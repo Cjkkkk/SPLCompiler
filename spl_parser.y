@@ -1,11 +1,11 @@
 /* 
- * @file 		spl_parser.l
+ * @file                spl_parser.l
  * @brief		Syntax parser of SPL language.
- * @details	    This is a syntax parser based on Bison.
- * @author		Jiang Xiaochong
- * @date		3/12/2019
- * @version	    1.0.0
- * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
+ * @details             This is a syntax parser based on Bison.
+ * @author              Jiang Xiaochong
+ * @date                3/12/2019
+ * @version             1.0.0
+ * @par                 Copyright(c): Zuiqiang Xiaozu(Best Group)
  */
 
 %token  AND

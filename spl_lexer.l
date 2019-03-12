@@ -1,10 +1,10 @@
 /* 
- * @file 		spl_lexer.l
- * @brief		Lexical analyzer of SPL language.
- * @details	    This is a lexical analyzer based on Flex.
- * @author		Jiang Xiaochong
- * @date		3/12/2019
- * @version	    1.0.0
+ * @file        spl_lexer.l
+ * @brief       Lexical analyzer of SPL language.
+ * @details     This is a lexical analyzer based on Flex.
+ * @author      Jiang Xiaochong
+ * @date        3/12/2019
+ * @version     1.0.0
  * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
  */
 
