@@ -1,12 +1,74 @@
 /* 
- * @file                spl_parser.l
- * @brief		Syntax parser of SPL language.
- * @details             This is a syntax parser based on Bison.
- * @author              Jiang Xiaochong
- * @date                3/12/2019
- * @version             1.0.0
- * @par                 Copyright(c): Zuiqiang Xiaozu(Best Group)
+ * @file        spl_parser.l
+ * @brief       Syntax parser of SPL language.
+ * @details     This is a syntax parser based on Bison.
+ * @author      Jiang Xiaochong
+ * @date        3/12/2019
+ * @version     1.0.0
+ * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
  */
+
+/* use newer C++ skeleton file */
+%skeleton "lalr1.cc"
+
+/* Require bison 2.3 or later */
+%require  "2.3"
+
+/* add debug output code to generated parser. disable this for release
+ * versions. */
+%debug 
+
+/* verbose error messages */
+%define parse.error verbose
+
+/* write out a header file containing the token defines */
+%define api.namespace {SPL}
+%define api.parser.class {SPL_Parser}
+
+%code requires{
+    namespace SPL {
+        class SPL_Driver;
+        class SPL_Scanner;
+    }
+
+// The following definitions is missing when %locations isn't used
+# ifndef YY_NULLPTR
+#  if defined __cplusplus && 201103L <= __cplusplus
+#   define YY_NULLPTR nullptr
+#  else
+#   define YY_NULLPTR 0
+#  endif
+# endif
+
+}
+
+%parse-param { SPL_Scanner &scanner }
+%parse-param { SPL_Driver  &driver  }
+
+%code{
+    #include <iostream>
+    #include <cstdlib>
+    #include <fstream>
+    #include <string>
+    #include <vector>
+   
+    /* include for all driver functions */
+    #include "spl_driver.hpp"
+
+#undef yylex
+#define yylex scanner.yylex
+}
+
+%define api.value.type variant
+%define parse.assert
+
+%right  ASSIGN
+%left   PLUS
+%left   MINUS
+%left   MUL
+%left   DIV
+%left   MOD
+%left   NOT
 
 %token  AND
 %token  ARRAY
@@ -41,16 +103,18 @@
 %token  WHILE
 %token  WITH
 
-%token  SYS_CON
-%token  SYS_FUNCT
-%token  SYS_PROC
-%token  SYS_TYPE
+%token  <int>           SYS_CON
+%token  <int>           SYS_FUNCT
+%token  <int>           SYS_PROC
+%token  <int>           SYS_TYPE
 %token  READ
 
-%token  INTEGER
-%token  REAL
-%token  CHAR
-%token  STRING
+%token  <int>           INTEGER
+%token  <double>        REAL
+%token  <char>          CHAR
+%token  <std::string>   STRING
+%token  <std::string>   NAME
+%token  <std::string>   ID
 
 %token  PLUS
 %token  MINUS
@@ -75,14 +139,8 @@
 %token  DOTDOT
 %token  DOT
 %token  SEMI
-%token  NAME
 
-%{
-    #include <stdio.h>
-    #include <stdlib.h>
-	#include <string.h>
-    
-%}
+%locations
 
 %%
 program: 
@@ -380,18 +438,3 @@ args_list:
 
 // TODO: error detection
 
-int main(int argc, char * argv[])
-{
-    if (argc > 1)
-    {
-        if (!(yyin = fopen(argv[1], "r"))) 
-        {
-            perror(argv[1]);
-            return -1;
-        }
-        yylex();
-        fclose(yyin);
-        return 0;
-    }
-    return -1;
-}

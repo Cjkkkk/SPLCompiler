@@ -1,10 +1,9 @@
 # SPL
 ## environment
-- windows
-- c++ 
-- flex
-- bison
-- [unix utils for windows](https://sourceforge.net/projects/unxutils/)
+- Windows 10
+- [GCC](https://sourceforge.net/projects/mingw-w64/)
+- [Flex & Bison](https://sourceforge.net/projects/winflexbison/files/winflexbison3-latest.zip/download))
+- - 一定要使用bison 3.0以上的版本
 - [MASM32](http://www.masm32.com/)
 - - 当SPL源代码编译成MASM格式的asm文件后，我们需要在Windows上配置MASM环境，进一步将asm文件汇编为可执行程序
 - - 首先，先到MASM32官网下载安装包，并安装至本机中，最好安装到C:/
