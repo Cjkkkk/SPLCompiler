@@ -1,14 +1,48 @@
-ifeq ($(OS), Windows_NT)
-	TARGET := spl_parser.exe
-else
-	TARGET := spl_parser.out
-endif
+CC = gcc
+CXX = g++
 
-all: spl_lexer.l spl_parser.y
-	flex lex.l
-	bison -d spl_parser.y
-	gcc -o $(TARGET) spl_lexer.yy.c spl_parser.tab.c -lm
+EXE = spl.exe
+
+CDEBUG = -g -Wall
+CXXDEBUG = -g -Wall
+
+CSTD = -std=c99
+CXXSTD = -std=c++14
+
+CFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CDEBUG) $(CSTD) 
+CXXFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CXXDEBUG) $(CXXSTD)
+
+CPPOBJ = main spl_driver
+SOBJ =  parser lexer
+
+FILES = $(addsuffix .cpp, $(CPPOBJ))#加后缀
+
+OBJS  = $(addsuffix .o, $(CPPOBJ))
+
+CLEANLIST =  $(addsuffix .o, $(OBJ)) $(OBJS) \
+				 spl_parser.tab.cc spl_parser.tab.hh \
+				 location.hh position.hh \
+			     stack.hh spl_parser.output parser.o \
+				 lexer.o spl_lexer.yy.cc \
+				 spl.ilk spl.pdb $(EXE)\
+
+.PHONY: all
+all: spl
+
+spl:$(FILES)
+	$(MAKE) $(SOBJ)
+	$(MAKE) $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(EXE) $(OBJS) parser.o lexer.o $(LIBS)
+
+
+parser: spl_parser.y
+	bison -d -v spl_parser.y
+	$(CXX) $(CXXFLAGS) -c -o parser.o spl_parser.tab.cc
+
+lexer: spl_lexer.l
+	flex --outfile=spl_lexer.yy.cc spl_lexer.l
+	$(CXX)  $(CXXFLAGS) -c spl_lexer.yy.cc -o lexer.o
 
 .PHONY: clean
 clean:
-	rm spl_lexer.yy.c spl_parser.tab.c spl_parser.tab.h $(TARGET)
+	rm -rf $(CLEANLIST)

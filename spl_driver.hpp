@@ -37,7 +37,7 @@ class SPL_Driver
    * parse - parse from a c++ input stream
    * @param is - std::istream&, valid input stream
    */
-    void parse(std::istream &iss);
+    void parse(std::istream &stream);
 
     std::ostream &print(std::ostream &stream);
 

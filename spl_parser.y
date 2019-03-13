@@ -1,5 +1,5 @@
 /* 
- * @file        spl_parser.l
+ * @file        spl_parser.y
  * @brief       Syntax parser of SPL language.
  * @details     This is a syntax parser based on Bison.
  * @author      Jiang Xiaochong
@@ -11,8 +11,11 @@
 /* use newer C++ skeleton file */
 %skeleton "lalr1.cc"
 
-/* Require bison 2.3 or later */
-%require  "2.3"
+/* require bison 3.0 or later */
+%require  "3.0"
+
+/* use C++ interface */
+%language "c++"
 
 /* add debug output code to generated parser. disable this for release
  * versions. */
@@ -62,17 +65,16 @@
 %define api.value.type variant
 %define parse.assert
 
+// TODO: 
 %right  ASSIGN
-%left   PLUS
-%left   MINUS
-%left   MUL
-%left   DIV
+%left   PLUS MINUS
+%left   MUL DIV
 %left   MOD
 %left   NOT
 
 %token  AND
 %token  ARRAY
-%token  BEGIN
+%token  _BEGIN
 %token  CASE
 %token  CONST
 %token  DIV
@@ -105,9 +107,10 @@
 
 %token  <int>           SYS_CON
 %token  <int>           SYS_FUNCT
+%token                  READ
 %token  <int>           SYS_PROC
 %token  <int>           SYS_TYPE
-%token  READ
+
 
 %token  <int>           INTEGER
 %token  <double>        REAL
@@ -302,7 +305,7 @@ routine_body:
         ;
 
 compound_stmt: 
-        BEGIN  stmt_list  END {}
+        _BEGIN  stmt_list  END {}
         ;
 
 stmt_list: 
@@ -438,3 +441,7 @@ args_list:
 
 // TODO: error detection
 
+void SPL::SPL_Parser::error( const location_type &l, const std::string &err_message )
+{
+   std::cout << "Error: " << err_message << " at " << l << "\n";
+}

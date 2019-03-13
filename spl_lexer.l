@@ -33,13 +33,15 @@ using token = SPL::SPL_Parser::token;
 
 /*** Flex Declarations and Options ***/
 
+/* comments scanner */
+%x COMMENT
+
 /* enable scanner to generate debug output. disable this for release
  * versions. */
 %option debug
 
 /* enable c++ scanner class generation */
 %option c++
-
 %option nodefault
 %option yyclass="SPL::SPL_Scanner"
 %option noyywrap
@@ -50,17 +52,17 @@ using token = SPL::SPL_Parser::token;
     yylval = lval;
 %}
     /* keyword */
-and         { return token::token::AND; }
-array       { return token::token::ARRAY; }
-begin       { return token::token::BEGIN; }
-case        { return token::token::CASE; }
-const       { return token::token::CONST; }
-div         { return token::token::DIV; }
-do          { return token::token::DO}
-downto      { return token::token::DOWNTO; }
-else        { return token::token::ELSE; }
-end         { return token::token::END; }
-for         { return token::token::FOR; }
+and         { return token::AND; }
+array       { return token::ARRAY; }
+begin       { return token::_BEGIN; }
+case        { return token::CASE; }
+const       { return token::CONST; }
+div         { return token::DIV; }
+do          { return token::DO; }
+downto      { return token::DOWNTO; }
+else        { return token::ELSE; }
+end         { return token::END; }
+for         { return token::FOR; }
 function    { return token::FUNCTION; }
 goto        { return token::GOTO; }
 if          { return token::IF; }
@@ -84,47 +86,47 @@ while       { return token::WHILE; }
 with        { return token::WITH; }
 
     /* system constant*/
-false       { return token::SYS_CON; }
-true        { return token::SYS_CON; }
-maxint      { return token::SYS_CON; }
+false       { yylval->build<int>(0); return token::SYS_CON; }
+true        { yylval->build<int>(1); return token::SYS_CON; }
+maxint      { yylval->build<int>(2147483647); return token::SYS_CON; }
 
     /* system function */
-abs         { return token::SYS_FUNCT; }
-chr         { return token::SYS_FUNCT; }
-odd         { return token::SYS_FUNCT; }
-ord         { return token::SYS_FUNCT; }
-pred        { return token::SYS_FUNCT; }
-sqr         { return token::SYS_FUNCT; }
-sqrt        { return token::SYS_FUNCT; }
-succ        { return token::SYS_FUNCT; }
+abs         { yylval->build<int>(0); return token::SYS_FUNCT; }
+chr         { yylval->build<int>(1); return token::SYS_FUNCT; }
+odd         { yylval->build<int>(2); return token::SYS_FUNCT; }
+ord         { yylval->build<int>(3); return token::SYS_FUNCT; }
+pred        { yylval->build<int>(4); return token::SYS_FUNCT; }
+sqr         { yylval->build<int>(5); return token::SYS_FUNCT; }
+sqrt        { yylval->build<int>(6); return token::SYS_FUNCT; }
+succ        { yylval->build<int>(7); return token::SYS_FUNCT; }
 
     /* system procedure */
 read        { return token::READ; }
-write       { return token::SYS_PROC; }
-writeln     { return token::SYS_PROC; }
+write       { yylval->build<int>(0); return token::SYS_PROC; }
+writeln     { yylval->build<int>(1); return token::SYS_PROC; }
 
     /* system type */
-boolean     { return token::SYS_TYPE; }
-char        { return token::SYS_TYPE; }
-integer     { return token::SYS_TYPE; }
-real        { return token::SYS_TYPE; }
-string      { return token::SYS_TYPE; }
+boolean     { yylval->build<int>(0); return token::SYS_TYPE; }
+char        { yylval->build<int>(1); return token::SYS_TYPE; }
+integer     { yylval->build<int>(2); return token::SYS_TYPE; }
+real        { yylval->build<int>(3); return token::SYS_TYPE; }
+string      { yylval->build<int>(4); return token::SYS_TYPE; }
 
     /* integer */
--?[0-9]+    { return token::INTEGER; }
+-?[0-9]+    { yylval->build<int>(atoi(yytext)); return token::INTEGER; }
 
     /* real */
 -?[0-9]+"."[0-9]* |
 -?"."[0-9]+	|
 -?[0-9]+E[-+]?[0-9]+ |
 -?[0-9]+"."[0-9]*E[-+]?[0-9]+ |
--?"."[0-9]*E[-+]?[0-9]+	{ return token::REAL; }   
+-?"."[0-9]*E[-+]?[0-9]+	{ yylval->build<double>(atof(yytext)); return token::REAL; }   
 
     /* character */
-'(\\.|''|[^'\n])'       { return token::CHAR; }
+'(\\.|''|[^'\n])'       { yylval->build<char>(yytext[1]); return token::CHAR; }
 
     /* string */
-\"(\\.|\"\"|[^\"\n])*\" { return token::STRING; }
+\"(\\.|\"\"|[^\"\n])*\" { yylval->build<std::string>(yytext); return token::STRING; }
 
     /* operator */
 "+"     { return token::PLUS; }
@@ -153,12 +155,13 @@ string      { return token::SYS_TYPE; }
 ";"     { return token::SEMI; }
 
     /* identifier */
-[A-Za-z][A-Za-z0-9_]*   { return token::NAME; }
+[A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::NAME; }
 
     /* comments (C-like) */
-"//".*;
-"/*"                    { old_status = YY_START; BEGIN COMMENT; }
-<COMMENT>"*/"           { BEGIN old_status; }
+"//".*                  
+"/*"                    { BEGIN COMMENT; }
+<COMMENT>"*/"           { BEGIN INITIAL; }
+<COMMENT>.
 
     /* white space */
 [ \t\n]

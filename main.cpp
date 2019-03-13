@@ -9,13 +9,20 @@
  */
 
 #include <iostream>
-#include <cstdlib>
-#include <cstring>
-
+#include <cstdio>
 #include "spl_driver.hpp"
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
-    
-    return 0;
+    SPL::SPL_Driver driver;
+    if (argc > 1)
+    {
+        driver.parse(argv[1]);
+        return 0;
+    }
+    else
+    {
+        std::cout << "spl.exe: error: no input files" << std::endl;
+        return 1;
+    }
 }
