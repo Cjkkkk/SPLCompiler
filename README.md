@@ -3,12 +3,12 @@
 - Windows 10
 - [GCC](https://sourceforge.net/projects/mingw-w64/)
 - [Flex & Bison](https://sourceforge.net/projects/winflexbison/files/winflexbison3-latest.zip/download)
-- - 一定要使用bison 3.0以上的版本
+	- 一定要使用bison 3.0以上的版本
 - [MASM32](http://www.masm32.com/)
-- - 当SPL源代码编译成MASM格式的asm文件后，我们需要在Windows上配置MASM环境，进一步将asm文件汇编为可执行程序
-- - 首先，先到MASM32官网下载安装包，并安装至本机中，最好安装到C:/
-- - 将C:/masm32/bin添加到系统环境变量中，就配置好了MASM汇编环境
-- - 为了检验配置的正确性，我们还需要运行以下汇编代码，将其保存为test.asm
+	- 当SPL源代码编译成MASM格式的asm文件后，我们需要在Windows上配置MASM环境，进一步将asm文件汇编为可执行程序
+	- 首先，先到MASM32官网下载安装包，并安装至本机中，最好安装到C:/
+	- 将C:/masm32/bin添加到系统环境变量中，就配置好了MASM汇编环境
+	- 为了检验配置的正确性，我们还需要运行以下汇编代码，将其保存为test.asm
 
 ```x86asm
 .686  
