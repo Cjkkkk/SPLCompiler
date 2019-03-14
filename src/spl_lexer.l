@@ -155,7 +155,7 @@ string      { yylval->build<int>(4); return token::SYS_TYPE; }
 ";"     { return token::SEMI; }
 
     /* identifier */
-[A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::NAME; }
+[A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::ID; }
 
     /* comments (C-like) */
 "//".*\n                

@@ -81,7 +81,6 @@
 %token  _BEGIN
 %token  CASE
 %token  CONST
-%token  DIV
 %token  DO
 %token  DOWNTO
 %token  ELSE
@@ -91,8 +90,6 @@
 %token  GOTO
 %token  IF
 %token  IN
-%token  MOD
-%token  NOT
 %token  OF
 %token  OR
 %token  PACKED
@@ -120,7 +117,6 @@
 %token  <double>        REAL
 %token  <char>          CHAR
 %token  <std::string>   STRING
-%token  <std::string>   NAME
 %token  <std::string>   ID
 
 %token  PLUS
@@ -151,7 +147,7 @@
 
 %%
 program: 
-        program_head  routine  DOT {}
+        program_head  routine  DOT { std::cout << "Match program successfully!\n"; }
         ;
 
 program_head: 
@@ -179,8 +175,8 @@ const_part:
         ;
 
 const_expr_list: 
-        const_expr_list  NAME  EQUAL  const_value  SEMI {}
-        |  NAME  EQUAL  const_value  SEMI {}
+        const_expr_list  ID  EQUAL  const_value  SEMI {}
+        |  ID  EQUAL  const_value  SEMI {}
         ;
 
 const_value: 
@@ -202,7 +198,7 @@ type_decl_list:
         ;
         
 type_definition: 
-        NAME  EQUAL  type_decl  SEMI {}
+        ID  EQUAL  type_decl  SEMI {}
         ;
 
 type_decl: 
@@ -213,12 +209,12 @@ type_decl:
 
 simple_type_decl: 
         SYS_TYPE  {}
-        |  NAME  {}
+        |  ID  {}
         |  LP  name_list  RP  {}
         |  const_value  DOTDOT  const_value  {}
         |  MINUS  const_value  DOTDOT  const_value {}
         |  MINUS  const_value  DOTDOT  MINUS  const_value {}
-        |  NAME  DOTDOT  NAME {}
+        |  ID  DOTDOT  ID {}
         ;
 
 array_type_decl: 
@@ -270,7 +266,7 @@ function_decl:
         ;
 
 function_head:  
-        FUNCTION  NAME  parameters  COLON  simple_type_decl {}
+        FUNCTION  ID  parameters  COLON  simple_type_decl {}
         ;
 
 procedure_decl:  
@@ -278,7 +274,7 @@ procedure_decl:
         ;
 
 procedure_head:  
-        PROCEDURE NAME parameters {}
+        PROCEDURE ID parameters {}
         ;
 
 parameters: 
@@ -423,8 +419,8 @@ term:
         ;
 
 factor: 
-        NAME {}
-        |  NAME  LP  args_list  RP {}
+        ID {}
+        |  ID  LP  args_list  RP {}
         |  SYS_FUNCT {}
         |  SYS_FUNCT  LP  args_list  RP {}
         |  const_value {}
