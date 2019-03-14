@@ -9,8 +9,8 @@ CXXDEBUG = -g -Wall
 CSTD = -std=c99
 CXXSTD = -std=c++14
 
-CFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CDEBUG) $(CSTD) 
-CXXFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CXXDEBUG) $(CXXSTD)
+CFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CDEBUG) $(CSTD)
+CXXFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CXXDEBUG) $(CXXSTD) -I D:\mingw32\include
 
 CPPOBJ = main spl_driver
 SOBJ =  parser lexer
@@ -29,11 +29,13 @@ CLEANLIST =  $(addsuffix .o, $(OBJ)) $(OBJS) \
 .PHONY: all
 all: spl
 
+# %.o : %.cpp
+#	$(CC) $(CCFLAGS) -c $< -o $@
+
 spl:$(FILES)
 	$(MAKE) $(SOBJ)
 	$(MAKE) $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(EXE) $(OBJS) parser.o lexer.o $(LIBS)
-
 
 parser: spl_parser.y
 	bison -d -v spl_parser.y
@@ -45,4 +47,4 @@ lexer: spl_lexer.l
 
 .PHONY: clean
 clean:
-	rm -rf $(CLEANLIST)
+	del /f /q $(CLEANLIST)
