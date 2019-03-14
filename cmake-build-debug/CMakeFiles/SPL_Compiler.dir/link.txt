@@ -1,3 +1,0 @@
-"D:\CLion 2018.2\bin\cmake\win\bin\cmake.exe" -E remove -f CMakeFiles\SPL_Compiler.dir/objects.a
-D:\bin\ar.exe cr CMakeFiles\SPL_Compiler.dir/objects.a @CMakeFiles\SPL_Compiler.dir\objects1.rsp
-D:\bin\g++.exe  -Wall -Wno-deprecated-register -g   -Wl,--whole-archive CMakeFiles\SPL_Compiler.dir/objects.a -Wl,--no-whole-archive  -o SPL_Compiler.exe -Wl,--out-implib,libSPL_Compiler.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SPL_Compiler.dir\linklibs.rsp
