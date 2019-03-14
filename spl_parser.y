@@ -65,12 +65,16 @@
 %define api.value.type variant
 %define parse.assert
 
-// TODO: 
+// TODO: 运算符
 %right  ASSIGN
-%left   PLUS MINUS
-%left   MUL DIV
-%left   MOD
+%left   OR
+%left   AND
 %left   NOT
+%left   EQUAL UNEQUAL GE GT LE LT 
+%left   PLUS MINUS
+%left   MUL DIV MOD
+
+%token  END     0       "end of file"
 
 %token  AND
 %token  ARRAY
@@ -81,7 +85,7 @@
 %token  DO
 %token  DOWNTO
 %token  ELSE
-%token  END
+%token  _END
 %token  FOR
 %token  FUNCTION
 %token  GOTO
@@ -222,7 +226,7 @@ array_type_decl:
         ;
 
 record_type_decl: 
-        RECORD  field_decl_list  END {}
+        RECORD  field_decl_list  _END {}
         ;
 
 field_decl_list: 
@@ -305,7 +309,7 @@ routine_body:
         ;
 
 compound_stmt: 
-        _BEGIN  stmt_list  END {}
+        _BEGIN  stmt_list  _END {}
         ;
 
 stmt_list: 
@@ -371,7 +375,7 @@ direction:
         ;
 
 case_stmt: 
-        CASE expression OF case_expr_list  END {}
+        CASE expression OF case_expr_list  _END {}
         ;
 
 case_expr_list: 

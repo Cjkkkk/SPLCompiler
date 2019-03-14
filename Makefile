@@ -9,13 +9,13 @@ CXXDEBUG = -g -Wall
 CSTD = -std=c99
 CXXSTD = -std=c++14
 
-CFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CDEBUG) $(CSTD) 
-CXXFLAGS = -Wno-deprecated-register -O0 -fpermissive $(CXXDEBUG) $(CXXSTD)
+CFLAGS = -Wno-deprecated-register -O0 $(CDEBUG) $(CSTD) 
+CXXFLAGS = -Wno-deprecated-register -O0 $(CXXDEBUG) $(CXXSTD)
 
 CPPOBJ = main spl_driver
 SOBJ =  parser lexer
 
-FILES = $(addsuffix .cpp, $(CPPOBJ))#加后缀
+FILES = $(addsuffix .cpp, $(CPPOBJ))
 
 OBJS  = $(addsuffix .o, $(CPPOBJ))
 

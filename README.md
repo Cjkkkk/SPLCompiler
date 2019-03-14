@@ -55,7 +55,7 @@ main proc
 main endp
 end main
 ```
-- - 然后，运行以下两条命令行，即可将asm文件汇编成exe可执行文件
+	- 然后，运行以下两条命令行，即可将asm文件汇编成exe可执行文件
 
 ```bash
 ml /c /coff /Cp test.asm

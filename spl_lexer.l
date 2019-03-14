@@ -61,7 +61,7 @@ div         { return token::DIV; }
 do          { return token::DO; }
 downto      { return token::DOWNTO; }
 else        { return token::ELSE; }
-end         { return token::END; }
+end         { return token::_END; }
 for         { return token::FOR; }
 function    { return token::FUNCTION; }
 goto        { return token::GOTO; }
@@ -158,10 +158,10 @@ string      { yylval->build<int>(4); return token::SYS_TYPE; }
 [A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::NAME; }
 
     /* comments (C-like) */
-"//".*                  
+"//".*\n                
 "/*"                    { BEGIN COMMENT; }
 <COMMENT>"*/"           { BEGIN INITIAL; }
-<COMMENT>.
+<COMMENT>([^*]|\n)+|.
 
     /* white space */
 [ \t\n]
