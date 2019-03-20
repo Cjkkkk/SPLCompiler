@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     SPL::SPL_Driver driver;
     if (argc > 1)
     {
+        std::cout << "yes" << std::endl;
         driver.parse(argv[1]);
         return 0;
     }

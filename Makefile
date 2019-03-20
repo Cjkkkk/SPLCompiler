@@ -14,7 +14,7 @@ CSTD = -std=c99
 CXXSTD = -std=c++17
 
 CFLAGS = -Wno-deprecated-register -O3 $(CDEBUG) $(CSTD) 
-CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD)
+CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD) -I D:\winFlexBison
 
 DIR_SRC = .\src
 DIR_OBJ = .\build
