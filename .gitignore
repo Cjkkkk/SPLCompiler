@@ -2,3 +2,6 @@
 .idea/
 build/
 cmake-build-debug/
+*.hh
+*.cc
+*.output
