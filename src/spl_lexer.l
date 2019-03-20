@@ -120,7 +120,7 @@ string      { yylval->build<int>(4); return token::SYS_TYPE; }
 -?"."[0-9]+	|
 -?[0-9]+E[-+]?[0-9]+ |
 -?[0-9]+"."[0-9]*E[-+]?[0-9]+ |
--?"."[0-9]*E[-+]?[0-9]+	{ yylval->build<double>(atof(yytext)); return token::REAL; }   
+-?"."[0-9]*E[-+]?[0-9]+	{ yylval->build<double>(atof(yytext)); return token::REAL; }
 
     /* character */
 '(\\.|''|[^'\n])'       { yylval->build<char>(yytext[1]); return token::CHAR; }

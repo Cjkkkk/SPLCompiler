@@ -1,19 +1,19 @@
 program test;
 
-var 
+var
 	ans : integer;
 	tmp : integer;
 
 function gcd(a, b : integer) : integer;
 var
 	c : integer;
-    
+
 begin
 	if b = 0 then begin
 		gcd := a;
 	end
 	else begin
-		c := a % b;
+		c := a MOD b;
 		gcd := gcd(b, c);
 	end
 	;
