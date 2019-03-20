@@ -218,7 +218,7 @@ simple_type_decl:
         ;
 
 array_type_decl: 
-        ARRAY  LB  simple_type_decl  RB  OF  type_decl {}
+        ARRAY  LB  INTEGER  RB  OF  type_decl {}
         ;
 
 record_type_decl: 
