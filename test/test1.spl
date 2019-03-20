@@ -4,6 +4,7 @@ var
 	ans : integer;
 	tmp : integer;
     arr : array [10] of integer;
+
 function gcd(a, b : integer) : integer;
 var
 	c : integer;
