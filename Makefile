@@ -2,9 +2,9 @@ CC = gcc
 CXX = g++
 
 ifeq ($(OS), Windows_NT)
-	EXE = SPLCompiler.exe
+	EXE = spl.exe
 else
-	EXE = SPLCompiler.out
+	EXE = spl.out
 endif
 
 CDEBUG = -g -Wall
@@ -14,11 +14,11 @@ CSTD = -std=c99
 CXXSTD = -std=c++17
 
 CFLAGS = -Wno-deprecated-register -O3 $(CDEBUG) $(CSTD) 
-CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD) -I D:\winFlexBison
+CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD)
 
 DIR_SRC = .\src
 DIR_OBJ = .\build
-DIR_EXE = .\test
+DIR_EXE = .\build
 
 CPPOBJ = main spl_driver
 
@@ -35,7 +35,7 @@ CLEANLIST =	$(OBJS) \
 			$(DIR_SRC)\spl_lexer.yy.cc \
 			$(DIR_OBJ)\parser.o \
 			$(DIR_OBJ)\lexer.o \
-			$(DIR_OBJ)\$(EXE) \
+			$(DIR_EXE)\$(EXE) \
 
 .PHONY: all
 all: parser lexer objects link
