@@ -161,10 +161,12 @@ string      { yylval->build<int>(4); return token::SYS_TYPE; }
 "//".*\n                
 "/*"                    { BEGIN COMMENT; }
 <COMMENT>"*/"           { BEGIN INITIAL; }
-<COMMENT>([^*]|\n)+|.
+<COMMENT>([^*]|\n)+|.   { }
+    /* update line number */
+\n                      { loc->lines(); }
 
     /* white space */
-[ \t\n]
+[ \t]
 .
 
 %%

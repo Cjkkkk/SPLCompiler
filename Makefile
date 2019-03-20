@@ -11,10 +11,10 @@ CDEBUG = -g -Wall
 CXXDEBUG = -g -Wall
 
 CSTD = -std=c99
-CXXSTD = -std=c++14
+CXXSTD = -std=c++17
 
-CFLAGS = -Wno-deprecated-register -O0 $(CDEBUG) $(CSTD) 
-CXXFLAGS = -Wno-deprecated-register -O0 $(CXXDEBUG) $(CXXSTD)
+CFLAGS = -Wno-deprecated-register -O3 $(CDEBUG) $(CSTD) 
+CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD)
 
 DIR_SRC = .\src
 DIR_OBJ = .\build
@@ -25,17 +25,17 @@ CPPOBJ = main spl_driver
 FILES = $(addprefix $(DIR_SRC)\, $(addsuffix .cpp, $(CPPOBJ)))
 OBJS  = $(addprefix $(DIR_OBJ)\, $(addsuffix .o, $(CPPOBJ)))
 
-CLEANLIST = $(OBJS) \
+CLEANLIST =	$(OBJS) \
 			$(DIR_SRC)\spl_parser.tab.cc \
 			$(DIR_SRC)\spl_parser.tab.hh \
 			$(DIR_SRC)\location.hh \
 			$(DIR_SRC)\position.hh \
 			$(DIR_SRC)\stack.hh \
-            $(DIR_SRC)\spl_parser.output \
-            $(DIR_SRC)\spl_lexer.yy.cc \
-            $(DIR_OBJ)\parser.o \
-            $(DIR_OBJ)\lexer.o \
-            $(DIR_EXE)\$(EXE) \
+			$(DIR_SRC)\spl_parser.output \
+			$(DIR_SRC)\spl_lexer.yy.cc \
+			$(DIR_OBJ)\parser.o \
+			$(DIR_OBJ)\lexer.o \
+			$(DIR_EXE)\$(EXE) \
 
 .PHONY: all
 all: parser lexer objects link
