@@ -64,7 +64,9 @@ link /subsystem:console test.obj
 ```
 
 ## git convention
+```
 <path_to_file>: [ADD/CHANGE/UPDATE/REMOVE] <message>
+```
 
 ```shell
 git commit -m"src/main.cpp: ADD new class"
