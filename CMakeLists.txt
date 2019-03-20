@@ -30,8 +30,3 @@ add_executable(SPLCompiler
         ${FLEX_lexer_OUTPUTS}
         ${BISON_parser_OUTPUTS}
         )
-
-target_include_directories(SPLCompiler
-        PRIVATE
-        .
-        ${CMAKE_CURRENT_BINARY_DIR})
