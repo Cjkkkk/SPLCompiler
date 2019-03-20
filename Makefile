@@ -11,14 +11,14 @@ CDEBUG = -g -Wall
 CXXDEBUG = -g -Wall
 
 CSTD = -std=c99
-CXXSTD = -std=c++17
+CXXSTD = -std=c++14
 
 CFLAGS = -Wno-deprecated-register -O3 $(CDEBUG) $(CSTD) 
 CXXFLAGS = -Wno-deprecated-register -O3 $(CXXDEBUG) $(CXXSTD) -I D:\winFlexBison
 
-DIR_SRC = .\src
-DIR_OBJ = .\build
-DIR_EXE = .\build
+DIR_SRC = ./src
+DIR_OBJ = ./build
+DIR_EXE = ./build
 
 CPPOBJ = main spl_driver
 
