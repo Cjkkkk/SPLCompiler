@@ -147,7 +147,7 @@
 
 %%
 program: 
-        program_head  routine  DOT { std::cout << "Match program successfully!\n"; }
+        program_head  routine  DOT {}
         ;
 
 program_head: 
@@ -443,5 +443,5 @@ args_list:
 
 void SPL::SPL_Parser::error( const location_type &l, const std::string &err_message )
 {
-   std::cout << "Error: " << err_message << " at " << l << "\n";
+   std::cout << "spl.exe: error: " << err_message << " at " << l << "\n";
 }
