@@ -5,18 +5,30 @@
 #ifndef SPLCOMPILER_PARSE_H
 #define SPLCOMPILER_PARSE_H
 
-#define  PLUS_ 1
-#define  MINUS_ 2
-#define  MUL_ 3
-#define  DIV_ 4
-#define  MOD_ 5
-#define  OR_ 6
-#define  AND_ 7
-#define  EQUAL_ 8
-#define  UNEQUAL_ 9
-#define  GE_ 10
-#define  GT_ 11
-#define  LE_ 12
-#define  LT_ 13
-#define  NOT_14
+enum opType{
+    PLUS_ = 1,
+    MINUS_,
+    MUL_,
+    DIV_,
+    MOD_,
+    OR_,
+    AND_,
+    EQUAL_,
+    UNEQUAL_,
+    GE_,
+    GT_,
+    LE_,
+    LT_,
+    NOT_,
+};
+
+enum dataType{
+    BOOL_,	    // boolean
+	CHAR_,	    // char
+	INT_,	    // int
+	REAL_,	    // double
+	STRING_,	// string
+	CUSTOM_,	// user-defined type, value = type_hashcode(<type_name>)
+};
+
 #endif //SPLCOMPILER_PARSE_H

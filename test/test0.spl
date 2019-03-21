@@ -4,6 +4,6 @@ var
 	ans : integer;
 
 begin
-	a := 3 + 2 * 10;
+	a := 3 + 2 * 10 - 5;
 end
 .

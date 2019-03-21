@@ -33,7 +33,7 @@
         class SPL_Driver;
         class SPL_Scanner;
     }
-#include "AST.h"
+#include "spl_ast.hpp"
 #include "parse.h"
 // The following definitions is missing when %locations isn't used
 # ifndef YY_NULLPTR
@@ -143,8 +143,8 @@
 %token  DOT
 %token  SEMI
 
-%type <Primary*> const_value
-%type <Expression*> factor term expr expression
+%type <AST_Const*> const_value
+%type <AST_Exp*> factor term expr expression
 //%type <int> delete_opts delete_list
 //%type <int> insert_opts insert_vals_list
 //%type <int>  opt_length opt_binary opt_uz
@@ -187,10 +187,10 @@ const_expr_list:
         ;
 
 const_value: 
-        INTEGER  {$$ = new Primary($1); }
-        |  REAL  {$$ = new Primary($1); }
-        |  CHAR  {$$ = new Primary($1); }
-        |  STRING  {$$ = new Primary($1);}
+        INTEGER  {$$ = new AST_Const($1); }
+        |  REAL  {}
+        |  CHAR  {}
+        |  STRING  {}
         |  SYS_CON {}
         ;
 
@@ -401,27 +401,27 @@ expression_list:
         ;
 
 expression: 
-        expression  GE  expr {$$ = new BinaryExpr($1, $3, GE_);}
-        |  expression  GT  expr {$$ = new BinaryExpr($1, $3, GT_);}
-        |  expression  LE  expr {$$ = new BinaryExpr($1, $3, LE_);}
-        |  expression  LT  expr {$$ = new BinaryExpr($1, $3, LT_);}
-        |  expression  EQUAL  expr {$$ = new BinaryExpr($1, $3, EQUAL_);}
-        |  expression  UNEQUAL  expr {$$ = new BinaryExpr($1, $3, UNEQUAL_);}
-        |  expr {$$ = $1; std::cout << $1->Evalute();}
+        expression  GE  expr {$$ = new AST_Math(GE_, $1, $3);}
+        |  expression  GT  expr {$$ = new AST_Math(GT_, $1, $3);}
+        |  expression  LE  expr {$$ = new AST_Math(LE_, $1, $3);}
+        |  expression  LT  expr {$$ = new AST_Math(LT_, $1, $3);}
+        |  expression  EQUAL  expr {$$ = new AST_Math(EQUAL_, $1, $3);}
+        |  expression  UNEQUAL  expr {$$ = new AST_Math(UNEQUAL_, $1, $3);}
+        |  expr {$$ = $1; std::cout << $1->calculate();}
         ;
 
 expr: 
-        expr  PLUS  term {$$ = new BinaryExpr($1, $3, PLUS_);}
-        |  expr  MINUS  term {$$ = new BinaryExpr($1, $3, MINUS_);}
-        |  expr  OR  term {$$ = new BinaryExpr($1, $3, OR_);}
+        expr  PLUS  term {$$ = new AST_Math(PLUS_, $1, $3);}
+        |  expr  MINUS  term {$$ = new AST_Math(MINUS_, $1, $3);}
+        |  expr  OR  term {$$ = new AST_Math(OR_, $1, $3);}
         |  term {$$ = $1;}
         ;
 
 term: 
-        term  MUL  factor {$$ = new BinaryExpr($1, $3, MUL_);}
-        |  term  DIV  factor {$$ = new BinaryExpr($1, $3, DIV_);}
-        |  term  MOD  factor {$$ = new BinaryExpr($1, $3, MOD_);}
-        |  term  AND  factor {$$ = new BinaryExpr($1, $3, AND_);}
+        term  MUL  factor {$$ = new AST_Math(MUL_, $1, $3);}
+        |  term  DIV  factor {$$ = new AST_Math(DIV_, $1, $3);}
+        |  term  MOD  factor {$$ = new AST_Math(MOD_, $1, $3);}
+        |  term  AND  factor {$$ = new AST_Math(AND_, $1, $3);}
         |  factor {$$ = $1;}
         ;
 
