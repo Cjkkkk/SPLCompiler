@@ -97,37 +97,37 @@ class AST_Sym : public AST_Exp
     std::string id;
     SymbolTable* scope;
 };
-/*
+
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
-class AST_Array : public AST_Exp
-{
-   public:
-    AST_Array(class AST_Sym* sym, class AST_Exp* exp);
-    int calculate(void);
-    void print(void);
-  protected:
-    AST_Sym* sym;
-    AST_Exp* exp;
-};
+//class AST_Array : public AST_Exp
+//{
+//   public:
+//    AST_Array(class AST_Sym* sym, class AST_Exp* exp);
+//    int calculate(void);
+//    void print(void);
+//  protected:
+//    AST_Sym* sym;
+//    AST_Exp* exp;
+//};
 
 // ast node for field reference in a record, such as point.x, node.next and so on
-class AST_Dot : public AST_Exp
-{
-  public:
-    AST_Dot(class AST_Sym* record, class AST_Sym* field);
-    int calculate(void);
-    void print(void);
-  protected:
-    AST_Sym* record;
-    AST_Sym* field;
-};
+//class AST_Dot : public AST_Exp
+//{
+//  public:
+//    AST_Dot(class AST_Sym* record, class AST_Sym* field);
+//    int calculate(void);
+//    void print(void);
+//  protected:
+//    AST_Sym* record;
+//    AST_Sym* field;
+//};
 
 // ast node for assignment
 // note that this kind of statement ifself contains a value
 class AST_Assign : public AST_Exp
 {
   public:
-    AST_Assign(class AST_Sym* sym, class AST_Exp* exp);
+    AST_Assign(AST_Sym* sym_, AST_Exp* exp_);
     int calculate(void);
     void print(void);
   protected:
@@ -137,26 +137,25 @@ class AST_Assign : public AST_Exp
 
 // ast node for if statement
 // if there's no 'else' case, 'doElse' will be nullptr
-class AST_If : public AST_Stmt
-{
-  public:
-    AST_If(class AST_Exp* cond, class AST_Stmt* doIf, class AST_Stmt* doElse);
-    int calculate(void);
-    void print(void);
-  protected:
-    AST_Exp* cond;
-    AST_Stmt* doIf;
-    AST_Stmt* doElse;
-};
+//class AST_If : public AST_Stmt
+//{
+//  public:
+//    AST_If(class AST_Exp* cond, class AST_Stmt* doIf, class AST_Stmt* doElse);
+//    int calculate(void);
+//    void print(void);
+//  protected:
+//    AST_Exp* cond;
+//    AST_Stmt* doIf;
+//    AST_Stmt* doElse;
+//};
 
 // ast node for case statement
-class AST_Case : public AST_Stmt
-{
+//class AST_Case : public AST_Stmt
+//{
+//
+//};
 
-};
 
-
-*/
 
 }
 #endif

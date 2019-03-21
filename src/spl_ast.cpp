@@ -93,3 +93,8 @@ int AST_Sym::calculate() {
     return 1;
     // add search symbol table
 }
+
+AST_Assign::AST_Assign(SPL::AST_Sym *sym_, SPL::AST_Exp *exp_) :sym(sym_), exp(exp_){};
+int AST_Assign::calculate() {
+    return exp->calculate();
+}
