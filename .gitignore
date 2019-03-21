@@ -5,3 +5,4 @@ cmake-build-debug/
 *.hh
 *.cc
 *.output
+~m4*

@@ -33,7 +33,8 @@
         class SPL_Driver;
         class SPL_Scanner;
     }
-
+#include "AST.h"
+#include "parse.h"
 // The following definitions is missing when %locations isn't used
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -54,10 +55,8 @@
     #include <fstream>
     #include <string>
     #include <vector>
-   
     /* include for all driver functions */
     #include "spl_driver.hpp"
-
 #undef yylex
 #define yylex scanner.yylex
 }
@@ -76,7 +75,6 @@
 
 %token  END     0       "end of file"
 
-%token  AND
 %token  ARRAY
 %token  _BEGIN
 %token  CASE
@@ -91,7 +89,6 @@
 %token  IF
 %token  IN
 %token  OF
-%token  OR
 %token  PACKED
 %token  PROCEDURE
 %token  PROGRAM
@@ -123,14 +120,17 @@
 %token  MINUS
 %token  MUL
 %token  DIV
+%token  MOD
+%token  OR
+%token  AND
+%token  EQUAL
+%token  UNEQUAL
 %token  GE
 %token  GT
 %token  LE
 %token  LT
-%token  EQUAL
-%token  UNEQUAL
-%token  MOD
 %token  NOT
+
 %token  ASSIGN
 
 %token  LP
@@ -142,6 +142,13 @@
 %token  DOTDOT
 %token  DOT
 %token  SEMI
+
+%type <Primary*> const_value
+%type <Expression*> factor term expr expression
+//%type <int> delete_opts delete_list
+//%type <int> insert_opts insert_vals_list
+//%type <int>  opt_length opt_binary opt_uz
+//%type <int> column_atts data_type create_col_list
 
 %locations
 
@@ -180,10 +187,10 @@ const_expr_list:
         ;
 
 const_value: 
-        INTEGER  {}
-        |  REAL  {}
-        |  CHAR  {}
-        |  STRING  {}
+        INTEGER  {$$ = new Primary($1); }
+        |  REAL  {$$ = new Primary($1); }
+        |  CHAR  {$$ = new Primary($1); }
+        |  STRING  {$$ = new Primary($1);}
         |  SYS_CON {}
         ;
 
@@ -394,28 +401,28 @@ expression_list:
         ;
 
 expression: 
-        expression  GE  expr {}
-        |  expression  GT  expr {}
-        |  expression  LE  expr {}
-        |  expression  LT  expr {}
-        |  expression  EQUAL  expr {}
-        |  expression  UNEQUAL  expr {}
-        |  expr {}
+        expression  GE  expr {$$ = new BinaryExpr($1, $3, GE_);}
+        |  expression  GT  expr {$$ = new BinaryExpr($1, $3, GT_);}
+        |  expression  LE  expr {$$ = new BinaryExpr($1, $3, LE_);}
+        |  expression  LT  expr {$$ = new BinaryExpr($1, $3, LT_);}
+        |  expression  EQUAL  expr {$$ = new BinaryExpr($1, $3, EQUAL_);}
+        |  expression  UNEQUAL  expr {$$ = new BinaryExpr($1, $3, UNEQUAL_);}
+        |  expr {$$ = $1; std::cout << $1->Evalute();}
         ;
 
 expr: 
-        expr  PLUS  term {}
-        |  expr  MINUS  term {}
-        |  expr  OR  term {}
-        |  term {}
+        expr  PLUS  term {$$ = new BinaryExpr($1, $3, PLUS_);}
+        |  expr  MINUS  term {$$ = new BinaryExpr($1, $3, MINUS_);}
+        |  expr  OR  term {$$ = new BinaryExpr($1, $3, OR_);}
+        |  term {$$ = $1;}
         ;
 
 term: 
-        term  MUL  factor {}
-        |  term  DIV  factor {}
-        |  term  MOD  factor {}
-        |  term  AND  factor {}
-        |  factor {}
+        term  MUL  factor {$$ = new BinaryExpr($1, $3, MUL_);}
+        |  term  DIV  factor {$$ = new BinaryExpr($1, $3, DIV_);}
+        |  term  MOD  factor {$$ = new BinaryExpr($1, $3, MOD_);}
+        |  term  AND  factor {$$ = new BinaryExpr($1, $3, AND_);}
+        |  factor {$$ = $1;}
         ;
 
 factor: 
@@ -423,7 +430,7 @@ factor:
         |  ID  LP  args_list  RP {}
         |  SYS_FUNCT {}
         |  SYS_FUNCT  LP  args_list  RP {}
-        |  const_value {}
+        |  const_value {$$ = $1;}
         |  LP  expression  RP {}
         |  NOT  factor {}
         |  MINUS  factor {}
