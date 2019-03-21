@@ -20,7 +20,6 @@
 
 namespace SPL
 {
-
 class SPL_Driver
 {
   public:

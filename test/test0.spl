@@ -1,0 +1,9 @@
+program test;
+
+var
+	ans : integer;
+
+begin
+	a := 3 + 2 * 10;
+end
+.

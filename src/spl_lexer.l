@@ -1,4 +1,4 @@
-/* 
+/*
  * @file        spl_lexer.l
  * @brief       Lexical analyzer of SPL language.
  * @details     This is a lexical analyzer based on Flex.
@@ -12,7 +12,7 @@
 /* C++ string header, for string ops below */
 #include <string>
 
-/* Implementation of yyFlexScanner */ 
+/* Implementation of yyFlexScanner */
 #include "spl_scanner.hpp"
 #undef  YY_DECL
 #define YY_DECL int SPL::SPL_Scanner::yylex( SPL::SPL_Parser::semantic_type * const lval, SPL::SPL_Parser::location_type *loc )
@@ -158,7 +158,7 @@ string      { yylval->build<int>(4); return token::SYS_TYPE; }
 [A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::ID; }
 
     /* comments (C-like) */
-"//".*\n                
+"//".*\n
 "/*"                    { BEGIN COMMENT; }
 <COMMENT>"*/"           { BEGIN INITIAL; }
 <COMMENT>([^*]|\n)+|.   { }
