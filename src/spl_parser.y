@@ -426,14 +426,14 @@ term:
         ;
 
 factor: 
-        ID {}
+        ID {$$ = new AST_Sym($1, nullptr);}
         |  ID  LP  args_list  RP {}
         |  SYS_FUNCT {}
         |  SYS_FUNCT  LP  args_list  RP {}
         |  const_value {$$ = $1;}
         |  LP  expression  RP {}
-        |  NOT  factor {}
-        |  MINUS  factor {}
+        |  NOT  factor {$$ = new AST_Math(NOT_, $2, nullptr);}
+        |  MINUS  factor {$$ = new AST_Math(MINUS__, $2, nullptr);}
         |  ID  LB  expression  RB {}
         |  ID  DOT  ID {}
         ;

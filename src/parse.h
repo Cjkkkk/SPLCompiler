@@ -20,6 +20,7 @@ enum opType{
     LE_,
     LT_,
     NOT_,
+    MINUS__
 };
 
 enum dataType{

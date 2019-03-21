@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-//#include "symtab.hpp"
+#include "symtab.hpp"
 #include "parse.h"
 
 #define ERROR_VAL  -1
@@ -85,19 +85,19 @@ class AST_Const : public AST_Exp
     void* valPtr = nullptr;
 };
 
-/*
+
 // ast node for symbols, including variables, function/procedure name 
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(string id, class SymbolTable* scope);
-    int calculate();
-    void print(void);
+    AST_Sym(std::string id_, class SymbolTable* scope_);
+    int calculate(void);
+    //void print(void);
   protected:
-    string id;
+    std::string id;
     SymbolTable* scope;
 };
-
+/*
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
 class AST_Array : public AST_Exp
 {

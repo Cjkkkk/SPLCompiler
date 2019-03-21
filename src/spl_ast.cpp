@@ -38,6 +38,10 @@ int AST_Math::calculate(void){
         return left->calculate() < right->calculate();
     case LE_:
         return left->calculate() <= right->calculate();
+    case NOT_:
+        return left->calculate() == 0 ? 1 : 0;
+    case MINUS__:
+        return - left->calculate();
     default:     return -ERROR_VAL;
     }
 }
@@ -82,4 +86,10 @@ int AST_Const::calculate(void){
 
 void AST_Const::print(void){
     return;
+}
+
+AST_Sym::AST_Sym(std::string id_, class SymbolTable *scope_) :id(id_), scope(scope_){};
+int AST_Sym::calculate() {
+    return 1;
+    // add search symbol table
 }
