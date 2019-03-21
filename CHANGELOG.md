@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binary Expression + - * / and or Mod
 - Unary Expression Not Minus
 - id (not symbol table check yet, default value to 1 for debug)
+- simple variable assignment
 
 ## [1.0.1] - 2019-03-16
 ### Added
