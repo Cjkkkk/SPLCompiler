@@ -19,15 +19,25 @@ AST_Math::AST_Math(int opType, class AST_Exp* left, class AST_Exp* right){
 }
 
 int AST_Math::calculate(void){
-    int plus = (this->left->calculate()) + (this->right->calculate());
-    int minus = (this->left->calculate()) - (this->right->calculate());
-    int mul = (this->left->calculate()) * (this->right->calculate());
-    int div = (this->left->calculate()) / (this->right->calculate());
     switch(opType){
-    case PLUS_:  return plus;
-    case MINUS_: return minus;
-    case MUL_:   return mul;
-    case DIV_:   return div;
+    case PLUS_:  return left->calculate() + right->calculate();
+    case MINUS_: return left->calculate() - right->calculate();
+    case MUL_:   return left->calculate() * right->calculate();
+    case DIV_:   return left->calculate() / right->calculate();
+    case AND_:
+        if(left->calculate() != 0 && right->calculate() != 0) return 1;
+        return 0;
+    case OR_ :
+        if(left->calculate() == 0 && right->calculate() == 0) return 0;
+        return 1;
+    case GT_ :
+        return left->calculate() > right->calculate();
+    case GE_:
+        return left->calculate() >= right->calculate();
+    case LT_ :
+        return left->calculate() < right->calculate();
+    case LE_:
+        return left->calculate() <= right->calculate();
     default:     return -ERROR_VAL;
     }
 }
@@ -41,26 +51,26 @@ void AST_Math::print(void){
 // ast node for constant expression
 AST_Const::AST_Const(const int val){
     this->valType = INT_;
-    this->valPtr = malloc(sizeof(int));
-    memcpy(this->valPtr, &val, sizeof(int));
+    this->valPtr = new int();
+    *((int*)this->valPtr) = val;
 }
 
 AST_Const::AST_Const(const double val){
     this->valType = REAL_;
-    this->valPtr = malloc(sizeof(double));
-    memcpy(this->valPtr, &val, sizeof(double));
+    this->valPtr = new double();
+    *((double*)this->valPtr) = val;
 }
 
 AST_Const::AST_Const(const char val){
     this->valType = CHAR_;
-    this->valPtr = malloc(sizeof(char));
-    memcpy(this->valPtr, &val, sizeof(char));
+    this->valPtr = new char();
+    *((char*)this->valPtr) = val;
 }
 
 AST_Const::AST_Const(const char* val){
     int size = strlen(val) + 1;
     this->valType = STRING_;
-    this->valPtr = malloc(sizeof(char) * size);
+    this->valPtr = new char(size);
     memcpy(this->valPtr, val, sizeof(char) * size);
 }
 

@@ -29,7 +29,7 @@ add_executable(SPLCompiler
         src/spl_driver.cpp
         ${FLEX_lexer_OUTPUTS}
         ${BISON_parser_OUTPUTS}
-        src/AST.cpp src/AST.h src/parse.h)
+        src/spl_ast.cpp src/parse.h)
 
 target_include_directories(SPLCompiler
         PUBLIC

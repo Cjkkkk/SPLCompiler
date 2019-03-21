@@ -401,13 +401,13 @@ expression_list:
         ;
 
 expression: 
-        expression  GE  expr {$$ = new AST_Math(GE_, $1, $3);}
-        |  expression  GT  expr {$$ = new AST_Math(GT_, $1, $3);}
-        |  expression  LE  expr {$$ = new AST_Math(LE_, $1, $3);}
-        |  expression  LT  expr {$$ = new AST_Math(LT_, $1, $3);}
-        |  expression  EQUAL  expr {$$ = new AST_Math(EQUAL_, $1, $3);}
-        |  expression  UNEQUAL  expr {$$ = new AST_Math(UNEQUAL_, $1, $3);}
-        |  expr {$$ = $1; std::cout << $1->calculate();}
+        expression  GE  expr {$$ = new AST_Math(GE_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expression  GT  expr {$$ = new AST_Math(GT_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expression  LE  expr {$$ = new AST_Math(LE_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expression  LT  expr {$$ = new AST_Math(LT_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expression  EQUAL  expr {$$ = new AST_Math(EQUAL_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expression  UNEQUAL  expr {$$ = new AST_Math(UNEQUAL_, $1, $3);std::cout << $$->calculate() << "\n";}
+        |  expr {$$ = $1; std::cout << $$->calculate() << "\n";}
         ;
 
 expr: 
