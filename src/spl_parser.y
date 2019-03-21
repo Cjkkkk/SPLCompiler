@@ -427,11 +427,11 @@ term:
 
 factor: 
         ID {$$ = new AST_Sym($1, nullptr);}
-        |  ID  LP  args_list  RP {}
+        |  ID  LP  args_list  RP {$$ = new AST_Sym($1, nullptr);}
         |  SYS_FUNCT {}
         |  SYS_FUNCT  LP  args_list  RP {}
         |  const_value {$$ = $1;}
-        |  LP  expression  RP {}
+        |  LP  expression  RP {$$ = $2;}
         |  NOT  factor {$$ = new AST_Math(NOT_, $2, nullptr);}
         |  MINUS  factor {$$ = new AST_Math(MINUS__, $2, nullptr);}
         |  ID  LB  expression  RB {}

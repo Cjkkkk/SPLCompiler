@@ -3,6 +3,7 @@ program test;
 var
 	ans : integer;
 begin
-	a := c + d + 3 + 2 * - 10 - 5 > 4 + 12 * 1;
+	a := c + d + 3 + 2 * - 10 - 5 > 10;
+	e := (4 + 12) * 2 * ( 1 + 2 );
 end
 .
