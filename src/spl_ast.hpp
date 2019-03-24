@@ -35,7 +35,7 @@ class AST
 };
 
 // abstract class: ast trees that represent an expression with a value
-class AST_Exp : public AST
+class AST_Exp : virtual public AST
 {
   public:
     virtual int calculate() = 0;    //pure virtual function
@@ -44,7 +44,7 @@ class AST_Exp : public AST
 };
 
 // abstract class : ast trees that represent a statement without a value
- class AST_Stmt : public AST
+ class AST_Stmt : virtual public AST
  {
    public:
      virtual int calculate() = 0;    //pure virtual function
@@ -131,16 +131,16 @@ class AST_Dot : public AST_Exp
 
 // ast node for assignment
 // note that this kind of statement ifself contains a value
-class AST_Assign : public AST_Exp
+class AST_Assign : public AST_Exp, public AST_Stmt
 {
   public:
-    AST_Assign(AST_Sym* sym_, AST_Exp* exp_);
+    AST_Assign(AST_Exp* lhs_, AST_Exp* rhs_);
     ~AST_Assign() override;
     int calculate() override ;
     void print();
   protected:
-    AST_Sym *sym;
-    AST_Exp *exp;
+    AST_Exp *lhs;
+    AST_Exp *rhs;
 };
 
 // ast node for if statement and case statement
@@ -166,6 +166,61 @@ class caseUnit{
     AST_Exp*   val;
     AST_Stmt*  stmt;
     inline caseUnit(AST_Exp* val_, AST_Stmt* stmt_): val(val_), stmt(stmt_){}
+};
+
+class AST_While : public AST_Stmt
+{
+  public:
+    AST_While(AST_Exp* cond_, AST_Stmt* stmt_);
+    ~AST_While() override;
+    int calculate() override;
+  protected:
+    AST_Exp* cond;
+    AST_Stmt* stmt;
+};
+
+class AST_Repeat : public AST_Stmt
+{
+  public:
+    AST_Repeat(std::vector<AST_Stmt*>* stmtList_, AST_Exp* exp_);
+    ~AST_Repeat() override;
+    int calculate() override;
+  protected:
+    std::vector<AST_Stmt*>* stmtList;
+    AST_Exp* exp;
+};
+
+class AST_For : public AST_Stmt
+{
+  public:
+    AST_For(AST_Assign* init_, bool dir_, AST_Exp* fin_, AST_Stmt* stmt_);
+    ~AST_For() override;
+    int calculate() override;
+  protected:
+    AST_Assign* init;
+    bool dir;
+    AST_Exp* fin;
+    AST_Stmt* stmt;
+};
+
+class AST_Goto : public AST_Stmt
+{
+  public:
+    AST_Goto(int label_);
+    ~AST_Goto() override;
+    int calculate() override;
+  protected:
+    int label;
+};
+
+class AST_Compound : public AST_Stmt
+{
+  public:
+    AST_Compound(std::vector<AST_Stmt*>* stmtList_);
+    ~AST_Compound() override;
+    int calculate() override;
+  protected:
+    std::vector<AST_Stmt*>* stmtList;
 };
 
 } // namespace SPL

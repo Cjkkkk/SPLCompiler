@@ -121,10 +121,10 @@ int AST_Dot::calculate(){
     return ERROR_VAL;
 }
 
-AST_Assign::AST_Assign(SPL::AST_Sym *sym_, SPL::AST_Exp *exp_): sym(sym_), exp(exp_){}
+AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_): lhs(lhs_), rhs(rhs_){}
 
 int AST_Assign::calculate() {
-    return exp->calculate();
+    return rhs->calculate();
 }
 
 AST_Assign::~AST_Assign(){}
@@ -148,4 +148,46 @@ void AST_If::addRight(AST_Stmt* doElse_){
 
 AST_Stmt* AST_If::getDoElse(void){
     return this->doElse;
+}
+
+AST_While::AST_While(AST_Exp* cond_, AST_Stmt* stmt_): cond(cond_), stmt(stmt_){}
+
+AST_While::~AST_While(){}
+
+int AST_While::calculate(){
+    return ERROR_VAL;
+}
+
+AST_Repeat::AST_Repeat(std::vector<AST_Stmt*>* stmtList_, AST_Exp* exp_):
+        stmtList(stmtList_), exp(exp_){}
+
+AST_Repeat::~AST_Repeat(){}
+
+int AST_Repeat::calculate(){
+    return ERROR_VAL;
+}
+
+AST_For::AST_For(AST_Assign* init_, bool dir_, AST_Exp* fin_, AST_Stmt* stmt_):
+        init(init_), dir(dir_), fin(fin_), stmt(stmt_){}
+
+AST_For::~AST_For(){}
+
+int AST_For::calculate(){
+    return ERROR_VAL;
+}
+
+AST_Goto::AST_Goto(int label_): label(label_){}
+
+AST_Goto::~AST_Goto(){}
+
+int AST_Goto::calculate(){
+    return ERROR_VAL;
+}
+
+AST_Compound::AST_Compound(std::vector<AST_Stmt*>* stmtList_): stmtList(stmtList_){}
+
+AST_Compound::~AST_Compound(){}
+
+int AST_Compound::calculate(){
+    return ERROR_VAL;
 }

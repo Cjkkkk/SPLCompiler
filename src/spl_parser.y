@@ -80,7 +80,6 @@
 %token  CASE
 %token  CONST
 %token  DO
-%token  DOWNTO
 %token  ELSE
 %token  _END
 %token  FOR
@@ -96,12 +95,13 @@
 %token  REPEAT
 %token  SET
 %token  THEN
-%token  TO
 %token  TYPE
 %token  UNTIL
 %token  VAR
 %token  WHILE
 %token  WITH
+%token  TO
+%token  DOWNTO
 
 %token  <int>           SYS_CON
 %token  <int>           SYS_FUNCT
@@ -143,13 +143,20 @@
 %token  DOT
 %token  SEMI
 
+%type   <bool>          direction
 %type   <AST_Const*>    const_value
 %type   <AST_Exp*>      factor term expr expression
 %type   <AST_Assign*>   assign_stmt
-%type 	<AST_Stmt*>	else_clause stmt
+%type 	<AST_Stmt*>	else_clause stmt non_label_stmt
 %type 	<AST_If*>	if_stmt case_stmt
+%type   <AST_While*>    while_stmt
+%type   <AST_Repeat*>   repeat_stmt
+%type   <AST_For*>      for_stmt
+%type   <AST_Goto*>     goto_stmt
+%type   <AST_Compound*> compound_stmt routine_body
 %type   <caseUnit*>             case_expr
 %type   <vector<caseUnit*>*>    case_expr_list
+%type   <vector<AST_Stmt*>*>    stmt_list
 //%type <int> delete_opts delete_list
 //%type <int> insert_opts insert_vals_list
 //%type <int>  opt_length opt_binary opt_uz
@@ -313,44 +320,51 @@ val_para_list:
         ;
 
 routine_body: 
-        compound_stmt {}
+        compound_stmt {$$ = $1;}
         ;
 
 compound_stmt: 
-        _BEGIN  stmt_list  _END {}
+        _BEGIN  stmt_list  _END {$$ = new AST_Compound($2);}
         ;
 
 stmt_list: 
-        stmt_list  stmt  SEMI {}
-        |  {}
+        stmt_list  stmt  SEMI {$1->push_back($2); $$ = $1;}
+        |  {$$->clear();}
         ;
 
 stmt: 
-        INTEGER  COLON  non_label_stmt {}
-        |  non_label_stmt {}
+        INTEGER  COLON  non_label_stmt {$$ = $3; /*add the label into the symtable*/ }
+        |  non_label_stmt {$$ = $1;}
         ;
 
 non_label_stmt: 
-        assign_stmt {}
+        assign_stmt {$$ = $1;}
         | proc_stmt {}
-        | compound_stmt {}
-        | if_stmt {}
-        | repeat_stmt {}
-        | while_stmt {}
-        | for_stmt {}
-        | case_stmt {}
-        | goto_stmt {}
+        | compound_stmt {$$ = $1;}
+        | if_stmt {$$ = $1;}
+        | repeat_stmt {$$ = $1;}
+        | while_stmt {$$ = $1;}
+        | for_stmt {$$ = $1;}
+        | case_stmt {$$ = $1;}
+        | goto_stmt {$$ = $1;}
         ;
 
 // todo: check symbol table to get sym
 assign_stmt: 
         ID  ASSIGN  expression {
-        	auto t = new AST_Sym($1, nullptr);
-		$$ = new AST_Assign(t, $3);
-		std::cout << $1 << ": " << $$->calculate()<<"\n";
+            AST_Sym* lhs = new AST_Sym($1, nullptr);
+	    $$ = new AST_Assign(lhs, $3);
+	    //std::cout << $1 << ": " << $$->calculate()<<"\n";
         }
-        | ID LB expression RB ASSIGN expression {}
-        | ID  DOT  ID  ASSIGN  expression {}
+        | ID LB expression RB ASSIGN expression {
+            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
+            $$ = new AST_Assign(lhs, $6);
+        }
+        | ID  DOT  ID  ASSIGN  expression {
+            AST_Dot* lhs = new AST_Dot(new AST_Sym($1, nullptr), 
+                                       new AST_Sym($3, nullptr));
+            $$ = new AST_Assign(lhs, $5);
+        }
         ;
 
 proc_stmt: 
@@ -371,20 +385,23 @@ else_clause:
         ;
 
 repeat_stmt: 
-        REPEAT  stmt_list  UNTIL  expression {}
+        REPEAT  stmt_list  UNTIL  expression {$$ = new AST_Repeat($2, $4);}
         ;
 
 while_stmt: 
-        WHILE  expression  DO stmt {}
+        WHILE  expression  DO stmt {$$ = new AST_While($2, $4);}
         ;
 
 for_stmt: 
-        FOR  ID  ASSIGN  expression  direction  expression  DO stmt {}
+        FOR  ID  ASSIGN  expression  direction  expression  DO stmt {
+            AST_Assign* init = new AST_Assign(new AST_Sym($2, nullptr), $4);
+            $$ = new AST_For(init, $5, $6, $8);
+        }
         ;
 
 direction: 
-        TO {}
-        | DOWNTO {}
+        TO {$$ = true;}
+        | DOWNTO {$$ = false;}
         ;
 
 case_stmt: 
@@ -417,7 +434,7 @@ case_expr:
         ;
 
 goto_stmt: 
-        GOTO  INTEGER {}
+        GOTO  INTEGER {$$ = new AST_Goto($2);}
         ;
 
 expression_list: 
