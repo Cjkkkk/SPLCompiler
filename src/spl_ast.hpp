@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <vector>
 #include "spl_symtab.hpp"
 #include "spl_compiler.h"
 
@@ -27,8 +28,8 @@ class AST
 {
   public:
     virtual int calculate() = 0;    //pure virtual function
+    virtual ~AST() = 0;             //pure virtual function
     //virtual void print(void) = 0;       //pure virtual function
-    //virtual void emit(void) = 0;
   protected:
     int nodeType;
 };
@@ -38,6 +39,7 @@ class AST_Exp : public AST
 {
   public:
     virtual int calculate() = 0;    //pure virtual function
+    virtual ~AST_Exp() = 0;         //pure virtual function
     //virtual void print(void) = 0;       //pure virtual function
 };
 
@@ -46,6 +48,7 @@ class AST_Exp : public AST
  {
    public:
      virtual int calculate() = 0;    //pure virtual function
+     virtual ~AST_Stmt() = 0;        //pure virtual function
      //virtual void print(void) = 0;       //pure virtual function
  };
 
@@ -54,6 +57,7 @@ class AST_Math : public AST_Exp
 {
   public:
     AST_Math(int opType, class AST_Exp* left, class AST_Exp* right);
+    ~AST_Math() override;
     int calculate() override ;
     void print();
 
@@ -75,6 +79,7 @@ class AST_Const : public AST_Exp
     explicit AST_Const(double val);
     explicit AST_Const(char val);
     explicit AST_Const(char* val);
+    ~AST_Const() override;
     int calculate() override ;
     void print();
   protected:
@@ -89,7 +94,8 @@ class AST_Const : public AST_Exp
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string& id_, class SymbolTable* scope_);
+    AST_Sym(std::string& id_, SymbolTable* scope_);
+    ~AST_Sym() override;
     int calculate() override ;
     //void print(void);
   protected:
@@ -98,28 +104,30 @@ class AST_Sym : public AST_Exp
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
-//class AST_Array : public AST_Exp
-//{
-//   public:
-//    AST_Array(class AST_Sym* sym, class AST_Exp* exp);
-//    int calculate(void);
-//    void print(void);
-//  protected:
-//    AST_Sym* sym;
-//    AST_Exp* exp;
-//};
+class AST_Array : public AST_Exp
+{
+  public:
+   AST_Array(AST_Sym* sym_, AST_Exp* exp_);
+   ~AST_Array() override;
+   int calculate(void) override;
+   //void print(void);
+ protected:
+   AST_Sym* sym;
+   AST_Exp* exp;
+};
 
 // ast node for field reference in a record, such as point.x, node.next and so on
-//class AST_Dot : public AST_Exp
-//{
-//  public:
-//    AST_Dot(class AST_Sym* record, class AST_Sym* field);
-//    int calculate(void);
-//    void print(void);
-//  protected:
-//    AST_Sym* record;
-//    AST_Sym* field;
-//};
+class AST_Dot : public AST_Exp
+{
+ public:
+   AST_Dot(AST_Sym* record_, AST_Sym* field_);
+   ~AST_Dot() override;
+   int calculate(void) override;
+   //void print(void);
+ protected:
+   AST_Sym* record;
+   AST_Sym* field;
+};
 
 // ast node for assignment
 // note that this kind of statement ifself contains a value
@@ -127,6 +135,7 @@ class AST_Assign : public AST_Exp
 {
   public:
     AST_Assign(AST_Sym* sym_, AST_Exp* exp_);
+    ~AST_Assign() override;
     int calculate() override ;
     void print();
   protected:
@@ -140,6 +149,7 @@ class AST_If : public AST_Stmt
 {
   public:
       AST_If(AST_Exp* cond_, AST_Stmt* doIf_, AST_Stmt* doElse_);
+      ~AST_If() override;
       int calculate() override ;
       void print();
   protected:

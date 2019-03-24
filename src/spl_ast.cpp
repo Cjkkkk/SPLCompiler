@@ -12,6 +12,12 @@
 #include "spl_compiler.h"
 using namespace SPL;
 
+AST::~AST(){}
+
+AST_Exp::~AST_Exp(){}
+
+AST_Stmt::~AST_Stmt(){}
+
 // ast node for math expression
 AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
 {
@@ -20,6 +26,7 @@ AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
     this->right = right;
 }
 
+AST_Math::~AST_Math(){}
 
 int AST_Math::calculate()
 {
@@ -58,11 +65,6 @@ int AST_Math::calculate()
     }
 }
 
-void AST_Math::print(){
-}
-
-/****************************************************************/
-
 // ast node for constant expression
 AST_Const::AST_Const(int val){
     this->valType = INT;
@@ -94,23 +96,44 @@ int AST_Const::calculate(){
     return 0;
 }
 
-void AST_Const::print(){
-}
+AST_Const::~AST_Const(){}
 
-AST_Sym::AST_Sym(std::string& id_, class SymbolTable *scope_) :id(id_), scope(scope_){};
+AST_Sym::AST_Sym(std::string& id_, SymbolTable *scope_) :id(id_), scope(scope_){}
 int AST_Sym::calculate() {
     return 1;
     // add search symbol table
 }
 
-AST_Assign::AST_Assign(SPL::AST_Sym *sym_, SPL::AST_Exp *exp_) : sym(sym_), exp(exp_){};
-int AST_Assign::calculate()
-{
+AST_Sym::~AST_Sym(){}
+
+AST_Array::AST_Array(AST_Sym* sym_, AST_Exp* exp_):sym(sym_), exp(exp_){}
+
+AST_Array::~AST_Array(){}
+
+int AST_Array::calculate(){
+    return ERROR_VAL;
+}
+
+AST_Dot::AST_Dot(AST_Sym* record_, AST_Sym* field_):record(record_), field(field_){}
+
+AST_Dot::~AST_Dot(){}
+
+int AST_Dot::calculate(){
+    return ERROR_VAL;
+}
+
+AST_Assign::AST_Assign(SPL::AST_Sym *sym_, SPL::AST_Exp *exp_): sym(sym_), exp(exp_){}
+
+int AST_Assign::calculate() {
     return exp->calculate();
 }
 
+AST_Assign::~AST_Assign(){}
+
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_),doElse(doElse_){};
+
+AST_If::~AST_If(){}
 
 int AST_If::calculate() {
     if(cond->calculate() != 0) { std::cout<< "if statement executed!";}
