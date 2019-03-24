@@ -78,7 +78,7 @@ class AST_Const : public AST_Exp
     explicit AST_Const(int val);
     explicit AST_Const(double val);
     explicit AST_Const(char val);
-    explicit AST_Const(char* val);
+    explicit AST_Const(std::basic_string<char>& val);
     ~AST_Const() override;
     int calculate() override ;
     void print();
@@ -143,14 +143,16 @@ class AST_Assign : public AST_Exp
     AST_Exp *exp;
 };
 
-// ast node for if statement
+// ast node for if statement and case statement
 // if there's no 'else' case, 'doElse' will be nullptr
 class AST_If : public AST_Stmt
 {
   public:
       AST_If(AST_Exp* cond_, AST_Stmt* doIf_, AST_Stmt* doElse_);
       ~AST_If() override;
-      int calculate() override ;
+      int calculate() override;
+      void addRight(AST_Stmt* doElse_);
+      AST_Stmt* getDoElse(void);
       void print();
   protected:
       AST_Exp* cond;
@@ -158,11 +160,13 @@ class AST_If : public AST_Stmt
       AST_Stmt* doElse;
 };
 
-// ast node for case statement
-//class AST_Case : public AST_Stmt
-//{
-//
-//};
+// auxiliary structure for case_expr
+class caseUnit{
+  public:
+    AST_Exp*   val;
+    AST_Stmt*  stmt;
+    inline caseUnit(AST_Exp* val_, AST_Stmt* stmt_): val(val_), stmt(stmt_){}
+};
 
 } // namespace SPL
 #endif

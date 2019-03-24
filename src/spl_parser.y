@@ -147,7 +147,9 @@
 %type   <AST_Exp*>      factor term expr expression
 %type   <AST_Assign*>   assign_stmt
 %type 	<AST_Stmt*>	else_clause stmt
-%type 	<AST_If*>	if_stmt
+%type 	<AST_If*>	if_stmt case_stmt
+%type   <caseUnit*>             case_expr
+%type   <vector<caseUnit*>*>    case_expr_list
 //%type <int> delete_opts delete_list
 //%type <int> insert_opts insert_vals_list
 //%type <int>  opt_length opt_binary opt_uz
@@ -191,10 +193,10 @@ const_expr_list:
 
 const_value: 
         INTEGER  {$$ = new AST_Const($1); }
-        |  REAL  {}
-        |  CHAR  {}
-        |  STRING  {}
-        |  SYS_CON {}
+        |  REAL  {$$ = new AST_Const($1); }
+        |  CHAR  {$$ = new AST_Const($1); }
+        |  STRING  {$$ = new AST_Const($1); }
+        |  SYS_CON {$$ = new AST_Const($1); }
         ;
 
 type_part: 
@@ -386,17 +388,32 @@ direction:
         ;
 
 case_stmt: 
-        CASE expression OF case_expr_list  _END {}
+        CASE expression OF case_expr_list  _END {
+            assert(!$4->empty());
+            $$ = new AST_If(new AST_Math(EQUAL_, $2, $4->at(0)->val),
+                                       $4->at(0)->stmt,
+                                       nullptr);
+            if($4->size() > 1){
+                AST_If* track = $$;
+                for(unsigned int i=1; i<$4->size(); i++, track=(AST_If*)track->getDoElse()){
+                    track->addRight(new AST_If(new AST_Math(EQUAL_, $2, $4->at(i)->val),
+                                               $4->at(i)->stmt,
+                                               nullptr));
+                }
+                //the last null pointer refers to 'default'
+            }
+        }
         ;
 
 case_expr_list: 
-        case_expr_list  case_expr {}
-        |  case_expr {}
+        case_expr_list  case_expr {$1->push_back($2); $$ = $1;}
+        |  case_expr {$$->clear(); $$->push_back($1);}
         ;
 
 case_expr: 
-        const_value  COLON  stmt  SEMI {}
-        |  ID  COLON  stmt  SEMI {}
+        const_value  COLON  stmt  SEMI {$$ = new caseUnit($1, $3);}
+        |  ID  COLON  stmt  SEMI {$$ = new caseUnit(new AST_Sym($1, nullptr), 
+                                                    $3);}
         ;
 
 goto_stmt: 
@@ -442,8 +459,12 @@ factor:
         |  LP  expression  RP {$$ = $2;}
         |  NOT  factor {$$ = new AST_Math(NOT_, $2, nullptr);}
         |  MINUS  factor {$$ = new AST_Math(MINUS__, $2, nullptr);}
-        |  ID  LB  expression  RB {}
-        |  ID  DOT  ID {}
+        |  ID  LB  expression  RB {$$ = new AST_Array(
+                                                new AST_Sym($1, nullptr),
+                                                $3);}
+        |  ID  DOT  ID {$$ = new AST_Dot(
+                                        new AST_Sym($1, nullptr),
+                                        new AST_Sym($3, nullptr));}
         ;
 
 args_list: 

@@ -84,11 +84,10 @@ AST_Const::AST_Const(char val){
     *((char *)this->valPtr) = val;
 }
 
-AST_Const::AST_Const(char* val){
-    int size = strlen(val) + 1;
+AST_Const::AST_Const(std::basic_string<char>& val){
     this->valType = STRING;
-    this->valPtr = new char[size];
-    memcpy(this->valPtr, val, sizeof(char) * size);
+    this->valPtr = new std::basic_string<char>();
+    *((std::basic_string<char>*)this->valPtr) = val;
 }
 
 int AST_Const::calculate(){
@@ -141,4 +140,12 @@ int AST_If::calculate() {
         if(doElse != nullptr){std::cout<< "else statement executed!";}
     }
     return 1;
+}
+
+void AST_If::addRight(AST_Stmt* doElse_){
+    this->doElse = doElse_;
+}
+
+AST_Stmt* AST_If::getDoElse(void){
+    return this->doElse;
 }
