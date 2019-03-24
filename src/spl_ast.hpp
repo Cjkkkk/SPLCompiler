@@ -8,18 +8,18 @@
  * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
  */
 
-#ifndef __SPLAST_H_
-#define __SPLAST_H_
+#ifndef _SPL_AST_H_
+#define _SPL_AST_H_
 
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include "symtab.hpp"
-#include "parse.h"
+#include "spl_symtab.hpp"
+#include "spl_compiler.h"
 
-#define ERROR_VAL  -1
+#define ERROR_VAL -1
 
-namespace SPL 
+namespace SPL
 {
 
 // abstract class: base
@@ -63,8 +63,8 @@ class AST_Math : public AST_Exp
      * < <= > >= == <> 
      */
     int opType;
-    AST_Exp* left;
-    AST_Exp* right;
+    AST_Exp *left;
+    AST_Exp *right;
 };
 
 // ast node for constant expression
@@ -82,11 +82,10 @@ class AST_Const : public AST_Exp
      * integer, real, boolean, char, string
      */
     int valType;
-    void* valPtr = nullptr;
+    void *valPtr = nullptr;
 };
 
-
-// ast node for symbols, including variables, function/procedure name 
+// ast node for symbols, including variables, function/procedure name
 class AST_Sym : public AST_Exp
 {
   public:
@@ -95,7 +94,7 @@ class AST_Sym : public AST_Exp
     //void print(void);
   protected:
     std::string id;
-    SymbolTable* scope;
+    SymbolTable *scope;
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
@@ -131,8 +130,8 @@ class AST_Assign : public AST_Exp
     int calculate() override ;
     void print();
   protected:
-    AST_Sym* sym;
-    AST_Exp* exp;
+    AST_Sym *sym;
+    AST_Exp *exp;
 };
 
 // ast node for if statement
@@ -155,7 +154,5 @@ class AST_Assign : public AST_Exp
 //
 //};
 
-
-
-}
+} // namespace SPL
 #endif

@@ -20,7 +20,7 @@ DIR_SRC = src
 DIR_OBJ = build
 DIR_EXE = build
 
-CPPOBJ = main spl_driver symtab spl_ast
+CPPOBJ = main spl_driver spl_symtab spl_ast
 
 FILES = $(addprefix $(DIR_SRC)\, $(addsuffix .cpp, $(CPPOBJ)))
 OBJS  = $(addprefix $(DIR_OBJ)\, $(addsuffix .o, $(CPPOBJ)))
@@ -53,7 +53,7 @@ lexer: $(DIR_SRC)\spl_lexer.l
 objects: $(FILES)
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\main.cpp -o $(DIR_OBJ)\main.o
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_driver.cpp -o $(DIR_OBJ)\spl_driver.o
-	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\symtab.cpp -o $(DIR_OBJ)\symtab.o
+	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_symtab.cpp -o $(DIR_OBJ)\spl_symtab.o
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_ast.cpp -o $(DIR_OBJ)\spl_ast.o
 	
 

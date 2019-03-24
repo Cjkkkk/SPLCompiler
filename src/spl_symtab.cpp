@@ -1,4 +1,4 @@
-#include "symtab.hpp"
+#include "spl_symtab.hpp"
 
 Symbol::Symbol()
 {
