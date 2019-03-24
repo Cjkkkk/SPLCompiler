@@ -8,27 +8,27 @@
  * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
  */
 
-#ifndef __SPLAST_H_
-#define __SPLAST_H_
+#ifndef _SPL_AST_H_
+#define _SPL_AST_H_
 
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include "symtab.hpp"
-#include "parse.h"
+#include "spl_symtab.hpp"
+#include "spl_compiler.h"
 
-#define ERROR_VAL  -1
+#define ERROR_VAL -1
 
-namespace SPL 
+namespace SPL
 {
 
 // abstract class: base
 class AST
 {
   public:
-    virtual int calculate(void) = 0;    //pure virtual function
-    //virtual void print(void) = 0;       //pure virtual function
-    //virtual void emit(void) = 0;
+    virtual int calculate(void) = 0; //pure virtual function
+                                     //virtual void print(void) = 0;       //pure virtual function
+                                     //virtual void emit(void) = 0;
   protected:
     int nodeType;
 };
@@ -37,7 +37,7 @@ class AST
 class AST_Exp : public AST
 {
   public:
-    virtual int calculate(void) = 0;    //pure virtual function
+    virtual int calculate(void) = 0; //pure virtual function
     //virtual void print(void) = 0;       //pure virtual function
 };
 
@@ -53,7 +53,7 @@ class AST_Exp : public AST
 class AST_Math : public AST_Exp
 {
   public:
-    AST_Math(int opType, class AST_Exp* left, class AST_Exp* right);
+    AST_Math(int opType, AST_Exp *left, AST_Exp *right);
     int calculate(void);
     void print(void);
 
@@ -63,8 +63,8 @@ class AST_Math : public AST_Exp
      * < <= > >= == <> 
      */
     int opType;
-    AST_Exp* left;
-    AST_Exp* right;
+    AST_Exp *left;
+    AST_Exp *right;
 };
 
 // ast node for constant expression
@@ -74,28 +74,28 @@ class AST_Const : public AST_Exp
     AST_Const(const int val);
     AST_Const(const double val);
     AST_Const(const char val);
-    AST_Const(const char* val);
+    AST_Const(const char *val);
     int calculate(void);
     void print(void);
+
   protected:
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
      */
     int valType;
-    void* valPtr = nullptr;
+    void *valPtr = nullptr;
 };
 
-
-// ast node for symbols, including variables, function/procedure name 
+// ast node for symbols, including variables, function/procedure name
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string id_, class SymbolTable* scope_);
+    AST_Sym(std::string id_, SymbolTable *scope_);
     int calculate(void);
     //void print(void);
   protected:
     std::string id;
-    SymbolTable* scope;
+    SymbolTable *scope;
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
@@ -127,12 +127,13 @@ class AST_Sym : public AST_Exp
 class AST_Assign : public AST_Exp
 {
   public:
-    AST_Assign(AST_Sym* sym_, AST_Exp* exp_);
+    AST_Assign(AST_Sym *sym_, AST_Exp *exp_);
     int calculate(void);
     void print(void);
+
   protected:
-    AST_Sym* sym;
-    AST_Exp* exp;
+    AST_Sym *sym;
+    AST_Exp *exp;
 };
 
 // ast node for if statement
@@ -155,7 +156,5 @@ class AST_Assign : public AST_Exp
 //
 //};
 
-
-
-}
+} // namespace SPL
 #endif

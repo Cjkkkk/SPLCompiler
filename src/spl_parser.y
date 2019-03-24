@@ -33,8 +33,8 @@
         class SPL_Driver;
         class SPL_Scanner;
     }
-#include "spl_ast.hpp"
-#include "parse.h"
+    #include "spl_ast.hpp"
+    #include "spl_symtab.hpp"
 // The following definitions is missing when %locations isn't used
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -143,9 +143,9 @@
 %token  DOT
 %token  SEMI
 
-%type <AST_Const*> const_value
-%type <AST_Exp*> factor term expr expression
-%type <AST_Assign*> assign_stmt
+%type   <AST_Const*>    const_value
+%type   <AST_Exp*>      factor term expr expression
+%type   <AST_Assign*>   assign_stmt
 //%type <int> delete_opts delete_list
 //%type <int> insert_opts insert_vals_list
 //%type <int>  opt_length opt_binary opt_uz

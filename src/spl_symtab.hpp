@@ -1,35 +1,15 @@
-#ifndef _SYMTAB_H_
-#define _SYMTAB_H_
+#ifndef _SPL_SYMTAB_H_
+#define _SPL_SYMTAB_H_
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <map>
+#include "spl_compiler.h"
 
 using namespace std;
 
 unsigned int hashcode(string& type_name);
-
-// class of a symbol
-enum SPL_CLASS: unsigned char
-{
-	VAR,	// variable
-	TYPE,	// user-defined typename
-	FUNC,	// function
-	PROC	// procedure
-};
-
-// type of a variable symbol
-enum SPL_TYPE: unsigned int
-{
-	BOOL,	// boolean
-	CHAR,	// char
-	INT,	// int
-	REAL,	// double
-	STRING,	// string
-	CUSTOM	// user-defined type, value = type_hashcode(<type_name>)
-};
-
 
 class Symbol {
 public:
@@ -58,4 +38,4 @@ public:
 	SymbolTable*			parent	= nullptr;
 };
 
-#endif // !_SYMTAB_H_
+#endif // !_SPL_SYMTAB_H_
