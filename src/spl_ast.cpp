@@ -18,7 +18,7 @@ AST_Math::AST_Math(int opType, class AST_Exp* left, class AST_Exp* right){
       this->right = right;
 }
 
-int AST_Math::calculate(void){
+int AST_Math::calculate(){
     switch(opType){
     case PLUS_:  return left->calculate() + right->calculate();
     case MINUS_: return left->calculate() - right->calculate();
@@ -46,49 +46,48 @@ int AST_Math::calculate(void){
     }
 }
 
-void AST_Math::print(void){
+void AST_Math::print(){
     return;
 }
 
 /****************************************************************/
 
 // ast node for constant expression
-AST_Const::AST_Const(const int val){
+AST_Const::AST_Const(int val){
     this->valType = INT_;
     this->valPtr = new int();
     *((int*)this->valPtr) = val;
 }
 
-AST_Const::AST_Const(const double val){
+AST_Const::AST_Const(double val){
     this->valType = REAL_;
     this->valPtr = new double();
     *((double*)this->valPtr) = val;
 }
 
-AST_Const::AST_Const(const char val){
+AST_Const::AST_Const(char val){
     this->valType = CHAR_;
     this->valPtr = new char();
     *((char*)this->valPtr) = val;
 }
 
-AST_Const::AST_Const(const char* val){
+AST_Const::AST_Const(char* val){
     int size = strlen(val) + 1;
     this->valType = STRING_;
-    this->valPtr = new char(size);
+    this->valPtr = new char[size];
     memcpy(this->valPtr, val, sizeof(char) * size);
 }
 
-int AST_Const::calculate(void){
-    if(valType == INT_)
-    return *(int*)valPtr;
+int AST_Const::calculate(){
+    if(valType == INT_) return *(int*)valPtr;
     return 0;
 }
 
-void AST_Const::print(void){
+void AST_Const::print(){
     return;
 }
 
-AST_Sym::AST_Sym(std::string id_, class SymbolTable *scope_) :id(id_), scope(scope_){};
+AST_Sym::AST_Sym(std::string& id_, class SymbolTable *scope_) :id(id_), scope(scope_){};
 int AST_Sym::calculate() {
     return 1;
     // add search symbol table

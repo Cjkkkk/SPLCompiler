@@ -26,7 +26,7 @@ namespace SPL
 class AST
 {
   public:
-    virtual int calculate(void) = 0;    //pure virtual function
+    virtual int calculate() = 0;    //pure virtual function
     //virtual void print(void) = 0;       //pure virtual function
     //virtual void emit(void) = 0;
   protected:
@@ -37,7 +37,7 @@ class AST
 class AST_Exp : public AST
 {
   public:
-    virtual int calculate(void) = 0;    //pure virtual function
+    virtual int calculate() = 0;    //pure virtual function
     //virtual void print(void) = 0;       //pure virtual function
 };
 
@@ -54,8 +54,8 @@ class AST_Math : public AST_Exp
 {
   public:
     AST_Math(int opType, class AST_Exp* left, class AST_Exp* right);
-    int calculate(void);
-    void print(void);
+    int calculate() override ;
+    void print();
 
   protected:
     /* op: operator, including:
@@ -71,12 +71,12 @@ class AST_Math : public AST_Exp
 class AST_Const : public AST_Exp
 {
   public:
-    AST_Const(const int val);
-    AST_Const(const double val);
-    AST_Const(const char val);
-    AST_Const(const char* val);
-    int calculate(void);
-    void print(void);
+    explicit AST_Const(int val);
+    explicit AST_Const(double val);
+    explicit AST_Const(char val);
+    explicit AST_Const(char* val);
+    int calculate() override ;
+    void print();
   protected:
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
@@ -90,8 +90,8 @@ class AST_Const : public AST_Exp
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string id_, class SymbolTable* scope_);
-    int calculate(void);
+    AST_Sym(std::string& id_, class SymbolTable* scope_);
+    int calculate() override ;
     //void print(void);
   protected:
     std::string id;
@@ -128,8 +128,8 @@ class AST_Assign : public AST_Exp
 {
   public:
     AST_Assign(AST_Sym* sym_, AST_Exp* exp_);
-    int calculate(void);
-    void print(void);
+    int calculate() override ;
+    void print();
   protected:
     AST_Sym* sym;
     AST_Exp* exp;
