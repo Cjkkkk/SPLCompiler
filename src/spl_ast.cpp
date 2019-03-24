@@ -108,3 +108,14 @@ int AST_Assign::calculate()
 {
     return exp->calculate();
 }
+
+AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
+    : cond(cond_), doIf(doIf_),doElse(doElse_){};
+
+int AST_If::calculate() {
+    if(cond->calculate() != 0) { std::cout<< "if statement executed!";}
+    else{
+        if(doElse != nullptr){std::cout<< "else statement executed!";}
+    }
+    return 1;
+}

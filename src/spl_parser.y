@@ -146,6 +146,8 @@
 %type   <AST_Const*>    const_value
 %type   <AST_Exp*>      factor term expr expression
 %type   <AST_Assign*>   assign_stmt
+%type 	<AST_Stmt*>	else_clause stmt
+%type 	<AST_If*>	if_stmt
 //%type <int> delete_opts delete_list
 //%type <int> insert_opts insert_vals_list
 //%type <int>  opt_length opt_binary opt_uz
@@ -358,12 +360,12 @@ proc_stmt:
         ;
 
 if_stmt: 
-        IF  expression  THEN  stmt  else_clause {}
+        IF  expression  THEN  stmt  else_clause {$$ = new AST_If($2, $4, $5); $$->calculate();}
         ;
 
 else_clause: 
-        ELSE stmt {}
-        |  {}
+        ELSE stmt {$$ = $2;}
+        |  {$$ = nullptr;}
         ;
 
 repeat_stmt: 

@@ -42,12 +42,12 @@ class AST_Exp : public AST
 };
 
 // abstract class : ast trees that represent a statement without a value
-// class AST_Stmt : public AST
-// {
-//   public:
-//     virtual int calculate(void) = 0;    //pure virtual function
-//     //virtual void print(void) = 0;       //pure virtual function
-// };
+ class AST_Stmt : public AST
+ {
+   public:
+     virtual int calculate() = 0;    //pure virtual function
+     //virtual void print(void) = 0;       //pure virtual function
+ };
 
 // ast node for math expression
 class AST_Math : public AST_Exp
@@ -136,17 +136,17 @@ class AST_Assign : public AST_Exp
 
 // ast node for if statement
 // if there's no 'else' case, 'doElse' will be nullptr
-//class AST_If : public AST_Stmt
-//{
-//  public:
-//    AST_If(class AST_Exp* cond, class AST_Stmt* doIf, class AST_Stmt* doElse);
-//    int calculate(void);
-//    void print(void);
-//  protected:
-//    AST_Exp* cond;
-//    AST_Stmt* doIf;
-//    AST_Stmt* doElse;
-//};
+class AST_If : public AST_Stmt
+{
+  public:
+      AST_If(AST_Exp* cond_, AST_Stmt* doIf_, AST_Stmt* doElse_);
+      int calculate() override ;
+      void print();
+  protected:
+      AST_Exp* cond;
+      AST_Stmt* doIf;
+      AST_Stmt* doElse;
+};
 
 // ast node for case statement
 //class AST_Case : public AST_Stmt
