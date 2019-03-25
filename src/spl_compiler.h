@@ -29,20 +29,23 @@ enum SPL_OP: unsigned int
 enum SPL_CLASS: unsigned char
 {
 	VAR,	// variable
-	TYPE,	// user-defined typename
+    CONST,  // constant
+	TYPE,	// user-defined type
 	FUNC,	// function
-	PROC	// procedure
+	PROC,	// procedure
+    LABEL   // label
 };
 
-// type of a variable symbol
-enum SPL_TYPE: unsigned int
+// type of a variable/constant/type symbol
+// if the value is negative, it means reference of it
+enum SPL_TYPE: int
 {
-	BOOL,	// boolean
-	CHAR,	// char
-	INT,	// int
-	REAL,	// double
-	STRING,	// string
-	CUSTOM	// user-defined type, value = type_hashcode(<type_name>)
+	BOOL = 1,	// boolean
+	CHAR,	    // char
+	INT,	    // int
+	REAL,	    // double
+	STRING,	    // string
+    RECORD      // value = type_hashcode(<record_name>) 
 };
 
 #endif //_SPL_COMPILER_H_

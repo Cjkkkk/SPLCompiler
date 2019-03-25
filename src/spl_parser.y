@@ -143,24 +143,32 @@
 %token  DOT
 %token  SEMI
 
-%type   <bool>          direction
-%type   <AST_Const*>    const_value
-%type   <AST_Exp*>      factor term expr expression
-%type   <AST_Assign*>   assign_stmt
-%type 	<AST_Stmt*>	else_clause stmt non_label_stmt
-%type 	<AST_If*>	if_stmt case_stmt
-%type   <AST_While*>    while_stmt
-%type   <AST_Repeat*>   repeat_stmt
-%type   <AST_For*>      for_stmt
-%type   <AST_Goto*>     goto_stmt
-%type   <AST_Compound*> compound_stmt routine_body
+%type   <bool>                  direction
+%type   <AST_Const*>            const_value
+%type   <AST_Exp*>              factor term expr expression
+%type   <AST_Assign*>           assign_stmt
+%type 	<AST_Stmt*>	            else_clause stmt non_label_stmt
+%type 	<AST_If*>	            if_stmt case_stmt
+%type   <AST_While*>            while_stmt
+%type   <AST_Repeat*>           repeat_stmt
+%type   <AST_For*>              for_stmt
+%type   <AST_Goto*>             goto_stmt
+%type   <AST_Compound*>         compound_stmt routine_body
 %type   <caseUnit*>             case_expr
-%type   <vector<caseUnit*>*>    case_expr_list
-%type   <vector<AST_Stmt*>*>    stmt_list
-//%type <int> delete_opts delete_list
-//%type <int> insert_opts insert_vals_list
-//%type <int>  opt_length opt_binary opt_uz
-//%type <int> column_atts data_type create_col_list
+%type   <std::vector<caseUnit*>*>   case_expr_list
+%type   <std::vector<AST_Stmt*>*>   stmt_list
+
+// %type   <std::vector<Symbol>>   const_part const_expr_list
+// %type   <std::vector<Symbol>>   type_part type_decl_list 
+// %type   <std::vector<Symbol>>   var_decl var_decl_list 
+
+// %type   <std::map<std::string, SPL_TYPE>>   field_decl field_decl_list
+
+// %type   <Symbol>        type_decl 
+// %type   <Symbol>        simple_type_decl 
+// %type   <Symbol>        array_type_decl 
+// %type   <Symbol>        record_type_decl
+// %type   <std::vector<std::string>>  name_list
 
 %locations
 
@@ -189,13 +197,29 @@ label_part:
         ;
 
 const_part: 
-        CONST  const_expr_list  {}
-        |  {}
+        CONST  const_expr_list  
+        { 
+            // $$.swap($2); 
+        }
+        |  
+        { 
+            // $$.clear(); 
+        }
         ;
 
 const_expr_list: 
-        const_expr_list  ID  EQUAL  const_value  SEMI {}
-        |  ID  EQUAL  const_value  SEMI {}
+        const_expr_list  ID  EQUAL  const_value  SEMI 
+        {
+            // $$.swap($1);
+            // build a new symbol and pushback
+            // $$.push_back();
+
+        }
+        |  ID  EQUAL  const_value  SEMI 
+        {
+            // build a new symbol and pushback
+            // $$.push_back();
+        }
         ;
 
 const_value: 
@@ -207,17 +231,32 @@ const_value:
         ;
 
 type_part: 
-        TYPE type_decl_list  {}
-        |  {}
+        TYPE type_decl_list  
+        { 
+            //$$.swap($2); 
+        }
+        |  
+        { 
+            //$$.clear(); 
+        }
         ;
 
 type_decl_list: 
-        type_decl_list  type_definition  {}
-        |  type_definition {}
+        type_decl_list  type_definition  
+        {
+
+        }
+        |  type_definition 
+        {
+
+        }
         ;
         
 type_definition: 
-        ID  EQUAL  type_decl  SEMI {}
+        ID  EQUAL  type_decl  SEMI 
+        {
+
+        }
         ;
 
 type_decl: 
@@ -254,18 +293,37 @@ field_decl:
         ;
 
 name_list: 
-        name_list  COMMA  ID {}
-        |  ID {}
+        name_list  COMMA  ID 
+        {
+            // $$.swap($1);
+            // $$.push_back($3);
+        }
+        |  ID 
+        {
+            // $$.push_back($1);
+        }
         ;
 
 var_part: 
-        VAR  var_decl_list {}
-        | {}
+        VAR  var_decl_list 
+        {
+
+        }
+        | 
+        {
+
+        }
         ;
 
 var_decl_list:  
-        var_decl_list  var_decl {}
-        |  var_decl {}
+        var_decl_list  var_decl 
+        {
+
+        }
+        |  var_decl 
+        {
+
+        }
         ;
 
 var_decl:  
