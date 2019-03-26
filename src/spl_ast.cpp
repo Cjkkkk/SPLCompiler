@@ -84,6 +84,12 @@ AST_Const::AST_Const(char val){
     *((char *)this->valPtr) = val;
 }
 
+AST_Const::AST_Const(bool val){
+    this->valType = CHAR;
+    this->valPtr = new bool();
+    *((bool *)this->valPtr) = val;
+}
+
 AST_Const::AST_Const(std::basic_string<char>& val){
     this->valType = STRING;
     this->valPtr = new std::basic_string<char>();
@@ -190,4 +196,34 @@ AST_Compound::~AST_Compound(){}
 
 int AST_Compound::calculate(){
     return ERROR_VAL;
+}
+
+AST_Func::AST_Func(bool isProc_, std::string& funcId_, std::vector<AST_Exp*>* argList_) :
+        isProc(isProc_), funcId(funcId_), argList(argList_){}
+
+AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp*>* argList_): argList(argList_){
+    switch(sysFuncId_){
+        case 0: isProc = false; funcId = "abs";
+        case 1: isProc = false; funcId = "chr";
+        case 2: isProc = false; funcId = "odd";
+        case 3: isProc = false; funcId = "ord";
+        case 4: isProc = false; funcId = "pred";
+        case 5: isProc = false; funcId = "sqr";
+        case 6: isProc = false; funcId = "sqrt";
+        case 7: isProc = false; funcId = "succ";
+        case 8: isProc = true; funcId = "write";
+        case 9: isProc = true; funcId = "writeln";
+        case 10:isProc = true; funcId = "read";
+        default:isProc = true; funcId = "";
+    }
+}
+
+AST_Func::~AST_Func(){}
+
+int AST_Func::calculate(){
+    if(isProc){
+        return ERROR_VAL;
+    }else{
+        return 0;
+    }
 }

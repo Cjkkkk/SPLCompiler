@@ -12,7 +12,7 @@
 #define _SPL_AST_H_
 
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <iostream>
 #include <vector>
 #include "spl_symtab.hpp"
@@ -78,6 +78,7 @@ class AST_Const : public AST_Exp
     explicit AST_Const(int val);
     explicit AST_Const(double val);
     explicit AST_Const(char val);
+    explicit AST_Const(bool val);
     explicit AST_Const(std::basic_string<char>& val);
     ~AST_Const() override;
     int calculate() override ;
@@ -221,6 +222,19 @@ class AST_Compound : public AST_Stmt
     int calculate() override;
   protected:
     std::vector<AST_Stmt*>* stmtList;
+};
+
+class AST_Func : public AST_Exp, public AST_Stmt
+{
+  public:
+    AST_Func(bool isProc_, std::string& funcId_, std::vector<AST_Exp*>* argList_);
+    AST_Func(int sysFuncId_, std::vector<AST_Exp*>* argList_);
+    ~AST_Func() override;
+    int calculate() override;
+  protected:
+    bool isProc;
+    std::string funcId;
+    std::vector<AST_Exp*>* argList;
 };
 
 } // namespace SPL

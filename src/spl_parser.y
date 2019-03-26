@@ -105,11 +105,11 @@
 
 %token  <int>           SYS_CON
 %token  <int>           SYS_FUNCT
-%token                  READ
+%token  <int>           READ
 %token  <int>           SYS_PROC
 %token  <int>           SYS_TYPE
 
-%type   <bool>          BOOL
+%token  <bool>          BOOL
 %token  <int>           INTEGER
 %token  <double>        REAL
 %token  <char>          CHAR
@@ -147,16 +147,18 @@
 %type   <AST_Const*>            const_value
 %type   <AST_Exp*>              factor term expr expression
 %type   <AST_Assign*>           assign_stmt
-%type 	<AST_Stmt*>	            else_clause stmt non_label_stmt
-%type 	<AST_If*>	            if_stmt case_stmt
+%type 	<AST_Stmt*>	        else_clause stmt non_label_stmt
+%type 	<AST_If*>	        if_stmt case_stmt
 %type   <AST_While*>            while_stmt
 %type   <AST_Repeat*>           repeat_stmt
 %type   <AST_For*>              for_stmt
 %type   <AST_Goto*>             goto_stmt
+%type   <AST_Func*>             proc_stmt
 %type   <AST_Compound*>         compound_stmt routine_body
 %type   <caseUnit*>             case_expr
 %type   <std::vector<caseUnit*>*>   case_expr_list
 %type   <std::vector<AST_Stmt*>*>   stmt_list
+%type   <std::vector<AST_Exp*>*>    args_list
 
 // %type   <std::vector<Symbol>>   const_part const_expr_list
 // %type   <std::vector<Symbol>>   type_part type_decl_list 
@@ -388,7 +390,7 @@ compound_stmt:
 
 stmt_list: 
         stmt_list  stmt  SEMI {$1->push_back($2); $$ = $1;}
-        |  {$$->clear();}
+        |  {$$ = new std::vector<AST_Stmt*>();}
         ;
 
 stmt: 
@@ -398,7 +400,7 @@ stmt:
 
 non_label_stmt: 
         assign_stmt {$$ = $1;}
-        | proc_stmt {}
+        | proc_stmt {$$ = $1;}
         | compound_stmt {$$ = $1;}
         | if_stmt {$$ = $1;}
         | repeat_stmt {$$ = $1;}
@@ -427,15 +429,22 @@ assign_stmt:
         ;
 
 proc_stmt: 
-        ID {}
-        |  ID  LP  args_list  RP {}
-        |  SYS_PROC {}
-        |  SYS_PROC  LP  expression_list  RP {}
-        |  READ  LP  factor  RP {}
+        ID  LP  RP
+                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func(true, $1, emptyVec);}
+        |  ID  LP  args_list  RP {$$ = new AST_Func(true, $1, $3);}
+        |  SYS_PROC  LP  RP
+                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func($1, emptyVec);}
+        |  SYS_PROC  LP  args_list  RP {$$ = new AST_Func($1, $3);}
+        |  READ  LP  factor  RP 
+                {std::vector<AST_Exp*>* factorVec = new std::vector<AST_Exp*>();
+                factorVec->push_back($3);
+                $$ = new AST_Func($1, factorVec);}
         ;
 
 if_stmt: 
-        IF  expression  THEN  stmt  else_clause {$$ = new AST_If($2, $4, $5); $$->calculate();}
+        IF  expression  THEN  stmt  else_clause {$$ = new AST_If($2, $4, $5);}
         ;
 
 else_clause: 
@@ -483,7 +492,7 @@ case_stmt:
 
 case_expr_list: 
         case_expr_list  case_expr {$1->push_back($2); $$ = $1;}
-        |  case_expr {$$->clear(); $$->push_back($1);}
+        |  case_expr {$$ = new std::vector<caseUnit*>(); $$->push_back($1);}
         ;
 
 case_expr: 
@@ -494,11 +503,6 @@ case_expr:
 
 goto_stmt: 
         GOTO  INTEGER {$$ = new AST_Goto($2);}
-        ;
-
-expression_list: 
-        expression_list  COMMA  expression {}
-        |  expression {}
         ;
 
 expression: 
@@ -528,9 +532,14 @@ term:
 
 factor: 
         ID {$$ = new AST_Sym($1, nullptr);}
-        |  ID  LP  args_list  RP {$$ = new AST_Sym($1, nullptr);}
-        |  SYS_FUNCT {}
-        |  SYS_FUNCT  LP  args_list  RP {}
+        |  ID  LP  RP
+                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func(false, $1, emptyVec);}
+        |  ID  LP  args_list  RP {$$ = new AST_Func(false, $1, $3);}
+        |  SYS_FUNCT  LP  RP
+                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func($1, emptyVec);}
+        |  SYS_FUNCT  LP  args_list  RP {$$ = new AST_Func($1, $3);}
         |  const_value {$$ = $1;}
         |  LP  expression  RP {$$ = $2;}
         |  NOT  factor {$$ = new AST_Math(NOT_, $2, nullptr);}
@@ -544,11 +553,10 @@ factor:
         ;
 
 args_list: 
-        args_list  COMMA  expression {}
-        |  expression {}
+        args_list  COMMA  expression {$1->push_back($3); $$ = $1;}
+        |  expression {$$ = new std::vector<AST_Exp*>(); $$->push_back($1);}
         ;
 
-	
 %%
 
 // TODO: error detection

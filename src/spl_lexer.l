@@ -91,7 +91,7 @@ true        { yylval->build<bool>(true); return token::BOOL; }
 nil         { yylval->build<int>(0); return token::SYS_CON; }
 maxint      { yylval->build<int>(2147483647); return token::SYS_CON; }
 
-    /* system function */
+    /* system function and procedures */
 abs         { yylval->build<int>(0); return token::SYS_FUNCT; }
 chr         { yylval->build<int>(1); return token::SYS_FUNCT; }
 odd         { yylval->build<int>(2); return token::SYS_FUNCT; }
@@ -100,11 +100,9 @@ pred        { yylval->build<int>(4); return token::SYS_FUNCT; }
 sqr         { yylval->build<int>(5); return token::SYS_FUNCT; }
 sqrt        { yylval->build<int>(6); return token::SYS_FUNCT; }
 succ        { yylval->build<int>(7); return token::SYS_FUNCT; }
-
-    /* system procedure */
-read        { return token::READ; }
-write       { yylval->build<int>(0); return token::SYS_PROC; }
-writeln     { yylval->build<int>(1); return token::SYS_PROC; }
+write       { yylval->build<int>(8); return token::SYS_PROC; }
+writeln     { yylval->build<int>(9); return token::SYS_PROC; }
+read        { yylval->build<int>(10); return token::READ; }
 
     /* system type */
 boolean     { yylval->build<int>(0); return token::SYS_TYPE; }
