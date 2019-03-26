@@ -109,7 +109,7 @@
 %token  <int>           SYS_PROC
 %token  <int>           SYS_TYPE
 
-
+%type   <bool>          BOOL
 %token  <int>           INTEGER
 %token  <double>        REAL
 %token  <char>          CHAR
@@ -227,6 +227,7 @@ const_value:
         |  REAL  {$$ = new AST_Const($1); }
         |  CHAR  {$$ = new AST_Const($1); }
         |  STRING  {$$ = new AST_Const($1); }
+        |  BOOL {$$ = new AST_Const($1);}
         |  SYS_CON {$$ = new AST_Const($1); }
         ;
 

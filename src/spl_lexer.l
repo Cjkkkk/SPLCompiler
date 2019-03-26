@@ -86,8 +86,9 @@ while       { return token::WHILE; }
 with        { return token::WITH; }
 
     /* system constant*/
-false       { yylval->build<int>(0); return token::SYS_CON; }
-true        { yylval->build<int>(1); return token::SYS_CON; }
+false       { yylval->build<bool>(false); return token::BOOL; }
+true        { yylval->build<bool>(true); return token::BOOL; }
+nil         { yylval->build<int>(0); return token::SYS_CON; }
 maxint      { yylval->build<int>(2147483647); return token::SYS_CON; }
 
     /* system function */
