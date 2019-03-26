@@ -105,11 +105,11 @@ writeln     { yylval->build<int>(9); return token::SYS_PROC; }
 read        { yylval->build<int>(10); return token::READ; }
 
     /* system type */
-boolean     { yylval->build<int>(0); return token::SYS_TYPE; }
-char        { yylval->build<int>(1); return token::SYS_TYPE; }
-integer     { yylval->build<int>(2); return token::SYS_TYPE; }
-real        { yylval->build<int>(3); return token::SYS_TYPE; }
-string      { yylval->build<int>(4); return token::SYS_TYPE; }
+boolean     { yylval->build<int>(1); return token::SYS_TYPE; }
+char        { yylval->build<int>(2); return token::SYS_TYPE; }
+integer     { yylval->build<int>(3); return token::SYS_TYPE; }
+real        { yylval->build<int>(4); return token::SYS_TYPE; }
+string      { yylval->build<int>(5); return token::SYS_TYPE; }
 
     /* integer */
 -?[0-9]+    { yylval->build<int>(atoi(yytext)); return token::INTEGER; }
