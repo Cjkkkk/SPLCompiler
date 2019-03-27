@@ -6,10 +6,10 @@
 #ifndef _SPL_COMPILER_HPP_
 #define _SPL_COMPILER_HPP_
 
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 
-void DoAssert(const char *errorMsg);
 #define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
 
 enum SPL_OP : unsigned int
@@ -44,13 +44,20 @@ enum SPL_CLASS : unsigned char
 // type of a variable symbol
 enum SPL_TYPE : unsigned int
 {
-    BOOL = 1, // boolean
-    CHAR,     // char
-    INT,      // int
-    REAL,     // double
-    STRING,   // string
-    ARRAY,    // array
-    RECORD    // record
+    BOOL = 1,   // boolean
+    CHAR,       // char
+    INT,        // int
+    REAL,       // double
+    STRING,     // string
+    ARRAY,      // array
+    ENUM,       // enumeration
+    SUBRANGE,	// subrange
+    RECORD      // record
 };
+
+void DoAssert(const char *errorMsg);
+
+std::string classToString(SPL_CLASS classId);
+std::string typeToString(SPL_TYPE typeId);
 
 #endif //_SPL_COMPILER_H_

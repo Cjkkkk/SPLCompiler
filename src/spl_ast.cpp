@@ -88,7 +88,7 @@ AST_Const::AST_Const(char val)
 
 AST_Const::AST_Const(bool val)
 {
-    this->valType = CHAR;
+    this->valType = BOOL;
     this->valPtr = new bool();
     *((bool *)this->valPtr) = val;
 }

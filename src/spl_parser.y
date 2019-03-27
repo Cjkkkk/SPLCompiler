@@ -143,34 +143,29 @@
 %token  DOT
 %token  SEMI
 
-%type   <bool>                  direction
-%type   <AST_Const*>            const_value
-%type   <AST_Exp*>              factor term expr expression
-%type   <AST_Assign*>           assign_stmt
-%type 	<AST_Stmt*>	        else_clause stmt non_label_stmt
-%type 	<AST_If*>	        if_stmt case_stmt
-%type   <AST_While*>            while_stmt
-%type   <AST_Repeat*>           repeat_stmt
-%type   <AST_For*>              for_stmt
-%type   <AST_Goto*>             goto_stmt
-%type   <AST_Func*>             proc_stmt
-%type   <AST_Compound*>         compound_stmt routine_body
-%type   <caseUnit*>             case_expr
-%type   <std::vector<caseUnit*>*>   case_expr_list
-%type   <std::vector<AST_Stmt*>*>   stmt_list
-%type   <std::vector<AST_Exp*>*>    args_list
+%type   <bool> direction
+%type   <AST_Const*> const_value
+%type   <AST_Exp*> factor term expr expression
+%type   <AST_Assign*> assign_stmt
+%type 	<AST_Stmt*>	else_clause stmt non_label_stmt
+%type 	<AST_If*> if_stmt case_stmt
+%type   <AST_While*> while_stmt
+%type   <AST_Repeat*> repeat_stmt
+%type   <AST_For*> for_stmt
+%type   <AST_Goto*> goto_stmt
+%type   <AST_Func*> proc_stmt
+%type   <AST_Compound*> compound_stmt routine_body
+%type   <caseUnit*> case_expr
+%type   <std::vector<caseUnit*>*> case_expr_list
+%type   <std::vector<AST_Stmt*>*> stmt_list
+%type   <std::vector<AST_Exp*>*> args_list
 
-// %type   <std::vector<Symbol>>   const_part const_expr_list
-// %type   <std::vector<Symbol>>   type_part type_decl_list 
-// %type   <std::vector<Symbol>>   var_decl var_decl_list 
-
-// %type   <std::map<std::string, SPL_TYPE>>   field_decl field_decl_list
-
-// %type   <Symbol>        type_decl 
-// %type   <Symbol>        simple_type_decl 
-// %type   <Symbol>        array_type_decl 
-// %type   <Symbol>        record_type_decl
-// %type   <std::vector<std::string>>  name_list
+%type   <std::vector<Symbol*>*> const_part const_expr_list
+%type   <std::vector<Symbol*>*> type_part type_decl_list 
+%type   <Symbol*> type_definition type_decl simple_type_decl array_type_decl record_type_decl
+%type   <std::vector<Symbol*>*> field_decl field_decl_list
+%type   <std::vector<Symbol*>*> var_part var_decl_list var_decl
+%type   <std::vector<std::string>*> name_list
 
 %locations
 
@@ -201,71 +196,103 @@ label_part:
 const_part: 
         CONST  const_expr_list  
         { 
-            // $$.swap($2); 
+            $$ = $2;
         }
         |  
         { 
-            // $$.clear(); 
+            $$ = nullptr;
         }
         ;
 
 const_expr_list: 
         const_expr_list  ID  EQUAL  const_value  SEMI 
         {
-            // $$.swap($1);
-            // build a new symbol and pushback
-            // $$.push_back();
-
+            Symbol* symbol = new Symbol($2, CONST, $4->valType);
+            symbol->constValue = $4;
+            $1->push_back(symbol);
+            $$ = $1;
         }
         |  ID  EQUAL  const_value  SEMI 
         {
-            // build a new symbol and pushback
-            // $$.push_back();
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            Symbol* symbol =  new Symbol($1, CONST, $3->valType);
+            symbol->constValue = $3;
+            newlist->push_back(symbol);
         }
         ;
 
 const_value: 
-        INTEGER  {$$ = new AST_Const($1); }
-        |  REAL  {$$ = new AST_Const($1); }
-        |  CHAR  {$$ = new AST_Const($1); }
-        |  STRING  {$$ = new AST_Const($1); }
-        |  BOOL {$$ = new AST_Const($1);}
-        |  SYS_CON {$$ = new AST_Const($1); }
+        INTEGER  
+        { 
+            $$ = new AST_Const($1); 
+        }
+        |  REAL  
+        { 
+            $$ = new AST_Const($1); 
+        }
+        |  CHAR 
+        { 
+            $$ = new AST_Const($1); 
+        }
+        |  STRING  
+        { 
+            $$ = new AST_Const($1); 
+        }
+        |  BOOL 
+        {
+            $$ = new AST_Const($1);
+        }
+        |  SYS_CON 
+        {
+            $$ = new AST_Const($1); 
+        }
         ;
 
 type_part: 
         TYPE type_decl_list  
         { 
-            //$$.swap($2); 
+            $$ = $2;
         }
         |  
         { 
-            //$$.clear(); 
+            $$ = nullptr;
         }
         ;
 
 type_decl_list: 
         type_decl_list  type_definition  
         {
-
+            $1->push_back($2);
+            $$ = $1;
         }
         |  type_definition 
         {
-
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            newlist->push_back($1);
+            $$ = newlist;
         }
         ;
         
 type_definition: 
         ID  EQUAL  type_decl  SEMI 
         {
-
+            // add to table
         }
         ;
 
 type_decl: 
-        simple_type_decl  {}
-        |  array_type_decl  {}
-        |  record_type_decl {}
+        simple_type_decl  
+        {
+            $$ = $1;
+        }
+        |  array_type_decl  
+        {
+            $$ = $1;
+        }
+        |  record_type_decl 
+        {
+            $$ = $1;
+        }
         ;
 
 simple_type_decl: 
@@ -279,58 +306,89 @@ simple_type_decl:
         ;
 
 array_type_decl: 
-        ARRAY  LB  INTEGER  RB  OF  type_decl {}
+        ARRAY  LB  INTEGER  RB  OF  type_decl 
+        {
+
+        }
         ;
 
 record_type_decl: 
-        RECORD  field_decl_list  _END {}
+        RECORD  field_decl_list  _END 
+        {
+
+        }
         ;
 
 field_decl_list: 
-        field_decl_list  field_decl {}
-        |  field_decl {}
+        field_decl_list  field_decl 
+        {
+            $1->insert($1->end(), $2->begin(), $2->end());
+            delete $2;
+            $$ = $1;
+        }
+        |  field_decl 
+        {
+            $$ = $1;
+        }
         ;
 
 field_decl: 
-        name_list  COLON  type_decl  SEMI {}
+        name_list  COLON  type_decl  SEMI 
+        {
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            // push_back
+            delete $1;
+            $$ = newlist;
+
+        }
         ;
 
 name_list: 
         name_list  COMMA  ID 
         {
-            // $$.swap($1);
-            // $$.push_back($3);
+            $1->push_back($3);
+            $$ = $1;
         }
         |  ID 
         {
-            // $$.push_back($1);
+            std::vector<std::string>* newlist = new std::vector<std::string>();
+            newlist->push_back($1);
+            $$ = newlist;
         }
         ;
 
 var_part: 
         VAR  var_decl_list 
         {
-
+            $$ = $2;
         }
         | 
         {
-
+            $$ = nullptr;
         }
         ;
 
 var_decl_list:  
         var_decl_list  var_decl 
         {
-
+            $1->insert($1->end(), $2->begin(), $2->end());
+            delete $2;
+            $$ = $1;
         }
         |  var_decl 
         {
-
+            $$ = $1;
         }
         ;
 
 var_decl:  
-        name_list  COLON  type_decl  SEMI {}
+        name_list  COLON  type_decl  SEMI 
+        {
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            // push_back
+            delete $1;
+            $$ = newlist;
+        }
         ;
 
 routine_part:  
@@ -414,8 +472,8 @@ non_label_stmt:
 assign_stmt: 
         ID  ASSIGN  expression {
             AST_Sym* lhs = new AST_Sym($1, nullptr);
-	    $$ = new AST_Assign(lhs, $3);
-	    //std::cout << $1 << ": " << $$->calculate()<<"\n";
+        $$ = new AST_Assign(lhs, $3);
+        //std::cout << $1 << ": " << $$->calculate()<<"\n";
         }
         | ID LB expression RB ASSIGN expression {
             AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);

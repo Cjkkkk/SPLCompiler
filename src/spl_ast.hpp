@@ -84,11 +84,12 @@ class AST_Const : public AST_Exp
     int calculate() override;
     void print();
 
-  protected:
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
      */
-    int valType;
+    SPL_TYPE valType;
+
+  protected:
     void *valPtr = nullptr;
 };
 
