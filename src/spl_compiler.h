@@ -6,7 +6,18 @@
 #ifndef _SPL_COMPILER_H_
 #define _SPL_COMPILER_H_
 
-enum SPL_OP: unsigned int
+#include <cstdio>
+#include <cstdlib>
+
+#define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
+
+void DoAssert(const char *errorMsg)
+{
+    fprintf(stderr, "%s\n", errorMsg);
+    exit(0);
+}
+
+enum SPL_OP : unsigned int
 {
     PLUS_ = 1,
     MINUS_,
@@ -26,26 +37,25 @@ enum SPL_OP: unsigned int
 };
 
 // class of a symbol
-enum SPL_CLASS: unsigned char
+enum SPL_CLASS : unsigned char
 {
-	VAR,	// variable
-    CONST,  // constant
-	TYPE,	// user-defined type
-	FUNC,	// function
-	PROC,	// procedure
-    LABEL   // label
+    VAR,   // variable
+    CONST, // constant
+    TYPE,  // user-defined type
+    FUNC,  // function/procedure
+    LABEL  // label
 };
 
-// type of a variable/constant/type symbol
-// if the value is negative, it means reference of it
-enum SPL_TYPE: int
+// type of a variable symbol
+enum SPL_TYPE : unsigned int
 {
-	BOOL = 1,	// boolean
-	CHAR,	    // char
-	INT,	    // int
-	REAL,	    // double
-	STRING,	    // string
-    RECORD      // value = type_hashcode(<record_name>) 
+    BOOL = 1, // boolean
+    CHAR,     // char
+    INT,      // int
+    REAL,     // double
+    STRING,   // string
+    ARRAY,    // array
+    RECORD    // record
 };
 
 #endif //_SPL_COMPILER_H_

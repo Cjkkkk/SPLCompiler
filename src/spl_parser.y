@@ -474,7 +474,7 @@ direction:
 
 case_stmt: 
         CASE expression OF case_expr_list  _END {
-            assert(!$4->empty());
+            Assert(!$4->empty(), "");
             $$ = new AST_If(new AST_Math(EQUAL_, $2, $4->at(0)->val),
                                        $4->at(0)->stmt,
                                        nullptr);

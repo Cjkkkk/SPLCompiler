@@ -9,58 +9,79 @@
 
 using namespace std;
 
-unsigned int hashcode(string& type_name);
-
-// class 
-
-class Symbol {
+class Symbol
+{
 public:
-	Symbol();
-	~Symbol();
+	Symbol(const std::string& name, SPL_CLASS symbolClass, SPL_TYPE symbolType, Symbol* symbolTypePtr = nullptr);
 
-	std::string 		symbol_id;
+	/* Symbol's name */
+	std::string name;
 
-	unsigned int		symbol_class = SPL_CLASS::VAR;
+	/* Symbol's class, e.g. variable/constant/function */
+	unsigned char symbolClass;
 
-	// symbol_type is available only when symbol is:
-	// 1. variable - VAR
-	// 2. constant - CONST
-	// 3. user-defined type - TYPE
-	// initialize to be unknown (0)
-	unsigned int		symbol_type = 0;
+	/* Symbol's type, only available for variable/constant. */
+	/* If symbol is atomic type (bool/int/char/real/string), 
+	 * then its type can be specified by symbolType, otherwise
+	 * the pointer symbolTypePtr is needed.
+	 */
+	unsigned int symbolType;
+	Symbol* symbolTypePtr;
 
-	// array_size is available only when symbol is array variable
-	// detail: if it's not an array, value == 0, else the array size
-	unsigned int 		array_size = 0;
-	
-	// type_list is available only when symbol is function or record
-	// detail: (field/param, type)
-	// 1. function - the argument list
-	//	- if it's positive integer -- pass by value
-	//	- if it's negative integer -- pass by reference
-	// 
-	// 2. record - the field list
-	//	- all of them should be positive integer
-	map<string, SPL_TYPE>	type_list;
+	/* For symbol with a constant value, pointing to ASTNode */
+	void* constValue = nullptr;
 
+	/* For array/record/function/procedure, the member/field/argument list */
+	std::vector<Symbol*> memberList;
 
-	// ret_type is available only when symbol is function
-	// detail: the return value type of a function
-	SPL_TYPE			ret_type = SPL_TYPE::BOOL;
-
-	// label_ptr is available only when symbol is a label
-	// detail: it points to the corresponding AST node
-	void*				label_ptr = nullptr;
+	/* For symbols that are parameters to functions or are 
+	   variables declared inside functions, this gives the
+	   function they're in. 
+	 */
+	Symbol* parentFunction = nullptr;
 };
 
-class SymbolTable {
+class SymbolTable
+{
 public:
+
+	/* ctor & dtor */
 	SymbolTable();
 	~SymbolTable();
 
-	map<string, Symbol>		symbols;
-	void*					scope	= nullptr;
-	SymbolTable*			parent	= nullptr;
+	/* The parser calls this method when it enters a new scope in the
+	 * program; this allows us to track variables that shadows others in
+     * outer scopes with same name as well as to efficiently discard all
+     * of the variables declared in a particular scope when we exit that
+     * scope. 
+	 */
+	void pushScope();
+
+	/* For each scope started by a call to SymbolTable::PushScope(), there
+     * must be a matching call to SymbolTable::PopScope() at the end of
+     * that scope. 
+	 */
+	void popScope();
+
+	bool addVaraible();
+	Symbol* lookupVariable(const char* name);
+
+	bool addFunction();
+	Symbol* lookupFunction(const char* name);
+
+	bool addType();
+	Symbol* lookupType(const char* name);
+
+	bool addLabel();
+	Symbol* lookupLabel(const char* name);
+
+private:
+	typedef std::map<std::string, Symbol*> SymbolMapType;
+	std::vector<SymbolMapType*> freeSymbolMaps;
+	std::vector<SymbolMapType*> variables;
+	std::vector<SymbolMapType*> functions;
+	std::vector<SymbolMapType*> types;
+	std::vector<SymbolMapType*> labels;
 };
 
 #endif // !_SPL_SYMTAB_H_
