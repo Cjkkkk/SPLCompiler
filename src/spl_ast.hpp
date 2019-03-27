@@ -16,7 +16,7 @@
 #include <iostream>
 #include <vector>
 #include "spl_symtab.hpp"
-#include "spl_compiler.h"
+#include "spl_compiler.hpp"
 
 #define ERROR_VAL -1
 

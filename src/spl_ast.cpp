@@ -9,7 +9,6 @@
  */
 
 #include "spl_ast.hpp"
-#include "spl_compiler.h"
 using namespace SPL;
 
 AST::~AST() {}

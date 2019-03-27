@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "spl_compiler.h"
+#include "spl_compiler.hpp"
 
 using namespace std;
 

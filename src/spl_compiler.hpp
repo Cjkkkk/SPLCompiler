@@ -1,21 +1,16 @@
 //
 // Created by DELL on 2019/3/21.
 //
-// This header is definition for global symbols.
+// This header is definition for global symbols and global functions.
 
-#ifndef _SPL_COMPILER_H_
-#define _SPL_COMPILER_H_
+#ifndef _SPL_COMPILER_HPP_
+#define _SPL_COMPILER_HPP_
 
 #include <cstdio>
 #include <cstdlib>
 
+void DoAssert(const char *errorMsg);
 #define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
-
-void DoAssert(const char *errorMsg)
-{
-    fprintf(stderr, "%s\n", errorMsg);
-    exit(0);
-}
 
 enum SPL_OP : unsigned int
 {
