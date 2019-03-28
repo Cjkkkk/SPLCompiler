@@ -29,7 +29,10 @@ AST_Math::~AST_Math() {
     delete(left);
     delete(right);
 }
-
+void AST_Math::checkSemantic() {
+    left->checkSemantic();
+    right->checkSemantic();
+}
 int AST_Math::calculate()
 {
     switch (opType)
@@ -121,7 +124,7 @@ AST_Const::~AST_Const() {
         default: ;
     }
 }
-
+void AST_Const::checkSemantic() {}
 AST_Sym::AST_Sym(std::string &id_, SymbolTable *scope_) : id(id_), scope(scope_) {}
 int AST_Sym::calculate()
 {
@@ -134,6 +137,12 @@ AST_Sym::~AST_Sym() {
     // delete(scope);
 }
 
+void AST_Sym::checkSemantic() {
+    std::cout << "check symbol " + id +" semantic" << std::endl;
+    //scope->lookupVariable(id.c_str());
+}
+
+// AST_Array
 AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_) {}
 
 AST_Array::~AST_Array() {
@@ -145,7 +154,9 @@ int AST_Array::calculate()
 {
     return ERROR_VAL;
 }
+void AST_Array::checkSemantic() {}
 
+// AST_Dot
 AST_Dot::AST_Dot(AST_Sym *record_, AST_Sym *field_) : record(record_), field(field_) {}
 
 AST_Dot::~AST_Dot() {
@@ -157,7 +168,9 @@ int AST_Dot::calculate()
 {
     return ERROR_VAL;
 }
+void AST_Dot::checkSemantic(){}
 
+// AST_Assign
 AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(rhs_) {}
 
 int AST_Assign::calculate()
@@ -169,7 +182,11 @@ AST_Assign::~AST_Assign() {
     delete(lhs);
     delete(rhs);
 }
-
+void AST_Assign::checkSemantic() {
+    std::cout << "check assignment semantic" << std::endl;
+    lhs->checkSemantic();
+    rhs->checkSemantic();
+}
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_){};
 
@@ -204,7 +221,7 @@ AST_Stmt *AST_If::getDoElse(void)
 {
     return this->doElse;
 }
-
+void AST_If::checkSemantic() {}
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) {}
 
 AST_While::~AST_While() {
@@ -216,7 +233,7 @@ int AST_While::calculate()
 {
     return ERROR_VAL;
 }
-
+void AST_While::checkSemantic() {}
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : stmtList(stmtList_), exp(exp_) {}
 
 AST_Repeat::~AST_Repeat() {
@@ -228,7 +245,7 @@ int AST_Repeat::calculate()
 {
     return ERROR_VAL;
 }
-
+void AST_Repeat::checkSemantic() {}
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : init(init_), dir(dir_), fin(fin_), stmt(stmt_) {}
 
 AST_For::~AST_For() {
@@ -241,7 +258,7 @@ int AST_For::calculate()
 {
     return ERROR_VAL;
 }
-
+void AST_For::checkSemantic() {}
 AST_Goto::AST_Goto(int label_) : label(label_) {}
 
 AST_Goto::~AST_Goto() {}
@@ -250,7 +267,7 @@ int AST_Goto::calculate()
 {
     return ERROR_VAL;
 }
-
+void AST_Goto::checkSemantic() {}
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_) {}
 
 AST_Compound::~AST_Compound() {
@@ -261,7 +278,7 @@ int AST_Compound::calculate()
 {
     return ERROR_VAL;
 }
-
+void AST_Compound::checkSemantic() {}
 AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_) : isProc(isProc_), funcId(funcId_), argList(argList_) {}
 
 AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_)
@@ -322,3 +339,5 @@ int AST_Func::calculate()
         return 0;
     }
 }
+
+void AST_Func::checkSemantic() {}

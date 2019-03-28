@@ -27,6 +27,7 @@ namespace SPL
 class AST
 {
   public:
+    virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST() = 0;          //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
@@ -38,6 +39,7 @@ class AST
 class AST_Exp : virtual public AST
 {
   public:
+    virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST_Exp() = 0;      //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
@@ -47,6 +49,7 @@ class AST_Exp : virtual public AST
 class AST_Stmt : virtual public AST
 {
   public:
+    virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST_Stmt() = 0;     //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
@@ -59,6 +62,7 @@ class AST_Math : public AST_Exp
     AST_Math(int opType, class AST_Exp *left, class AST_Exp *right);
     ~AST_Math() override;
     int calculate() override;
+    void checkSemantic() override;
     void print();
 
   protected:
@@ -82,6 +86,7 @@ class AST_Const : public AST_Exp
     explicit AST_Const(std::basic_string<char> &val);
     ~AST_Const() override;
     int calculate() override;
+    void checkSemantic() override;
     void print();
 
     /* valType: type of the constant, including:
@@ -100,6 +105,7 @@ class AST_Sym : public AST_Exp
     AST_Sym(std::string &id_, SymbolTable *scope_);
     ~AST_Sym() override;
     int calculate() override;
+    void checkSemantic() override;
     //void print(void);
   protected:
     std::string id;
@@ -113,6 +119,7 @@ class AST_Array : public AST_Exp
     AST_Array(AST_Sym *sym_, AST_Exp *exp_);
     ~AST_Array() override;
     int calculate(void) override;
+    void checkSemantic() override;
     //void print(void);
   protected:
     AST_Sym *sym;
@@ -126,6 +133,7 @@ class AST_Dot : public AST_Exp
     AST_Dot(AST_Sym *record_, AST_Sym *field_);
     ~AST_Dot() override;
     int calculate(void) override;
+    void checkSemantic() override;
     //void print(void);
   protected:
     AST_Sym *record;
@@ -140,6 +148,7 @@ class AST_Assign : public AST_Exp, public AST_Stmt
     AST_Assign(AST_Exp *lhs_, AST_Exp *rhs_);
     ~AST_Assign() override;
     int calculate() override;
+    void checkSemantic() override;
     void print();
 
   protected:
@@ -157,6 +166,7 @@ class AST_If : public AST_Stmt
     int calculate() override;
     void addRight(AST_Stmt *doElse_);
     AST_Stmt *getDoElse(void);
+    void checkSemantic() override;
     void print();
 
   protected:
@@ -180,6 +190,7 @@ class AST_While : public AST_Stmt
     AST_While(AST_Exp *cond_, AST_Stmt *stmt_);
     ~AST_While() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     AST_Exp *cond;
@@ -192,6 +203,7 @@ class AST_Repeat : public AST_Stmt
     AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_);
     ~AST_Repeat() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -204,6 +216,7 @@ class AST_For : public AST_Stmt
     AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_);
     ~AST_For() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     AST_Assign *init;
@@ -218,6 +231,7 @@ class AST_Goto : public AST_Stmt
     AST_Goto(int label_);
     ~AST_Goto() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     int label;
@@ -229,6 +243,7 @@ class AST_Compound : public AST_Stmt
     AST_Compound(std::vector<AST_Stmt *> *stmtList_);
     ~AST_Compound() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -241,6 +256,7 @@ class AST_Func : public AST_Exp, public AST_Stmt
     AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_);
     ~AST_Func() override;
     int calculate() override;
+    void checkSemantic() override;
 
   protected:
     bool isProc;

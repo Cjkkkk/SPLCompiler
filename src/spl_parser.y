@@ -458,7 +458,7 @@ stmt:
         ;
 
 non_label_stmt: 
-        assign_stmt {$$ = $1;}
+        assign_stmt {$$ = $1; $$->checkSemantic();}
         | proc_stmt {$$ = $1;}
         | compound_stmt {$$ = $1;}
         | if_stmt {$$ = $1;}
@@ -613,8 +613,14 @@ factor:
         ;
 
 args_list: 
-        args_list  COMMA  expression {$1->push_back($3); $$ = $1;}
-        |  expression {$$ = new std::vector<AST_Exp*>(); $$->push_back($1);}
+        args_list  COMMA  expression {
+        	$1->push_back($3);
+        	$$ = $1;
+        }
+        | expression {
+        	$$ = new std::vector<AST_Exp*>();
+        	$$->push_back($1);
+        }
         ;
 
 %%
