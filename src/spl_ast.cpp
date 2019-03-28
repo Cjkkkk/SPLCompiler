@@ -31,7 +31,7 @@ AST_Math::~AST_Math() {
 }
 void AST_Math::checkSemantic() {
     left->checkSemantic();
-    right->checkSemantic();
+    if(right) right->checkSemantic();
 }
 int AST_Math::calculate()
 {
