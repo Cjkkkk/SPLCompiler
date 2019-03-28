@@ -5,7 +5,7 @@ var
 begin
 	a := c + d + 3 + 2 * - 10 - 5 > 10;
 	e := (4 + 12) * 2 * ( 1 + 2 );
-	if d == 0 then begin
+	if d = 0 then begin
     	d := 4 + 4;
     end
     else begin

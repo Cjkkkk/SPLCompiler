@@ -25,7 +25,10 @@ AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
     this->right = right;
 }
 
-AST_Math::~AST_Math() {}
+AST_Math::~AST_Math() {
+    delete(left);
+    delete(right);
+}
 
 int AST_Math::calculate()
 {
@@ -107,7 +110,17 @@ int AST_Const::calculate()
     return 0;
 }
 
-AST_Const::~AST_Const() {}
+// todo add delete void*
+AST_Const::~AST_Const() {
+    switch(valType){
+        case BOOL: delete((bool*)valPtr);
+        case CHAR: delete((char*)valPtr);
+        case INT: delete((int*)valPtr);
+        case REAL: delete((double*)valPtr);
+        case STRING: delete((std::basic_string<char>*)valPtr);
+        default: ;
+    }
+}
 
 AST_Sym::AST_Sym(std::string &id_, SymbolTable *scope_) : id(id_), scope(scope_) {}
 int AST_Sym::calculate()
@@ -116,11 +129,17 @@ int AST_Sym::calculate()
     // add search symbol table
 }
 
-AST_Sym::~AST_Sym() {}
+// todo add symbol table destruction
+AST_Sym::~AST_Sym() {
+    // delete(scope);
+}
 
 AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_) {}
 
-AST_Array::~AST_Array() {}
+AST_Array::~AST_Array() {
+    delete(sym);
+    delete(exp);
+}
 
 int AST_Array::calculate()
 {
@@ -129,7 +148,10 @@ int AST_Array::calculate()
 
 AST_Dot::AST_Dot(AST_Sym *record_, AST_Sym *field_) : record(record_), field(field_) {}
 
-AST_Dot::~AST_Dot() {}
+AST_Dot::~AST_Dot() {
+    delete(record);
+    delete(field);
+}
 
 int AST_Dot::calculate()
 {
@@ -143,12 +165,19 @@ int AST_Assign::calculate()
     return rhs->calculate();
 }
 
-AST_Assign::~AST_Assign() {}
+AST_Assign::~AST_Assign() {
+    delete(lhs);
+    delete(rhs);
+}
 
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_){};
 
-AST_If::~AST_If() {}
+AST_If::~AST_If() {
+    delete(cond);
+    delete(doElse);
+    delete(doIf);
+}
 
 int AST_If::calculate()
 {
@@ -178,7 +207,10 @@ AST_Stmt *AST_If::getDoElse(void)
 
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) {}
 
-AST_While::~AST_While() {}
+AST_While::~AST_While() {
+    delete(cond);
+    delete(stmt);
+}
 
 int AST_While::calculate()
 {
@@ -187,7 +219,10 @@ int AST_While::calculate()
 
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : stmtList(stmtList_), exp(exp_) {}
 
-AST_Repeat::~AST_Repeat() {}
+AST_Repeat::~AST_Repeat() {
+    delete exp;
+    delete [] stmtList;
+}
 
 int AST_Repeat::calculate()
 {
@@ -196,7 +231,11 @@ int AST_Repeat::calculate()
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : init(init_), dir(dir_), fin(fin_), stmt(stmt_) {}
 
-AST_For::~AST_For() {}
+AST_For::~AST_For() {
+    delete(init);
+    delete(fin);
+    delete(stmt);
+}
 
 int AST_For::calculate()
 {
@@ -214,7 +253,9 @@ int AST_Goto::calculate()
 
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_) {}
 
-AST_Compound::~AST_Compound() {}
+AST_Compound::~AST_Compound() {
+    delete []stmtList;
+}
 
 int AST_Compound::calculate()
 {
@@ -266,7 +307,9 @@ AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(a
     }
 }
 
-AST_Func::~AST_Func() {}
+AST_Func::~AST_Func() {
+    delete []argList;
+}
 
 int AST_Func::calculate()
 {

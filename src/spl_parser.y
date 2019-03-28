@@ -35,6 +35,7 @@
     }
     #include "spl_ast.hpp"
     #include "spl_symtab.hpp"
+    #include "spl_compiler.hpp"
 // The following definitions is missing when %locations isn't used
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -450,7 +451,7 @@ stmt_list:
         stmt_list  stmt  SEMI {$1->push_back($2); $$ = $1;}
         |  {$$ = new std::vector<AST_Stmt*>();}
         ;
-
+// todo
 stmt: 
         INTEGER  COLON  non_label_stmt {$$ = $3; /*add the label into the symtable*/ }
         |  non_label_stmt {$$ = $1;}
@@ -469,6 +470,7 @@ non_label_stmt:
         ;
 
 // todo: check symbol table to get sym
+// todo: add symbol share between nodes
 assign_stmt: 
         ID  ASSIGN  expression {
             AST_Sym* lhs = new AST_Sym($1, nullptr);

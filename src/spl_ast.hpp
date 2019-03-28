@@ -11,7 +11,7 @@
 #ifndef _SPL_AST_H_
 #define _SPL_AST_H_
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <iostream>
 #include <vector>
