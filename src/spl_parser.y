@@ -148,7 +148,7 @@
 %type   <AST_Const*> const_value
 %type   <AST_Exp*> factor term expr expression
 %type   <AST_Assign*> assign_stmt
-%type 	<AST_Stmt*>	else_clause stmt non_label_stmt
+%type 	<AST_Stmt*> else_clause stmt non_label_stmt
 %type 	<AST_If*> if_stmt case_stmt
 %type   <AST_While*> while_stmt
 %type   <AST_Repeat*> repeat_stmt
@@ -166,7 +166,7 @@
 %type   <Symbol*> type_definition type_decl simple_type_decl array_type_decl record_type_decl
 %type   <std::vector<Symbol*>*> field_decl field_decl_list
 %type   <std::vector<Symbol*>*> var_part var_decl_list var_decl
-%type   <std::vector<std::string>*> name_list
+%type   <std::vector<std::string>*> name_list var_para_list val_para_list
 
 %locations
 
@@ -432,11 +432,17 @@ para_type_list:
         ;
 
 var_para_list: 
-        VAR  name_list {}
+        VAR  name_list 
+        {
+            $$ = $2;
+        }
         ;
 
 val_para_list: 
-        name_list {}
+        name_list 
+        {
+            $$ = $1;
+        }
         ;
 
 routine_body: 

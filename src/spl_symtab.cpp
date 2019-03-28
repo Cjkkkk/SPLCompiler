@@ -6,7 +6,10 @@ Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolTy
     this->symbolTypePtr = nullptr;
     this->constValue = nullptr;
     this->memberList = nullptr;
+    this->passMode = SPL_PASSMODE::VALUE;
     this->parentScope = nullptr;
+    this->returnType = SPL_TYPE::UNKNOWN;
+    this->returnTpyePtr = nullptr;
 }
 
 SymbolTable::SymbolTable()

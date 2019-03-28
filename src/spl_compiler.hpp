@@ -45,15 +45,23 @@ enum SPL_CLASS : unsigned char
 // type of a variable symbol
 enum SPL_TYPE : unsigned int
 {
-    BOOL = 1,   // boolean
+    UNKNOWN,    // unknown
+    BOOL,       // boolean
     CHAR,       // char
     INT,        // int
     REAL,       // double
     STRING,     // string
-    ARRAY,      // array
     ENUM,       // enumeration
     SUBRANGE,	// subrange
+    ARRAY,      // array
     RECORD      // record
+};
+
+// parameter passing mode
+enum SPL_PASSMODE : bool
+{
+    VALUE = false,  // pass by value
+    REFER = true    // pass by reference
 };
 
 void DoAssert(const char *errorMsg);

@@ -34,11 +34,26 @@ public:
     /* For array/record/function/procedure, the member/field/argument list */
     std::vector<Symbol*>* memberList;
 
+    /* Parameter passing mode */
+    SPL_PASSMODE passMode;
+
+    // TODO: subrange type and enum type
+    // std::map<Symbol*, unsigned int>* enumMap;
+    // std::map<unsigned int, unsigned int>* subrangeMap;
+
     /* For symbols that are parameters to functions or are 
-       variables declared inside functions, this gives the
-       scope they're in. 
+     * variables declared inside functions, this gives the
+     * scope they're in. 
      */
     std::map<std::string, Symbol*>* parentScope;
+
+    /* Return value's type, only available for function.
+     * If symbol is atomic type (bool/int/char/real/string), 
+     * then its type can be specified by returnType, otherwise
+     * the pointer returnTypePtr is needed.
+     */
+    SPL_TYPE returnType;
+    Symbol* returnTpyePtr;
 };
 
 class SymbolTable
