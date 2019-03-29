@@ -30,8 +30,8 @@ AST_Math::~AST_Math() {
     delete(right);
 }
 void AST_Math::checkSemantic() {
-    left->checkSemantic();
-    if(right) right->checkSemantic();
+    // left->checkSemantic();
+    // if(right) right->checkSemantic();
 }
 int AST_Math::calculate()
 {
@@ -138,7 +138,7 @@ AST_Sym::~AST_Sym() {
 }
 
 void AST_Sym::checkSemantic() {
-    std::cout << "check symbol " + id +" semantic" << std::endl;
+    // std::cout << "check symbol " + id +" semantic" << std::endl;
     //scope->lookupVariable(id.c_str());
 }
 
@@ -183,9 +183,9 @@ AST_Assign::~AST_Assign() {
     delete(rhs);
 }
 void AST_Assign::checkSemantic() {
-    std::cout << "check assignment semantic" << std::endl;
-    lhs->checkSemantic();
-    rhs->checkSemantic();
+    // std::cout << "check assignment semantic" << std::endl;
+    // lhs->checkSemantic();
+    // rhs->checkSemantic();
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_){};

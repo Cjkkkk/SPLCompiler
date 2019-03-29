@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
     if (argc > 1)
     {
         driver.parse(argv[1]);
+        //driver.symtab.print();
+
         return 0;
     }
     else

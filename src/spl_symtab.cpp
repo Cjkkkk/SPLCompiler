@@ -3,9 +3,12 @@
 Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType, Symbol *symbolTypePtr)
     : name(name), symbolClass(symbolClass), symbolType(symbolType)
 {
-    this->symbolTypePtr = nullptr;
+    //this->symbolTypePtr = nullptr;
     this->constValue = nullptr;
+    this->memberType = SPL_TYPE::UNKNOWN;
+    this->memberTypePtr = nullptr;
     this->memberList = nullptr;
+    this->arraySize = 0;
     this->passMode = SPL_PASSMODE::VALUE;
     this->parentScope = nullptr;
     this->returnType = SPL_TYPE::UNKNOWN;
@@ -15,6 +18,8 @@ Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolTy
 SymbolTable::SymbolTable()
 {
     pushScope();
+
+    //
 }
 
 SymbolTable::~SymbolTable()
@@ -78,19 +83,19 @@ bool SymbolTable::addVaraible(Symbol *symbol)
 
 Symbol *SymbolTable::lookupVariable(const char *name)
 {
-    for (int i = (int)variables.size() - 1; i >= 0; --i) {
-        SymbolMapType& sm = *(variables[i]);
+    for (int i = (int)variables.size() - 1; i >= 0; --i)
+    {
+        SymbolMapType &sm = *(variables[i]);
         SymbolMapType::iterator iter = sm.find(name);
         if (iter != sm.end())
             return iter->second;
     }
-    std::string errorMsg = "spl.exe: error: identifier \"" + std::string(name) + "\"  is undefined.";
-    Assert(0, errorMsg.c_str());
     return nullptr;
 }
 
 bool SymbolTable::addFunction(Symbol *symbol)
 {
+
     return true;
 }
 
@@ -101,11 +106,21 @@ Symbol *SymbolTable::lookupFunction(const char *name)
 
 bool SymbolTable::addType(Symbol *symbol)
 {
+    if (types.find(symbol->name) != types.end())
+    {
+        std::string errorMsg = "spl.exe: error: ignoring redeclaration of symbol \"" + symbol->name + "\".";
+        Assert(0, errorMsg.c_str());
+        return false;
+    }
+    types[symbol->name] = symbol;
     return true;
 }
 
 Symbol *SymbolTable::lookupType(const char *name)
 {
+    SymbolMapType::iterator iter = types.find(name);
+    if (iter != types.end())
+        return iter->second;
     return nullptr;
 }
 
@@ -119,9 +134,49 @@ Symbol *SymbolTable::lookupLabel(const char *name)
     return nullptr;
 }
 
+// void printSymbol(Symbol *sym)
+// {
+//     if (sym->symbolType >= BOOL && sym->symbolType <= STRING)
+//         fprintf(stderr, "%s ", typeToString(sym->symbolType).c_str());
+//     else if (sym->symbolType == ARRAY)
+//     {
+//     }
+// }
+
 void SymbolTable::print()
 {
     int depth = 0;
+
+    fprintf(stderr, "Types:\n---------------\n");
+    SymbolMapType::iterator iter = types.begin();
+    while (iter != types.end())
+    {
+        fprintf(stderr, "%*c", depth, ' ');
+        Symbol *sym = iter->second;
+        if ((sym->symbolType >= BOOL && sym->symbolType <= STRING) || sym->symbolType == RECORD)
+            fprintf(stderr, "%s -> %s\n", iter->first.c_str(), typeToString(sym->symbolType).c_str());
+        else if (sym->symbolType == ARRAY)
+        {
+            fprintf(stderr, "%s -> %s [", iter->first.c_str(), typeToString(sym->symbolType).c_str());
+            fprintf(stderr, "%u] of ", sym->arraySize);
+            Symbol *p = sym;
+            while (p != nullptr)
+            {
+                if (p->memberType >= BOOL && p->memberType <= STRING)
+                    fprintf(stderr, "%s ", typeToString(p->memberType).c_str());
+                else if (p->memberType == ARRAY)
+                {
+                    fprintf(stderr, "%s [%u] of ", typeToString(p->memberType).c_str(), p->memberTypePtr->arraySize);
+                }
+                p = p->memberTypePtr;
+            }
+            fprintf(stderr, "\n");
+        }
+        ++iter;
+    }
+    fprintf(stderr, "----------------\n\n");
+
+    depth = 0;
     fprintf(stderr, "Variables:\n----------------\n");
     for (int i = 0; i < (int)variables.size(); ++i)
     {
@@ -136,4 +191,5 @@ void SymbolTable::print()
         fprintf(stderr, "\n");
         depth += 4;
     }
+    fprintf(stderr, "----------------\n\n");
 }

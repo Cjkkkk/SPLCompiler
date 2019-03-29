@@ -59,6 +59,14 @@ std::string typeToString(SPL_TYPE typeId)
         case STRING:
             return "STRING";
             break;
+        
+        case ENUM:
+            return "ENUM";
+            break;
+        
+        case SUBRANGE:
+            return "SUBRANGE";
+            break;
 
         case ARRAY:
             return "ARRAY";

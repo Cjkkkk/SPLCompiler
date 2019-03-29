@@ -76,6 +76,7 @@ void SPL::SPL_Driver::parse_helper(std::istream &stream)
     if (parser->parse() != accept)
     {
         std::cerr << "Parse failed!!\n";
+        exit(EXIT_FAILURE);
     }
     return;
 }

@@ -20,19 +20,26 @@ public:
     /* Symbol's class, e.g. variable/constant/function */
     SPL_CLASS symbolClass;
 
-    /* Symbol's type, only available for variable/constant.
-     * If symbol is atomic type (bool/int/char/real/string), 
-     * then its type can be specified by symbolType, otherwise
-     * the pointer symbolTypePtr is needed.
-     */
+    /* Symbol's type, only available for variable/constant/type */
     SPL_TYPE symbolType;
-    Symbol* symbolTypePtr;
+    // Symbol* symbolTypePtr;
 
     /* For symbol with a constant value, pointing to ASTNode */ 
     void* constValue;
 
-    /* For array/record/function/procedure, the member/field/argument list */
+    /* For array type, the member type.
+     * If symbol is atomic type (bool/int/char/real/string), 
+     * then its type can be specified by memberType, otherwise
+     * the pointer memberTypePtr is needed for more information.
+     */
+    SPL_TYPE memberType;
+    Symbol* memberTypePtr;
+
+    /* For array/record variable or function/procedure, the member/field/argument list */
     std::vector<Symbol*>* memberList;
+
+    /* Array size */
+    unsigned int arraySize;
 
     /* Parameter passing mode */
     SPL_PASSMODE passMode;
@@ -96,9 +103,9 @@ private:
     typedef std::map<std::string, Symbol*> SymbolMapType;
     std::vector<SymbolMapType*> freeSymbolMaps;
     std::vector<SymbolMapType*> variables;
-    std::vector<SymbolMapType*> functions;
-    std::vector<SymbolMapType*> types;
-    std::vector<SymbolMapType*> labels;
+    SymbolMapType functions;
+    SymbolMapType types;
+    SymbolMapType labels;
 };
 
 #endif // !_SPL_SYMTAB_H_

@@ -43,7 +43,7 @@ enum SPL_CLASS : unsigned char
 };
 
 // type of a variable symbol
-enum SPL_TYPE : unsigned int
+enum SPL_TYPE : unsigned char
 {
     UNKNOWN,    // unknown
     BOOL,       // boolean

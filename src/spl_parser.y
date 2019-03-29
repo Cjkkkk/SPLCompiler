@@ -162,8 +162,9 @@
 %type   <std::vector<AST_Exp*>*> args_list
 
 %type   <std::vector<Symbol*>*> const_part const_expr_list
-%type   <std::vector<Symbol*>*> type_part type_decl_list 
-%type   <Symbol*> type_definition type_decl simple_type_decl array_type_decl record_type_decl
+// %type   <std::vector<Symbol*>*> type_part type_decl_list 
+%type   <Symbol*> type_decl simple_type_decl array_type_decl record_type_decl
+// %type   <Symbol*> type_definition 
 %type   <std::vector<Symbol*>*> field_decl field_decl_list
 %type   <std::vector<Symbol*>*> var_part var_decl_list var_decl
 %type   <std::vector<std::string>*> name_list var_para_list val_para_list
@@ -252,32 +253,33 @@ const_value:
 type_part: 
         TYPE type_decl_list  
         { 
-            $$ = $2;
+            // $$ = $2;
         }
         |  
         { 
-            $$ = nullptr;
+            // $$ = nullptr;
         }
         ;
 
 type_decl_list: 
         type_decl_list  type_definition  
         {
-            $1->push_back($2);
-            $$ = $1;
+            // $1->push_back($2);
+            // $$ = $1;
         }
         |  type_definition 
         {
-            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
-            newlist->push_back($1);
-            $$ = newlist;
+            // std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            // newlist->push_back($1);
+            // $$ = newlist;
         }
         ;
         
 type_definition: 
         ID  EQUAL  type_decl  SEMI 
         {
-            // add to table
+            $3->name = $1;
+            driver.symtab.addType($3);
         }
         ;
 
@@ -297,26 +299,61 @@ type_decl:
         ;
 
 simple_type_decl: 
-        SYS_TYPE  {}
-        |  ID  {}
-        |  LP  name_list  RP  {}
-        |  const_value  DOTDOT  const_value  {}
-        |  MINUS  const_value  DOTDOT  const_value {}
-        |  MINUS  const_value  DOTDOT  MINUS  const_value {}
-        |  ID  DOTDOT  ID {}
+        SYS_TYPE  
+        {
+            $$ = new Symbol("", TYPE, (SPL_TYPE)$1);
+        }
+        |  ID  
+        {
+            Symbol* symbol = driver.symtab.lookupType($1.c_str());
+            std::string errorMsg = "spl.exe: error: undefined symbol \"" + $1 + "\"";
+            Assert(symbol != nullptr, errorMsg.c_str());
+            $$ = new Symbol(*symbol);
+        }
+        |  LP  name_list  RP  
+        {
+            // TODO: enumeration type
+        }
+        |  const_value  DOTDOT  const_value  
+        {
+            // TODO: subrange type
+        }
+        |  MINUS  const_value  DOTDOT  const_value 
+        {
+
+        }
+        |  MINUS  const_value  DOTDOT  MINUS  const_value 
+        {
+
+        }
+        |  ID  DOTDOT  ID 
+        {
+
+        }
         ;
 
 array_type_decl: 
         ARRAY  LB  INTEGER  RB  OF  type_decl 
         {
-
+            Assert($3 >= 1, "spl.exe: error: illegal array index");
+            SPL_TYPE memberType = $6->symbolType;
+            Symbol* symbol = new Symbol("", TYPE, ARRAY);
+            symbol->memberType = memberType;
+            symbol->arraySize = $3;
+            if (memberType >= BOOL && memberType <= STRING)
+                delete $6;
+            else
+                symbol->memberTypePtr = $6;
+            $$ = symbol;
         }
         ;
 
 record_type_decl: 
         RECORD  field_decl_list  _END 
         {
-
+            Symbol* symbol = new Symbol("", TYPE, RECORD);
+            symbol->memberList = $2;
+            $$ = symbol;
         }
         ;
 
@@ -324,6 +361,8 @@ field_decl_list:
         field_decl_list  field_decl 
         {
             $1->insert($1->end(), $2->begin(), $2->end());
+            for(size_t i = 0; i < $2->size(); i++)
+                delete (*$2)[i];
             delete $2;
             $$ = $1;
         }
@@ -337,10 +376,15 @@ field_decl:
         name_list  COLON  type_decl  SEMI 
         {
             std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
-            // push_back
+            for(size_t i = 0; i < $1->size(); i++)
+            {
+                Symbol* symbol = new Symbol(*$3);
+                symbol->name = (*$1)[i];
+                newlist->push_back(symbol);
+            }
             delete $1;
+            delete $3;
             $$ = newlist;
-
         }
         ;
 

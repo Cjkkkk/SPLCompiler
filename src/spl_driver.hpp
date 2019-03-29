@@ -40,6 +40,8 @@ class SPL_Driver
 
     std::ostream &print(std::ostream &stream);
 
+    SymbolTable symtab;
+
   private:
     void parse_helper(std::istream &stream);
 

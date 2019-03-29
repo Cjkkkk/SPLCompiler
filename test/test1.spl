@@ -1,5 +1,15 @@
 program test;
 
+type
+	a = integer;
+	b = char;
+	c = string;
+	d = array [10] of integer;
+	e = array [100] of array [10] of c;
+	f = record
+		a, b, c : integer;
+		end;
+
 var
 	ans : integer;
 	tmp : integer;
