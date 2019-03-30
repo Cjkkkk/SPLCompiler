@@ -6,13 +6,12 @@ Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolTy
     this->constValuePtr = nullptr;
     this->elementType = SPL_TYPE::UNKNOWN;
     this->elementTypePtr = nullptr;
-    this->memberList = nullptr;
-    this->argsList = nullptr;
+    this->subSymbolMap = nullptr;
+    this->subSymbolList = nullptr;
     this->arraySize = 0;
     this->paraType = VALUE;
     this->parentScope = nullptr;
-    this->returnType = SPL_TYPE::UNKNOWN;
-    this->returnTpyePtr = nullptr;
+    this->returnTypePtr = nullptr;
 }
 
 SymbolTable::SymbolTable()
@@ -24,8 +23,8 @@ SymbolTable::SymbolTable()
 
 SymbolTable::~SymbolTable()
 {
-    Assert(variables.size() == 1, "spl.exe: error: mismatched scopes!");
-    popScope();
+    // Assert(variables.size() == 1, "spl.exe: error: mismatched scopes!");
+    // popScope();
 }
 
 void SymbolTable::pushScope(const std::string &scopeName)
@@ -54,9 +53,8 @@ void SymbolTable::popScope()
 bool SymbolTable::addVariable(Symbol *symbol)
 {
     // Check to see if a symbol of the same name has already been declared.
-    if (types.find(symbol->name) != types.end() ||
+    if (
         functions.find(symbol->name) != functions.end() ||
-        labels.find(symbol->name) != labels.end() ||
         (*variables.back()).find(symbol->name) != (*variables.back()).end())
     {
         std::string errorMsg = "spl.exe: error: ignoring redeclaration of symbol \"" + symbol->name + "\".";
@@ -145,14 +143,13 @@ void SymbolTable::printType(Symbol *sym)
     }
     else if (sym->symbolType == RECORD)
     {
-        fprintf(stderr, "RECORD (");
-        SymbolMapType::iterator iter;
-        for (iter = sym->memberList->begin(); iter != sym->memberList->end();)
+        fprintf(stderr, "RECORD ( ");
+        for (size_t i = 0; i < sym->subSymbolList->size(); i++)
         {
-            Symbol *symbol = iter->second;
+            Symbol *symbol = (*sym->subSymbolList)[i];
             fprintf(stderr, "%s : ", symbol->name.c_str());
             printType(symbol);
-            if (++iter == sym->memberList->end())
+            if (i == sym->subSymbolList->size() - 1)
                 fprintf(stderr, ")");
             else
                 fprintf(stderr, ", ");
@@ -198,6 +195,37 @@ void SymbolTable::print()
                 fprintf(stderr, "\n");
             }
         }
+    }
+    fprintf(stderr, "----------------\n\n");
+
+    fprintf(stderr, "Functions:\n----------------\n");
+    iter = functions.begin();
+    while (iter != functions.end())
+    {
+        fprintf(stderr, "%*c", depth, ' ');
+        fprintf(stderr, "%s \tParam: (", iter->first.c_str());
+        for(size_t i = 0; i < iter->second->subSymbolList->size(); i++)
+        {
+            Symbol *symbol = (*iter->second->subSymbolList)[i];
+            fprintf(stderr, "%s : ", symbol->name.c_str());
+            if (symbol->paraType)
+                fprintf(stderr, "var ");
+            printType(symbol);
+            if (i != iter->second->subSymbolList->size() - 1)
+                fprintf(stderr, ", ");
+        }
+        fprintf(stderr, ") ");
+        if (iter->second->symbolType >= BOOL && iter->second->symbolType <= STRING)
+        {
+            fprintf(stderr, "Return: %s ", typeToString(iter->second->symbolType).c_str());
+        }
+        else if (iter->second->returnTypePtr != nullptr)
+        {
+            fprintf(stderr, "Return: ");
+            printType(iter->second->returnTypePtr);
+        }
+        fprintf(stderr, "\n");
+        ++iter;
     }
     fprintf(stderr, "----------------\n\n");
 }

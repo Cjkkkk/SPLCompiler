@@ -162,9 +162,9 @@
 %type   <std::vector<AST_Exp*>*> args_list
 
 %type   <Symbol*> type_decl simple_type_decl array_type_decl record_type_decl
-%type   <SymbolMapType*> field_decl field_decl_list
+%type   <SymbolListType*> field_decl field_decl_list
+%type   <SymbolListType*> parameters para_decl_list para_type_list
 %type   <std::vector<std::string>*> name_list var_para_list val_para_list
-%type   <std::vector<Symbol*>*> parameters para_decl_list para_type_list
 
 %locations
 
@@ -345,7 +345,17 @@ record_type_decl:
         RECORD  field_decl_list  _END 
         {
             Symbol* symbol = new Symbol("", TYPE, RECORD);
-            symbol->memberList = $2;
+            SymbolMapType* subSymbolMap = new SymbolMapType;
+            for(size_t i = 0; i < $2->size(); i++)
+            {
+                std::string name = (*$2)[i]->name;
+                std::string errorMsg = 
+                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
+                Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
+                (*subSymbolMap)[name] = (*$2)[i];
+            }
+            symbol->subSymbolMap = subSymbolMap;
+            symbol->subSymbolList = $2;
             $$ = symbol;
         }
         ;
@@ -353,15 +363,7 @@ record_type_decl:
 field_decl_list: 
         field_decl_list  field_decl 
         {
-            SymbolMapType::iterator iter;
-            for(iter = $2->begin(); iter != $2->end(); ++iter)
-            {
-                std::string name = iter->first;
-                std::string errorMsg = 
-                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
-                Assert($1->find(name) == $1->end(), errorMsg.c_str());
-                (*$1)[name] = iter->second;
-            }
+            $1->insert($1->end(), $2->begin(), $2->end());
             delete $2;
             $$ = $1;
         }
@@ -374,20 +376,16 @@ field_decl_list:
 field_decl: 
         name_list  COLON  type_decl  SEMI 
         {
-            SymbolMapType* memberList = new SymbolMapType;
+            SymbolListType* subSymbolList = new SymbolListType;
             for(size_t i = 0; i < $1->size(); i++)
             {
-                std::string name = (*$1)[i];
-                std::string errorMsg = 
-                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
-                Assert(memberList->find(name) == memberList->end(), errorMsg.c_str());
                 Symbol* symbol = new Symbol(*$3);
-                symbol->name = name;
-                (*memberList)[name] = symbol;
+                symbol->name = (*$1)[i];
+                subSymbolList->push_back(symbol);
             }
             delete $1;
             delete $3;
-            $$ = memberList;
+            $$ = subSymbolList;
         }
         ;
 
@@ -457,8 +455,29 @@ function_decl:
 function_head:  
         FUNCTION  ID  parameters  COLON  simple_type_decl 
         {
-            Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
-            symbol->argsList = $3;
+            Symbol* symbol = new Symbol($2, FUNC, $5->symbolType);
+            SymbolMapType* subSymbolMap = new SymbolMapType;
+            for(size_t i = 0; i < $3->size(); i++)
+            {
+                std::string name = (*$3)[i]->name;
+                std::string errorMsg = 
+                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
+                Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
+                (*subSymbolMap)[name] = (*$3)[i];
+                // TODO: set parentScope
+            }
+            symbol->subSymbolMap = subSymbolMap;
+            symbol->subSymbolList = $3;
+            if ($5->symbolType >= BOOL && $5->symbolType <= STRING)
+                delete $5;
+            else
+                symbol->returnTypePtr = $5;
+
+            // new scope
+            driver.symtab.pushScope($2);
+            for(size_t i = 0; i < $3->size(); i++)
+                driver.symtab.addVariable((*$3)[i]);
+            driver.symtab.addFunction(symbol);
         }
         ;
 
@@ -470,8 +489,24 @@ procedure_head:
         PROCEDURE ID parameters 
         {
             Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
-            symbol->argsList = $3;
+            SymbolMapType* subSymbolMap = new SymbolMapType;
+            for(size_t i = 0; i < $3->size(); i++)
+            {
+                std::string name = (*$3)[i]->name;
+                std::string errorMsg = 
+                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
+                Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
+                (*subSymbolMap)[name] = (*$3)[i];
+                // set parentscope
+            }
+            symbol->subSymbolMap = subSymbolMap;
+            symbol->subSymbolList = $3;
 
+            // new scope
+            driver.symtab.pushScope($2);
+            for(size_t i = 0; i < $3->size(); i++)
+                driver.symtab.addVariable((*$3)[i]);
+            driver.symtab.addFunction(symbol);
         }
         ;
 
@@ -482,7 +517,7 @@ parameters:
         }
         |  
         {
-            $$ = nullptr;
+            $$ = new SymbolListType;
         }
         ;
 

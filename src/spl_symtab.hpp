@@ -10,6 +10,7 @@
 using namespace std;
 
 class Symbol;
+typedef std::vector<Symbol*> SymbolListType;
 typedef std::map<std::string, Symbol*> SymbolMapType;
 
 class Symbol
@@ -23,7 +24,9 @@ public:
     /* Symbol's class, e.g. variable/constant/function */
     SPL_CLASS symbolClass;
 
-    /* Symbol's type, only available for variable/constant/type */
+    /* Symbol's type. The type of variable/constant/type symbols
+     * or return type of function symbols.
+     */
     SPL_TYPE symbolType;
 
     /* For symbol with a constant value, pointing to ASTNode */ 
@@ -40,11 +43,13 @@ public:
     /* Array size */
     unsigned int arraySize;
 
-    /* For record type/variable, the member list */
-    SymbolMapType* memberList;
+    /* In record/function/procedure symbol, we use
+     * (name, Symbol*) mapping to gain faster accessing.
+     */
+    SymbolMapType* subSymbolMap;
 
-    /* For function/procedure symbol, the argument list */
-    std::vector<Symbol*>* argsList;
+    /* For record/function/procedure symbol, the member/argument list */
+    SymbolListType* subSymbolList;
 
     /* Parameter passing mode */
     SPL_PARA paraType;
@@ -61,11 +66,10 @@ public:
 
     /* Return value's type, only available for function.
      * If symbol is atomic type (bool/int/char/real/string), 
-     * then its type can be specified by returnType, otherwise
+     * then its type can be specified by symbolType, otherwise
      * the pointer returnTypePtr is needed.
      */
-    SPL_TYPE returnType;
-    Symbol* returnTpyePtr;
+    Symbol* returnTypePtr;
 };
 
 class SymbolTable
