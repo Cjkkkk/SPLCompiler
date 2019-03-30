@@ -161,13 +161,10 @@
 %type   <std::vector<AST_Stmt*>*> stmt_list
 %type   <std::vector<AST_Exp*>*> args_list
 
-%type   <std::vector<Symbol*>*> const_part const_expr_list
-// %type   <std::vector<Symbol*>*> type_part type_decl_list 
 %type   <Symbol*> type_decl simple_type_decl array_type_decl record_type_decl
-// %type   <Symbol*> type_definition 
-%type   <std::vector<Symbol*>*> field_decl field_decl_list
-%type   <std::vector<Symbol*>*> var_part var_decl_list var_decl
+%type   <SymbolMapType*> field_decl field_decl_list
 %type   <std::vector<std::string>*> name_list var_para_list val_para_list
+%type   <std::vector<Symbol*>*> parameters para_decl_list para_type_list
 
 %locations
 
@@ -197,12 +194,12 @@ label_part:
 
 const_part: 
         CONST  const_expr_list  
-        { 
-            $$ = $2;
+        {
+
         }
         |  
-        { 
-            $$ = nullptr;
+        {
+
         }
         ;
 
@@ -210,16 +207,14 @@ const_expr_list:
         const_expr_list  ID  EQUAL  const_value  SEMI 
         {
             Symbol* symbol = new Symbol($2, CONST, $4->valType);
-            symbol->constValue = $4;
-            $1->push_back(symbol);
-            $$ = $1;
+            symbol->constValuePtr = $4;
+            driver.symtab.addVariable(symbol);
         }
         |  ID  EQUAL  const_value  SEMI 
         {
-            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
             Symbol* symbol =  new Symbol($1, CONST, $3->valType);
-            symbol->constValue = $3;
-            newlist->push_back(symbol);
+            symbol->constValuePtr = $3;
+            driver.symtab.addVariable(symbol);
         }
         ;
 
@@ -253,25 +248,22 @@ const_value:
 type_part: 
         TYPE type_decl_list  
         { 
-            // $$ = $2;
+            
         }
         |  
         { 
-            // $$ = nullptr;
+            
         }
         ;
 
 type_decl_list: 
         type_decl_list  type_definition  
         {
-            // $1->push_back($2);
-            // $$ = $1;
+        
         }
         |  type_definition 
         {
-            // std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
-            // newlist->push_back($1);
-            // $$ = newlist;
+        
         }
         ;
         
@@ -309,6 +301,7 @@ simple_type_decl:
             std::string errorMsg = "spl.exe: error: undefined symbol \"" + $1 + "\"";
             Assert(symbol != nullptr, errorMsg.c_str());
             $$ = new Symbol(*symbol);
+            $$->name = "";
         }
         |  LP  name_list  RP  
         {
@@ -336,14 +329,14 @@ array_type_decl:
         ARRAY  LB  INTEGER  RB  OF  type_decl 
         {
             Assert($3 >= 1, "spl.exe: error: illegal array index");
-            SPL_TYPE memberType = $6->symbolType;
+            SPL_TYPE elementType = $6->symbolType;
             Symbol* symbol = new Symbol("", TYPE, ARRAY);
-            symbol->memberType = memberType;
+            symbol->elementType = elementType;
             symbol->arraySize = $3;
-            if (memberType >= BOOL && memberType <= STRING)
+            if (elementType >= BOOL && elementType <= STRING)
                 delete $6;
             else
-                symbol->memberTypePtr = $6;
+                symbol->elementTypePtr = $6;
             $$ = symbol;
         }
         ;
@@ -360,9 +353,15 @@ record_type_decl:
 field_decl_list: 
         field_decl_list  field_decl 
         {
-            $1->insert($1->end(), $2->begin(), $2->end());
-            for(size_t i = 0; i < $2->size(); i++)
-                delete (*$2)[i];
+            SymbolMapType::iterator iter;
+            for(iter = $2->begin(); iter != $2->end(); ++iter)
+            {
+                std::string name = iter->first;
+                std::string errorMsg = 
+                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
+                Assert($1->find(name) == $1->end(), errorMsg.c_str());
+                (*$1)[name] = iter->second;
+            }
             delete $2;
             $$ = $1;
         }
@@ -375,16 +374,20 @@ field_decl_list:
 field_decl: 
         name_list  COLON  type_decl  SEMI 
         {
-            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            SymbolMapType* memberList = new SymbolMapType;
             for(size_t i = 0; i < $1->size(); i++)
             {
+                std::string name = (*$1)[i];
+                std::string errorMsg = 
+                "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
+                Assert(memberList->find(name) == memberList->end(), errorMsg.c_str());
                 Symbol* symbol = new Symbol(*$3);
-                symbol->name = (*$1)[i];
-                newlist->push_back(symbol);
+                symbol->name = name;
+                (*memberList)[name] = symbol;
             }
             delete $1;
             delete $3;
-            $$ = newlist;
+            $$ = memberList;
         }
         ;
 
@@ -405,34 +408,37 @@ name_list:
 var_part: 
         VAR  var_decl_list 
         {
-            $$ = $2;
+            
         }
         | 
         {
-            $$ = nullptr;
+           
         }
         ;
 
 var_decl_list:  
         var_decl_list  var_decl 
         {
-            $1->insert($1->end(), $2->begin(), $2->end());
-            delete $2;
-            $$ = $1;
+
         }
         |  var_decl 
         {
-            $$ = $1;
+
         }
         ;
 
 var_decl:  
         name_list  COLON  type_decl  SEMI 
         {
-            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
-            // push_back
+            for(size_t i = 0; i < $1->size(); i++)
+            {
+                Symbol* symbol = new Symbol(*$3);
+                symbol->name = (*$1)[i];
+                symbol->symbolClass = VAR;
+                driver.symtab.addVariable(symbol);
+            }
             delete $1;
-            $$ = newlist;
+            delete $3;
         }
         ;
 
@@ -449,7 +455,11 @@ function_decl:
         ;
 
 function_head:  
-        FUNCTION  ID  parameters  COLON  simple_type_decl {}
+        FUNCTION  ID  parameters  COLON  simple_type_decl 
+        {
+            Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
+            symbol->argsList = $3;
+        }
         ;
 
 procedure_decl:  
@@ -457,22 +467,66 @@ procedure_decl:
         ;
 
 procedure_head:  
-        PROCEDURE ID parameters {}
+        PROCEDURE ID parameters 
+        {
+            Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
+            symbol->argsList = $3;
+
+        }
         ;
 
 parameters: 
-        LP  para_decl_list  RP {}
-        |  {}
+        LP  para_decl_list  RP 
+        {
+            $$ = $2;
+        }
+        |  
+        {
+            $$ = nullptr;
+        }
         ;
 
 para_decl_list: 
-        para_decl_list  SEMI  para_type_list {}
-        | para_type_list {}
+        para_decl_list  SEMI  para_type_list 
+        {
+            $1->insert($1->end(), $3->begin(), $3->end());
+            delete $3;
+            $$ = $1;
+        }
+        | para_type_list 
+        {
+            $$ = $1;
+        }
         ;
 
 para_type_list: 
-        var_para_list COLON  simple_type_decl {}
-        |  val_para_list  COLON  simple_type_decl {}
+        var_para_list COLON  simple_type_decl 
+        {
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            for(size_t i = 0; i < $1->size(); i++)
+            {
+                Symbol* symbol = new Symbol(*$3);
+                symbol->name = (*$1)[i];
+                symbol->symbolClass = VAR;
+                symbol->paraType = REFER;
+                newlist->push_back(symbol);
+            }
+            delete $3;
+            $$ = newlist;
+        }
+        |  val_para_list  COLON  simple_type_decl 
+        {
+            std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
+            for(size_t i = 0; i < $1->size(); i++)
+            {
+                Symbol* symbol = new Symbol(*$3);
+                symbol->name = (*$1)[i];
+                symbol->symbolClass = VAR;
+                newlist->push_back(symbol);
+            }
+            delete $3;
+            $$ = newlist;
+        }
         ;
 
 var_para_list: 
@@ -490,7 +544,7 @@ val_para_list:
         ;
 
 routine_body: 
-        compound_stmt {$$ = $1;}
+        compound_stmt { $$ = $1; }
         ;
 
 compound_stmt: 

@@ -1,13 +1,29 @@
 program test;
 
+const
+	t1 = 12;
+	t2 = "Hello, world!";
+	t3 = 'c';
+	t4 = false;
+	t5 = 0.23424;
+	t6 = maxint;
+	t7 = nil;
+
+
 type
 	a = integer;
 	b = char;
 	c = string;
 	d = array [10] of integer;
 	e = array [100] of array [10] of c;
-	f = record
+	g = record
 		a, b, c : integer;
+		d : string;
+		f : array [10] of integer;
+		end;
+	f = record
+		a : integer;
+		b : array [10] of g;
 		end;
 
 var
@@ -15,21 +31,21 @@ var
 	tmp : integer;
     arr : array [10] of integer;
 
-function gcd(a, b : integer) : integer;
-var
-	c : integer;
+// function gcd(a, b : integer) : integer;
+// var
+// 	c : integer;
 
-begin
-	if b = 0 then begin
-		gcd := a;
-	end
-	else begin
-		c := a MOD b;
-		gcd := gcd(b, c);
-	end
-	;
-end
-;
+// begin
+// 	if b = 0 then begin
+// 		gcd := a;
+// 	end
+// 	else begin
+// 		c := a MOD b;
+// 		gcd := gcd(b, c);
+// 	end
+// 	;
+// end
+// ;
 
 begin
 	ans := gcd(36, 9);

@@ -9,10 +9,13 @@
 
 using namespace std;
 
+class Symbol;
+typedef std::map<std::string, Symbol*> SymbolMapType;
+
 class Symbol
 {
 public:
-    Symbol(const std::string& name, SPL_CLASS symbolClass, SPL_TYPE symbolType, Symbol* symbolTypePtr = nullptr);
+    Symbol(const std::string& name, SPL_CLASS symbolClass, SPL_TYPE symbolType);
 
     /* Symbol's name */
     std::string name;
@@ -22,27 +25,29 @@ public:
 
     /* Symbol's type, only available for variable/constant/type */
     SPL_TYPE symbolType;
-    // Symbol* symbolTypePtr;
 
     /* For symbol with a constant value, pointing to ASTNode */ 
-    void* constValue;
+    void* constValuePtr;
 
     /* For array type, the member type.
      * If symbol is atomic type (bool/int/char/real/string), 
-     * then its type can be specified by memberType, otherwise
-     * the pointer memberTypePtr is needed for more information.
+     * then its type can be specified by elementType, otherwise
+     * the pointer elementTypePtr is needed for more information.
      */
-    SPL_TYPE memberType;
-    Symbol* memberTypePtr;
-
-    /* For array/record variable or function/procedure, the member/field/argument list */
-    std::vector<Symbol*>* memberList;
+    SPL_TYPE elementType;
+    Symbol* elementTypePtr;
 
     /* Array size */
     unsigned int arraySize;
 
+    /* For record type/variable, the member list */
+    SymbolMapType* memberList;
+
+    /* For function/procedure symbol, the argument list */
+    std::vector<Symbol*>* argsList;
+
     /* Parameter passing mode */
-    SPL_PASSMODE passMode;
+    SPL_PARA paraType;
 
     // TODO: subrange type and enum type
     // std::map<Symbol*, unsigned int>* enumMap;
@@ -52,7 +57,7 @@ public:
      * variables declared inside functions, this gives the
      * scope they're in. 
      */
-    std::map<std::string, Symbol*>* parentScope;
+    SymbolMapType* parentScope;
 
     /* Return value's type, only available for function.
      * If symbol is atomic type (bool/int/char/real/string), 
@@ -77,7 +82,7 @@ public:
      * of the variables declared in a particular scope when we exit that
      * scope. 
      */
-    void pushScope();
+    void pushScope(const std::string& scopeName);
 
     /* For each scope started by a call to SymbolTable::PushScope(), there
      * must be a matching call to SymbolTable::PopScope() at the end of
@@ -85,7 +90,7 @@ public:
      */
     void popScope();
 
-    bool addVaraible(Symbol* symbol);
+    bool addVariable(Symbol* symbol);
     Symbol* lookupVariable(const char* name);
 
     bool addFunction(Symbol* symbol);
@@ -98,9 +103,10 @@ public:
     Symbol* lookupLabel(const char* name);
 
     void print();
+    void printType(Symbol* sym);
 
 private:
-    typedef std::map<std::string, Symbol*> SymbolMapType;
+    std::vector<std::string> scopeNames;
     std::vector<SymbolMapType*> freeSymbolMaps;
     std::vector<SymbolMapType*> variables;
     SymbolMapType functions;

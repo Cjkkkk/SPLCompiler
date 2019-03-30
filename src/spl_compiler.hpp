@@ -58,7 +58,7 @@ enum SPL_TYPE : unsigned char
 };
 
 // parameter passing mode
-enum SPL_PASSMODE : bool
+enum SPL_PARA : bool
 {
     VALUE = false,  // pass by value
     REFER = true    // pass by reference
