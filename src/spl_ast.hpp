@@ -287,11 +287,11 @@ class AST_RoutinePart : public AST_RoutineHead {
 
 class AST_Routine : virtual public AST{
 public:
-    AST_Routine(std::vector<AST_RoutineHead*>& routine_head, AST_Compound* routine_body);
+    AST_Routine(std::vector<AST_RoutineHead*>* routine_head, AST_Compound* routine_body);
     void checkSemantic() override;
     int calculate() override; //pure virtual function
 
-    std::vector<AST_RoutineHead*> routine_head;
+    std::vector<AST_RoutineHead*>* routine_head;
     AST_Compound* routine_body;
 };
 class AST_Program : virtual public AST

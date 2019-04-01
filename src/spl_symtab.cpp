@@ -55,7 +55,7 @@ bool SymbolTable::addVariable(Symbol *symbol)
     // Check to see if a symbol of the same name has already been declared.
     if (
         functions.find(symbol->name) != functions.end() ||
-        (*variables.back()).find(symbol->name) != (*variables.back()).end())
+        variables.back()->find(symbol->name) != variables.back() ->end())
     {
         std::string errorMsg = "spl.exe: error: ignoring redeclaration of symbol \"" + symbol->name + "\".";
         Assert(0, errorMsg.c_str());

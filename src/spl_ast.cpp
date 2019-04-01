@@ -344,19 +344,19 @@ int AST_Func::calculate()
 void AST_Func::checkSemantic() {}
 
 
-AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead*> &routine_head_, SPL::AST_Compound *routine_body_) {
+AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead*> *routine_head_, SPL::AST_Compound *routine_body_) {
     routine_body = routine_body_;
     routine_head = routine_head_;
 }
 void AST_Routine::checkSemantic() {
-    for(auto part:routine_head){
+    for(auto part:*routine_head){
         if(part) part->checkSemantic();
     }
     routine_body->checkSemantic();
 }
 
 int AST_Routine::calculate() {
-    for(auto part:routine_head){
+    for(auto part:*routine_head){
         if(part) part->calculate();
     }
     routine_body->calculate();

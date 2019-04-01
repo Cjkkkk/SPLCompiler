@@ -65,7 +65,7 @@
 %define api.value.type variant
 %define parse.assert
 
-// TODO: 运算符
+
 %right  ASSIGN
 %left   OR
 %left   AND
@@ -148,7 +148,7 @@
 %type 	<AST_Program*> program
 %type	<std::string> program_head
 %type	<AST_Routine*> routine sub_routine
-%type	<std::vector<AST_RoutineHead*>> routine_head
+%type	<std::vector<AST_RoutineHead*>*> routine_head
 %type   <AST_Compound*> routine_body
 %type	<AST_RoutineHead*> label_part const_part var_part type_part routine_part
 %type   <AST_Exp*> factor term expr expression
@@ -183,7 +183,7 @@ program:
 
 program_head: 
         PROGRAM  ID  SEMI {
-        $$ = $2;
+        $$ = $2;// program head can be just a string
         }
         ;
 routine: 
@@ -200,16 +200,18 @@ sub_routine:
 
 routine_head: 
         label_part  const_part  type_part  var_part  routine_part {
-        std::vector<AST_RoutineHead*> vec(4);
-        vec.push_back($2);
-        vec.push_back($3);
-        vec.push_back($4);
-        vec.push_back($5);
+	$$ = new std::vector<AST_RoutineHead*>; // label part is always null, so ignore
+	$$->push_back($2);
+	$$->push_back($3);
+	$$->push_back($4);
+	$$->push_back($5);
         }
         ;
 
 label_part: 
-        {$$ = nullptr;}
+        {
+      	$$ = nullptr;
+        }
         ;
 
 const_part: 
@@ -219,7 +221,7 @@ const_part:
         }
         |  
         {
-		$$ = nullptr;
+	    $$ = nullptr;
         }
         ;
 
@@ -232,6 +234,7 @@ const_expr_list:
         }
         |  ID  EQUAL  const_value  SEMI 
         {
+             // 检查变量是否已经被定义过， 没定义过则添加到符号表
             Symbol* symbol =  new Symbol($1, CONST, $3->valType);
             symbol->constValuePtr = $3;
             driver.symtab.addVariable(symbol);
@@ -788,4 +791,4 @@ args_list:
 void SPL::SPL_Parser::error( const location_type &l, const std::string &err_message )
 {
    std::cout << "spl.exe: error: " << err_message << " at " << l << "\n";
-}
+} 
