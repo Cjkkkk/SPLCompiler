@@ -177,7 +177,7 @@
 %%
 program: 
         program_head  routine  DOT {
-        $$ = new AST_Program($1, $2);
+        driver.program = new AST_Program($1, $2);
         }
         ;
 
