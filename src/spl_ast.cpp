@@ -17,6 +17,7 @@ AST_Exp::~AST_Exp() {}
 
 AST_Stmt::~AST_Stmt() {}
 
+
 // ast node for math expression
 AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
 {
@@ -341,3 +342,35 @@ int AST_Func::calculate()
 }
 
 void AST_Func::checkSemantic() {}
+
+
+AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead*> &routine_head_, SPL::AST_Compound *routine_body_) {
+    routine_body = routine_body_;
+    routine_head = routine_head_;
+}
+void AST_Routine::checkSemantic() {
+    for(auto part:routine_head){
+        if(part) part->checkSemantic();
+    }
+    routine_body->checkSemantic();
+}
+
+int AST_Routine::calculate() {
+    for(auto part:routine_head){
+        if(part) part->calculate();
+    }
+    routine_body->calculate();
+    return -ERROR_VAL;
+}
+AST_Program::AST_Program(string &id_, SPL::AST_Routine *routine_) {
+    id = id_;
+    routine = routine_;
+}
+
+void AST_Program::checkSemantic() {
+    routine->checkSemantic();
+}
+
+int AST_Program::calculate() {
+    return routine->calculate();
+}

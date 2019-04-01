@@ -145,8 +145,14 @@
 %token  SEMI
 
 %type   <bool> direction
-%type   <AST_Const*> const_value
+%type 	<AST_Program*> program
+%type	<std::string> program_head
+%type	<AST_Routine*> routine sub_routine
+%type	<std::vector<AST_RoutineHead*>> routine_head
+%type   <AST_Compound*> routine_body
+%type	<AST_RoutineHead*> label_part const_part var_part type_part routine_part
 %type   <AST_Exp*> factor term expr expression
+%type   <AST_Const*> const_value
 %type   <AST_Assign*> assign_stmt
 %type 	<AST_Stmt*> else_clause stmt non_label_stmt
 %type 	<AST_If*> if_stmt case_stmt
@@ -155,7 +161,7 @@
 %type   <AST_For*> for_stmt
 %type   <AST_Goto*> goto_stmt
 %type   <AST_Func*> proc_stmt
-%type   <AST_Compound*> compound_stmt routine_body
+%type   <AST_Compound*> compound_stmt
 %type   <caseUnit*> case_expr
 %type   <std::vector<caseUnit*>*> case_expr_list
 %type   <std::vector<AST_Stmt*>*> stmt_list
@@ -170,26 +176,40 @@
 
 %%
 program: 
-        program_head  routine  DOT {}
+        program_head  routine  DOT {
+        $$ = new AST_Program($1, $2);
+        }
         ;
 
 program_head: 
-        PROGRAM  ID  SEMI {}
+        PROGRAM  ID  SEMI {
+        $$ = $2;
+        }
         ;
 routine: 
-        routine_head  routine_body {}
+        routine_head  routine_body {
+        $$ = new AST_Routine($1, $2);
+        }
         ;
 
 sub_routine: 
-        routine_head  routine_body {}
+        routine_head  routine_body {
+        $$ = new AST_Routine($1, $2);
+        }
         ;
 
 routine_head: 
-        label_part  const_part  type_part  var_part  routine_part {}
+        label_part  const_part  type_part  var_part  routine_part {
+        std::vector<AST_RoutineHead*> vec(4);
+        vec.push_back($2);
+        vec.push_back($3);
+        vec.push_back($4);
+        vec.push_back($5);
+        }
         ;
 
 label_part: 
-        {}
+        {$$ = nullptr;}
         ;
 
 const_part: 
@@ -199,7 +219,7 @@ const_part:
         }
         |  
         {
-
+		$$ = nullptr;
         }
         ;
 
@@ -252,7 +272,7 @@ type_part:
         }
         |  
         { 
-            
+            $$ = nullptr;
         }
         ;
 
@@ -408,9 +428,9 @@ var_part:
         {
             
         }
-        | 
+        |
         {
-           
+           $$ = nullptr;
         }
         ;
 
@@ -445,7 +465,7 @@ routine_part:
         |  routine_part  procedure_decl {}
         |  function_decl {}
         |  procedure_decl {}
-        | {}
+        | {$$ = nullptr;}
         ;
 
 function_decl: 
@@ -613,8 +633,7 @@ non_label_stmt:
 assign_stmt: 
         ID  ASSIGN  expression {
             AST_Sym* lhs = new AST_Sym($1, nullptr);
-        $$ = new AST_Assign(lhs, $3);
-        //std::cout << $1 << ": " << $$->calculate()<<"\n";
+            $$ = new AST_Assign(lhs, $3);
         }
         | ID LB expression RB ASSIGN expression {
             AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
