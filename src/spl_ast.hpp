@@ -264,44 +264,48 @@ class AST_Func : public AST_Exp, public AST_Stmt
     std::vector<AST_Exp *> *argList;
 };
 
-class AST_RoutineHead : virtual public AST{
-public:
+class AST_RoutineHead : virtual public AST
+{
+  public:
     void checkSemantic() override = 0;
     int calculate() override = 0; //pure virtual function
 };
 
-class AST_VarPart : public AST_RoutineHead {
-
-};
-class AST_ConstPart : public AST_RoutineHead {
-
+class AST_VarPart : public AST_RoutineHead
+{
 };
 
-class AST_TypePart : public AST_RoutineHead {
-
-};
-class AST_RoutinePart : public AST_RoutineHead {
-
+class AST_ConstPart : public AST_RoutineHead
+{
 };
 
+class AST_TypePart : public AST_RoutineHead
+{
+};
 
-class AST_Routine : virtual public AST{
-public:
-    AST_Routine(std::vector<AST_RoutineHead*>* routine_head, AST_Compound* routine_body);
+class AST_RoutinePart : public AST_RoutineHead
+{
+};
+
+class AST_Routine : virtual public AST
+{
+  public:
+    AST_Routine(std::vector<AST_RoutineHead *> *routine_head, AST_Compound *routine_body);
     void checkSemantic() override;
     int calculate() override; //pure virtual function
 
-    std::vector<AST_RoutineHead*>* routine_head;
-    AST_Compound* routine_body;
+    std::vector<AST_RoutineHead *> *routine_head;
+    AST_Compound *routine_body;
 };
+
 class AST_Program : virtual public AST
 {
-public:
-    AST_Program(string& id, AST_Routine* routine);
+  public:
+    AST_Program(string &id, AST_Routine *routine);
     void checkSemantic() override;
     int calculate() override; //pure virtual function
     string id;
-    AST_Routine* routine;
+    AST_Routine *routine;
 };
 
 } // namespace SPL

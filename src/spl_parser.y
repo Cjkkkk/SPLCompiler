@@ -146,7 +146,7 @@
 
 %type   <bool> direction
 %type 	<AST_Program*> program
-%type	<std::string> program_head
+%type	<std::string*> program_head
 %type	<AST_Routine*> routine sub_routine
 %type	<std::vector<AST_RoutineHead*>*> routine_head
 %type   <AST_Compound*> routine_body
@@ -176,41 +176,47 @@
 
 %%
 program: 
-        program_head  routine  DOT {
-        driver.program = new AST_Program($1, $2);
+        program_head  routine  DOT 
+        {
+            driver.program = new AST_Program(*$1, $2);
         }
         ;
 
 program_head: 
-        PROGRAM  ID  SEMI {
-        $$ = $2;// program head can be just a string
+        PROGRAM  ID  SEMI 
+        {
+            $$ = new std::string($2); // program head can be just a string
+            driver.symtab.pushScope($2); // push a symbol
         }
         ;
 routine: 
-        routine_head  routine_body {
-        $$ = new AST_Routine($1, $2);
+        routine_head  routine_body 
+        {
+            $$ = new AST_Routine($1, $2);
         }
         ;
 
 sub_routine: 
-        routine_head  routine_body {
-        $$ = new AST_Routine($1, $2);
+        routine_head  routine_body 
+        {
+            $$ = new AST_Routine($1, $2);
         }
         ;
 
 routine_head: 
-        label_part  const_part  type_part  var_part  routine_part {
-	$$ = new std::vector<AST_RoutineHead*>; // label part is always null, so ignore
-	$$->push_back($2);
-	$$->push_back($3);
-	$$->push_back($4);
-	$$->push_back($5);
+        label_part  const_part  type_part  var_part  routine_part 
+        {
+            $$ = new std::vector<AST_RoutineHead*>; // label part is always null, so ignore
+            $$->push_back($2);
+            $$->push_back($3);
+            $$->push_back($4);
+            $$->push_back($5);
         }
         ;
 
 label_part: 
         {
-      	$$ = nullptr;
+              $$ = nullptr;
         }
         ;
 
@@ -221,7 +227,7 @@ const_part:
         }
         |  
         {
-	    $$ = nullptr;
+            $$ = nullptr;
         }
         ;
 
@@ -775,12 +781,12 @@ factor:
 
 args_list: 
         args_list  COMMA  expression {
-        	$1->push_back($3);
-        	$$ = $1;
+            $1->push_back($3);
+            $$ = $1;
         }
         | expression {
-        	$$ = new std::vector<AST_Exp*>();
-        	$$->push_back($1);
+            $$ = new std::vector<AST_Exp*>();
+            $$->push_back($1);
         }
         ;
 

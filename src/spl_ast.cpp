@@ -17,7 +17,6 @@ AST_Exp::~AST_Exp() {}
 
 AST_Stmt::~AST_Stmt() {}
 
-
 // ast node for math expression
 AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
 {
@@ -26,11 +25,13 @@ AST_Math::AST_Math(int opType, AST_Exp *left, AST_Exp *right)
     this->right = right;
 }
 
-AST_Math::~AST_Math() {
-    delete(left);
-    delete(right);
+AST_Math::~AST_Math()
+{
+    delete (left);
+    delete (right);
 }
-void AST_Math::checkSemantic() {
+void AST_Math::checkSemantic()
+{
     // left->checkSemantic();
     // if(right) right->checkSemantic();
 }
@@ -115,14 +116,21 @@ int AST_Const::calculate()
 }
 
 // todo add delete void*
-AST_Const::~AST_Const() {
-    switch(valType){
-        case BOOL: delete((bool*)valPtr);
-        case CHAR: delete((char*)valPtr);
-        case INT: delete((int*)valPtr);
-        case REAL: delete((double*)valPtr);
-        case STRING: delete((std::basic_string<char>*)valPtr);
-        default: ;
+AST_Const::~AST_Const()
+{
+    switch (valType)
+    {
+    case BOOL:
+        delete ((bool *)valPtr);
+    case CHAR:
+        delete ((char *)valPtr);
+    case INT:
+        delete ((int *)valPtr);
+    case REAL:
+        delete ((double *)valPtr);
+    case STRING:
+        delete ((std::basic_string<char> *)valPtr);
+    default:;
     }
 }
 void AST_Const::checkSemantic() {}
@@ -134,11 +142,13 @@ int AST_Sym::calculate()
 }
 
 // todo add symbol table destruction
-AST_Sym::~AST_Sym() {
+AST_Sym::~AST_Sym()
+{
     // delete(scope);
 }
 
-void AST_Sym::checkSemantic() {
+void AST_Sym::checkSemantic()
+{
     // std::cout << "check symbol " + id +" semantic" << std::endl;
     //scope->lookupVariable(id.c_str());
 }
@@ -146,9 +156,10 @@ void AST_Sym::checkSemantic() {
 // AST_Array
 AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_) {}
 
-AST_Array::~AST_Array() {
-    delete(sym);
-    delete(exp);
+AST_Array::~AST_Array()
+{
+    delete (sym);
+    delete (exp);
 }
 
 int AST_Array::calculate()
@@ -160,16 +171,17 @@ void AST_Array::checkSemantic() {}
 // AST_Dot
 AST_Dot::AST_Dot(AST_Sym *record_, AST_Sym *field_) : record(record_), field(field_) {}
 
-AST_Dot::~AST_Dot() {
-    delete(record);
-    delete(field);
+AST_Dot::~AST_Dot()
+{
+    delete (record);
+    delete (field);
 }
 
 int AST_Dot::calculate()
 {
     return ERROR_VAL;
 }
-void AST_Dot::checkSemantic(){}
+void AST_Dot::checkSemantic() {}
 
 // AST_Assign
 AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(rhs_) {}
@@ -179,11 +191,13 @@ int AST_Assign::calculate()
     return rhs->calculate();
 }
 
-AST_Assign::~AST_Assign() {
-    delete(lhs);
-    delete(rhs);
+AST_Assign::~AST_Assign()
+{
+    delete (lhs);
+    delete (rhs);
 }
-void AST_Assign::checkSemantic() {
+void AST_Assign::checkSemantic()
+{
     // std::cout << "check assignment semantic" << std::endl;
     // lhs->checkSemantic();
     // rhs->checkSemantic();
@@ -191,10 +205,11 @@ void AST_Assign::checkSemantic() {
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_){};
 
-AST_If::~AST_If() {
-    delete(cond);
-    delete(doElse);
-    delete(doIf);
+AST_If::~AST_If()
+{
+    delete (cond);
+    delete (doElse);
+    delete (doIf);
 }
 
 int AST_If::calculate()
@@ -225,9 +240,10 @@ AST_Stmt *AST_If::getDoElse(void)
 void AST_If::checkSemantic() {}
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) {}
 
-AST_While::~AST_While() {
-    delete(cond);
-    delete(stmt);
+AST_While::~AST_While()
+{
+    delete (cond);
+    delete (stmt);
 }
 
 int AST_While::calculate()
@@ -237,9 +253,10 @@ int AST_While::calculate()
 void AST_While::checkSemantic() {}
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : stmtList(stmtList_), exp(exp_) {}
 
-AST_Repeat::~AST_Repeat() {
+AST_Repeat::~AST_Repeat()
+{
     delete exp;
-    delete [] stmtList;
+    delete[] stmtList;
 }
 
 int AST_Repeat::calculate()
@@ -249,10 +266,11 @@ int AST_Repeat::calculate()
 void AST_Repeat::checkSemantic() {}
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : init(init_), dir(dir_), fin(fin_), stmt(stmt_) {}
 
-AST_For::~AST_For() {
-    delete(init);
-    delete(fin);
-    delete(stmt);
+AST_For::~AST_For()
+{
+    delete (init);
+    delete (fin);
+    delete (stmt);
 }
 
 int AST_For::calculate()
@@ -271,8 +289,9 @@ int AST_Goto::calculate()
 void AST_Goto::checkSemantic() {}
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_) {}
 
-AST_Compound::~AST_Compound() {
-    delete []stmtList;
+AST_Compound::~AST_Compound()
+{
+    delete[] stmtList;
 }
 
 int AST_Compound::calculate()
@@ -325,8 +344,9 @@ AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(a
     }
 }
 
-AST_Func::~AST_Func() {
-    delete []argList;
+AST_Func::~AST_Func()
+{
+    delete[] argList;
 }
 
 int AST_Func::calculate()
@@ -343,34 +363,43 @@ int AST_Func::calculate()
 
 void AST_Func::checkSemantic() {}
 
-
-AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead*> *routine_head_, SPL::AST_Compound *routine_body_) {
+AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)
+{
     routine_body = routine_body_;
     routine_head = routine_head_;
 }
-void AST_Routine::checkSemantic() {
-    for(auto part:*routine_head){
-        if(part) part->checkSemantic();
+void AST_Routine::checkSemantic()
+{
+    for (auto part : *routine_head)
+    {
+        if (part)
+            part->checkSemantic();
     }
     routine_body->checkSemantic();
 }
 
-int AST_Routine::calculate() {
-    for(auto part:*routine_head){
-        if(part) part->calculate();
+int AST_Routine::calculate()
+{
+    for (auto part : *routine_head)
+    {
+        if (part)
+            part->calculate();
     }
     routine_body->calculate();
     return -ERROR_VAL;
 }
-AST_Program::AST_Program(string &id_, SPL::AST_Routine *routine_) {
+AST_Program::AST_Program(string &id_, SPL::AST_Routine *routine_)
+{
     id = id_;
     routine = routine_;
 }
 
-void AST_Program::checkSemantic() {
+void AST_Program::checkSemantic()
+{
     routine->checkSemantic();
 }
 
-int AST_Program::calculate() {
+int AST_Program::calculate()
+{
     return routine->calculate();
 }

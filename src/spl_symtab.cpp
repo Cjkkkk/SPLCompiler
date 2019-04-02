@@ -10,15 +10,12 @@ Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolTy
     this->subSymbolList = nullptr;
     this->arraySize = 0;
     this->paraType = VALUE;
-    this->parentScope = nullptr;
     this->returnTypePtr = nullptr;
 }
 
 SymbolTable::SymbolTable()
 {
-    pushScope("Global");
-
-    //
+    currentScopeIndex = -1;
 }
 
 SymbolTable::~SymbolTable()
@@ -29,25 +26,40 @@ SymbolTable::~SymbolTable()
 
 void SymbolTable::pushScope(const std::string &scopeName)
 {
-    SymbolMapType *sm;
-    if (freeSymbolMaps.size() > 0)
-    {
-        sm = freeSymbolMaps.back();
-        freeSymbolMaps.pop_back();
-        sm->erase(sm->begin(), sm->end());
-    }
-    else
-        sm = new SymbolMapType;
-
-    variables.push_back(sm);
     scopeNames.push_back(scopeName);
+    unsigned int newScopeIndex = variables.size();
+    variables.push_back(new SymbolMapType);
+    // functions.push_back(new SymbolMapType);
+    // types.push_back(new SymbolMapType);
+
+    // TODO: assertion
+    Assert(prevScopeMap.find(newScopeIndex) == prevScopeMap.end(),
+           "spl.exe: error: allocating memory error!");
+    prevScopeMap[newScopeIndex] = currentScopeIndex;
+    currentScopeIndex = newScopeIndex;
 }
 
 void SymbolTable::popScope()
 {
     Assert(variables.size() >= 1, "spl.exe: error: mismatched scopes!");
     freeSymbolMaps.push_back(variables.back());
-    variables.pop_back();
+    currentScopeIndex = prevScopeMap[currentScopeIndex];
+}
+
+bool SymbolTable::detectCollision(const std::string &name)
+{
+    // TODO: mask
+    if (
+            name == scopeNames[currentScopeIndex]  
+        ||  variables[currentScopeIndex]->find(name) != variables[currentScopeIndex]->end()
+        ||  functions.find(name) != functions.end()
+        ||  types.find(name) != types.end()
+        ||  labels.find(name) != labels.end()
+        )
+    {
+        return true;
+    }
+    return false;
 }
 
 bool SymbolTable::addVariable(Symbol *symbol)
@@ -55,7 +67,7 @@ bool SymbolTable::addVariable(Symbol *symbol)
     // Check to see if a symbol of the same name has already been declared.
     if (
         functions.find(symbol->name) != functions.end() ||
-        variables.back()->find(symbol->name) != variables.back() ->end())
+        variables.back()->find(symbol->name) != variables.back()->end())
     {
         std::string errorMsg = "spl.exe: error: ignoring redeclaration of symbol \"" + symbol->name + "\".";
         Assert(0, errorMsg.c_str());
@@ -204,7 +216,7 @@ void SymbolTable::print()
     {
         fprintf(stderr, "%*c", depth, ' ');
         fprintf(stderr, "%s \tParam: (", iter->first.c_str());
-        for(size_t i = 0; i < iter->second->subSymbolList->size(); i++)
+        for (size_t i = 0; i < iter->second->subSymbolList->size(); i++)
         {
             Symbol *symbol = (*iter->second->subSymbolList)[i];
             fprintf(stderr, "%s : ", symbol->name.c_str());

@@ -58,12 +58,6 @@ public:
     // std::map<Symbol*, unsigned int>* enumMap;
     // std::map<unsigned int, unsigned int>* subrangeMap;
 
-    /* For symbols that are parameters to functions or are 
-     * variables declared inside functions, this gives the
-     * scope they're in. 
-     */
-    SymbolMapType* parentScope;
-
     /* Return value's type, only available for function.
      * If symbol is atomic type (bool/int/char/real/string), 
      * then its type can be specified by symbolType, otherwise
@@ -94,6 +88,8 @@ public:
      */
     void popScope();
 
+    bool detectCollision(const std::string& name);
+
     bool addVariable(Symbol* symbol);
     Symbol* lookupVariable(const char* name);
 
@@ -110,12 +106,19 @@ public:
     void printType(Symbol* sym);
 
 private:
+    /* containers */
     std::vector<std::string> scopeNames;
     std::vector<SymbolMapType*> freeSymbolMaps;
     std::vector<SymbolMapType*> variables;
+    // TODO: function & type scope
     SymbolMapType functions;
     SymbolMapType types;
     SymbolMapType labels;
+
+    /* tracking working scope */
+    std::map<unsigned int, unsigned int> prevScopeMap;
+    unsigned int currentScopeIndex;
+
 };
 
 #endif // !_SPL_SYMTAB_H_
