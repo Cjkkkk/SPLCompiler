@@ -1,7 +1,12 @@
-//
-// Created by DELL on 2019/3/21.
-//
-// This header is definition for global symbols and global functions.
+/*
+ * @file        spl_compiler.hpp
+ * @brief       Global symbols and functions
+ * @details     .
+ * @author      Ke shanbin
+ * @date        3/21/2019
+ * @version     1.0.0
+ * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
+ */
 
 #ifndef _SPL_COMPILER_HPP_
 #define _SPL_COMPILER_HPP_

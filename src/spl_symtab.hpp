@@ -1,3 +1,13 @@
+/*
+ * @file        spl_symtab.hpp
+ * @brief       Symbol table definition
+ * @details     .
+ * @author      Jiang Xiaochong
+ * @date        3/27/2019
+ * @version     1.0.0
+ * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
+ */
+
 #ifndef _SPL_SYMTAB_H_
 #define _SPL_SYMTAB_H_
 

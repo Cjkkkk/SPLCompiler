@@ -1,3 +1,13 @@
+/*
+ * @file        spl_symtab.hpp
+ * @brief       Symbol table implementation
+ * @details     .
+ * @author      Jiang Xiaochong
+ * @date        3/27/2019
+ * @version     1.0.0
+ * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
+ */
+
 #include "spl_symtab.hpp"
 
 Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType)
@@ -26,8 +36,8 @@ SymbolTable::~SymbolTable()
 
 void SymbolTable::pushScope(const std::string &scopeName)
 {
-    scopeNames.push_back(scopeName);
     unsigned int newScopeIndex = variables.size();
+    scopeNames.push_back(scopeName);
     variables.push_back(new SymbolMapType);
     functions.push_back(new SymbolMapType);
     types.push_back(new SymbolMapType);

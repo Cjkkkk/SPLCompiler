@@ -1,3 +1,13 @@
+/*
+ * @file        spl_compiler.hpp
+ * @brief       Global symbols and functions
+ * @details     .
+ * @author      Ke shanbin
+ * @date        3/21/2019
+ * @version     1.0.0
+ * @par         Copyright(c): Zuiqiang Xiaozu(Best Group)
+ */
+
 #include "spl_compiler.hpp"
 
 void DoAssert(const char *errorMsg)

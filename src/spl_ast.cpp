@@ -1,6 +1,6 @@
 /*
  * @file        spl_ast.cpp
- * @brief       Abstract syntax tree defination.
+ * @brief       Abstract syntax tree implementation
  * @details     .
  * @author      Yin Junlin
  * @date        3/21/2019

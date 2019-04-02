@@ -55,7 +55,7 @@ begin
    else
       m := y;
    
-   if z <m then
+   if z < m then
       m := z;
 end
 ;
