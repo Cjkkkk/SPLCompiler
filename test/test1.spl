@@ -34,6 +34,7 @@ var
 function gcd(a, b : integer) : integer;
 var
 	c : integer;
+	d : f;
 
 begin
 	if b = 0 then begin
@@ -44,6 +45,18 @@ begin
 		gcd := gcd(b, c);
 	end
 	;
+end
+;
+
+procedure findMin(x, y, z: integer; var m: integer); 
+begin
+   if x < y then
+      m := x
+   else
+      m := y;
+   
+   if z <m then
+      m := z;
 end
 ;
 

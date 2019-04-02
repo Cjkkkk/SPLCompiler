@@ -235,14 +235,14 @@ const_expr_list:
         const_expr_list  ID  EQUAL  const_value  SEMI 
         {
             Symbol* symbol = new Symbol($2, CONST, $4->valType);
-            symbol->constValuePtr = $4;
+            symbol->relevantASTNode = $4;
             driver.symtab.addVariable(symbol);
         }
         |  ID  EQUAL  const_value  SEMI 
         {
              // 检查变量是否已经被定义过， 没定义过则添加到符号表
             Symbol* symbol =  new Symbol($1, CONST, $3->valType);
-            symbol->constValuePtr = $3;
+            symbol->relevantASTNode = $3;
             driver.symtab.addVariable(symbol);
         }
         ;
@@ -361,7 +361,7 @@ array_type_decl:
             SPL_TYPE elementType = $6->symbolType;
             Symbol* symbol = new Symbol("", TYPE, ARRAY);
             symbol->elementType = elementType;
-            symbol->arraySize = $3;
+            symbol->scalarSize = $3;
             if (elementType >= BOOL && elementType <= STRING)
                 delete $6;
             else
@@ -470,11 +470,26 @@ var_decl:
         ;
 
 routine_part:  
-        routine_part  function_decl {}
-        |  routine_part  procedure_decl {}
-        |  function_decl {}
-        |  procedure_decl {}
-        | {$$ = nullptr;}
+        routine_part  function_decl 
+        {
+            driver.symtab.popScope();
+        }
+        |  routine_part  procedure_decl 
+        {
+            driver.symtab.popScope();
+        }
+        |  function_decl 
+        {
+            driver.symtab.popScope();
+        }
+        |  procedure_decl 
+        {
+            driver.symtab.popScope();
+        }
+        | 
+        {
+            $$ = nullptr;
+        }
         ;
 
 function_decl: 
@@ -493,7 +508,6 @@ function_head:
                 "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
                 Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
                 (*subSymbolMap)[name] = (*$3)[i];
-                // TODO: set parentScope
             }
             symbol->subSymbolMap = subSymbolMap;
             symbol->subSymbolList = $3;
@@ -502,11 +516,11 @@ function_head:
             else
                 symbol->returnTypePtr = $5;
 
+            driver.symtab.addFunction(symbol);
             // new scope
             driver.symtab.pushScope($2);
             for(size_t i = 0; i < $3->size(); i++)
                 driver.symtab.addVariable((*$3)[i]);
-            driver.symtab.addFunction(symbol);
         }
         ;
 
@@ -531,11 +545,11 @@ procedure_head:
             symbol->subSymbolMap = subSymbolMap;
             symbol->subSymbolList = $3;
 
+            driver.symtab.addFunction(symbol);
             // new scope
             driver.symtab.pushScope($2);
             for(size_t i = 0; i < $3->size(); i++)
                 driver.symtab.addVariable((*$3)[i]);
-            driver.symtab.addFunction(symbol);
         }
         ;
 
@@ -797,4 +811,4 @@ args_list:
 void SPL::SPL_Parser::error( const location_type &l, const std::string &err_message )
 {
    std::cout << "spl.exe: error: " << err_message << " at " << l << "\n";
-} 
+}

@@ -29,8 +29,10 @@ public:
      */
     SPL_TYPE symbolType;
 
-    /* For symbol with a constant value, pointing to ASTNode */ 
-    void* constValuePtr;
+    /* If symbol is a constant class, pointing to ASTNode with constant value.
+     * If symbol is a label, pointing to corresponding ASTNode with label.
+     */ 
+    void* relevantASTNode;
 
     /* For array type, the member type.
      * If symbol is atomic type (bool/int/char/real/string), 
@@ -40,8 +42,8 @@ public:
     SPL_TYPE elementType;
     Symbol* elementTypePtr;
 
-    /* Array size */
-    unsigned int arraySize;
+    /* Array/Enumeration/Subrange size */
+    unsigned int scalarSize;
 
     /* In record/function/procedure symbol, we use
      * (name, Symbol*) mapping to gain faster accessing.
@@ -108,11 +110,10 @@ public:
 private:
     /* containers */
     std::vector<std::string> scopeNames;
-    std::vector<SymbolMapType*> freeSymbolMaps;
+    // std::vector<SymbolMapType*> freeSymbolMaps;
     std::vector<SymbolMapType*> variables;
-    // TODO: function & type scope
-    SymbolMapType functions;
-    SymbolMapType types;
+    std::vector<SymbolMapType*> functions;
+    std::vector<SymbolMapType*> types;
     SymbolMapType labels;
 
     /* tracking working scope */
