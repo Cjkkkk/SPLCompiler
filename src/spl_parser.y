@@ -145,12 +145,8 @@
 %token  SEMI
 
 %type   <bool> direction
-%type 	<AST_Program*> program
 %type	<std::string*> program_head
-%type	<AST_Routine*> routine sub_routine
-%type	<std::vector<AST_RoutineHead*>*> routine_head
 %type   <AST_Compound*> routine_body
-%type	<AST_RoutineHead*> label_part const_part var_part type_part routine_part
 %type   <AST_Exp*> factor term expr expression
 %type   <AST_Const*> const_value
 %type   <AST_Assign*> assign_stmt
@@ -178,7 +174,7 @@
 program: 
         program_head  routine  DOT 
         {
-            driver.program = new AST_Program(*$1, $2);
+
         }
         ;
 
@@ -192,31 +188,27 @@ program_head:
 routine: 
         routine_head  routine_body 
         {
-            $$ = new AST_Routine($1, $2);
+            driver.astmng.addMain($2);
         }
         ;
 
 sub_routine: 
         routine_head  routine_body 
         {
-            $$ = new AST_Routine($1, $2);
+            driver.astmng.addFunc($2);
         }
         ;
 
 routine_head: 
         label_part  const_part  type_part  var_part  routine_part 
         {
-            $$ = new std::vector<AST_RoutineHead*>; // label part is always null, so ignore
-            $$->push_back($2);
-            $$->push_back($3);
-            $$->push_back($4);
-            $$->push_back($5);
+
         }
         ;
 
 label_part: 
         {
-              $$ = nullptr;
+
         }
         ;
 
@@ -227,7 +219,7 @@ const_part:
         }
         |  
         {
-            $$ = nullptr;
+
         }
         ;
 
@@ -281,7 +273,7 @@ type_part:
         }
         |  
         { 
-            $$ = nullptr;
+
         }
         ;
 
@@ -439,7 +431,7 @@ var_part:
         }
         |
         {
-           $$ = nullptr;
+
         }
         ;
 
@@ -488,7 +480,7 @@ routine_part:
         }
         | 
         {
-            $$ = nullptr;
+
         }
         ;
 

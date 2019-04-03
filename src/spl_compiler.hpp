@@ -62,6 +62,23 @@ enum SPL_TYPE : unsigned char
     RECORD      // record
 };
 
+enum AST_TYPE : unsigned int
+{
+    AST_MATH,
+    AST_CONST,
+    AST_SYM,
+    AST_ARRAY,
+    AST_DOT,
+    AST_ASSIGN,
+    AST_IF,
+    AST_WHILE,
+    AST_REPEAT,
+    AST_FOR,
+    AST_GOTO,
+    AST_COMPOUND,
+    AST_FUNC,
+};
+
 // parameter passing mode
 enum SPL_PARA : bool
 {

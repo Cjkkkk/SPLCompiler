@@ -41,7 +41,7 @@ class SPL_Driver
     std::ostream &print(std::ostream &stream);
 
     SymbolTable symtab;
-    AST* program;
+    AST_Manager astmng;
   private:
     void parse_helper(std::istream &stream);
 
