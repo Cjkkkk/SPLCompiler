@@ -9,6 +9,7 @@
  */
 
 #include "spl_ast.hpp"
+#include <algorithm>
 using namespace SPL;
 
 AST::~AST() {}
@@ -106,7 +107,7 @@ AST_Const::AST_Const(std::string &val)
 {
     this->nodeType = AST_CONST;
     this->valType = STRING;
-    this->value.valString = val;
+    this->value.valString = new std::string(val);
 }
 
 int AST_Const::calculate()
@@ -119,7 +120,10 @@ int AST_Const::calculate()
 // todo add delete void*
 AST_Const::~AST_Const()
 {
-
+    if(this->valType == STRING){
+        delete this->value.valString;
+        this->value.valString = nullptr;
+    }
 }
 
 void AST_Const::checkSemantic() {}

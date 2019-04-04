@@ -79,7 +79,7 @@ union valueUnion{
   bool    valBool;
   int     valInt;
   double  valDouble;
-  std::string valString;
+  std::string* valString;
   valueUnion(){}
   ~valueUnion(){}
 };
