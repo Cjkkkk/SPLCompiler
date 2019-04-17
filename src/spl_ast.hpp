@@ -22,7 +22,6 @@
 
 namespace SPL
 {
-
 // abstract class: base
 class AST
 {
@@ -75,6 +74,16 @@ class AST_Math : public AST_Exp
     AST_Exp *right;
 };
 
+union valueUnion{
+  char    valChar;
+  bool    valBool;
+  int     valInt;
+  double  valDouble;
+  std::string* valString;
+  valueUnion(){}
+  ~valueUnion(){}
+};
+
 // ast node for constant expression
 class AST_Const : public AST_Exp
 {
@@ -83,7 +92,7 @@ class AST_Const : public AST_Exp
     explicit AST_Const(double val);
     explicit AST_Const(char val);
     explicit AST_Const(bool val);
-    explicit AST_Const(std::basic_string<char> &val);
+    explicit AST_Const(std::string &val);
     ~AST_Const() override;
     int calculate() override;
     void checkSemantic() override;
@@ -95,7 +104,7 @@ class AST_Const : public AST_Exp
     SPL_TYPE valType;
 
   protected:
-    void *valPtr = nullptr;
+    valueUnion value;
 };
 
 // ast node for symbols, including variables, function/procedure name
@@ -264,48 +273,44 @@ class AST_Func : public AST_Exp, public AST_Stmt
     std::vector<AST_Exp *> *argList;
 };
 
-class AST_RoutineHead : virtual public AST
-{
-  public:
-    void checkSemantic() override = 0;
-    int calculate() override = 0; //pure virtual function
-};
 
-class AST_VarPart : public AST_RoutineHead
-{
-};
+// class AST_Routine : virtual public AST
+// {
+//   public:
+//     AST_Routine(std::vector<AST_RoutineHead *> *routine_head, AST_Compound *routine_body);
+//     void checkSemantic() override;
+//     int calculate() override; //pure virtual function
 
-class AST_ConstPart : public AST_RoutineHead
-{
-};
+//     std::vector<AST_RoutineHead *> *routine_head;
+//     AST_Compound *routine_body;
+// };
 
-class AST_TypePart : public AST_RoutineHead
-{
-};
+// class AST_Program : virtual public AST
+// {
+//   public:
+//     AST_Program(string &id, AST_Routine *routine);
+//     void checkSemantic() override;
+//     int calculate() override; //pure virtual function
+//     string id;
+//     AST_Routine *routine;
+// };
 
-class AST_RoutinePart : public AST_RoutineHead
+class AST_Manager
 {
-};
-
-class AST_Routine : virtual public AST
-{
-  public:
-    AST_Routine(std::vector<AST_RoutineHead *> *routine_head, AST_Compound *routine_body);
-    void checkSemantic() override;
-    int calculate() override; //pure virtual function
-
-    std::vector<AST_RoutineHead *> *routine_head;
-    AST_Compound *routine_body;
-};
-
-class AST_Program : virtual public AST
-{
-  public:
-    AST_Program(string &id, AST_Routine *routine);
-    void checkSemantic() override;
-    int calculate() override; //pure virtual function
-    string id;
-    AST_Routine *routine;
+  private:
+    std::vector<AST*> *functions = nullptr;
+  public: 
+    AST_Manager(void){
+      functions = new std::vector<AST*>();
+      functions->push_back((AST*)nullptr);  //reserve for main()
+    }
+    void addFunc(AST* func){
+      functions->push_back(func);
+    }
+    void addMain(AST* func){
+      functions->at(0) = func;
+    }
+    ~AST_Manager(){}
 };
 
 } // namespace SPL
