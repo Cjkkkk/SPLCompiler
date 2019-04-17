@@ -202,6 +202,7 @@ sub_routine:
 routine_head: 
         label_part  const_part  type_part  var_part  routine_part 
         {
+        	// do nothing
         }
         ;
 
@@ -239,15 +240,15 @@ const_expr_list:
 const_value: 
         INTEGER  
         { 
-            $$ = new AST_Const($1); 
+            $$ = new AST_Const($1);
         }
         |  REAL  
         { 
-            $$ = new AST_Const($1); 
+            $$ = new AST_Const($1);
         }
         |  CHAR 
         { 
-            $$ = new AST_Const($1); 
+            $$ = new AST_Const($1);
         }
         |  STRING  
         { 
@@ -645,6 +646,7 @@ assign_stmt:
         ID  ASSIGN  expression {
             AST_Sym* lhs = new AST_Sym($1, nullptr);
             $$ = new AST_Assign(lhs, $3);
+            std::cout << "infer type :" << $1 << " -> " << $3->valType <<"\n";
         }
         | ID LB expression RB ASSIGN expression {
             AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
@@ -735,44 +737,184 @@ goto_stmt:
         ;
 
 expression: 
-        expression  GE  expr {$$ = new AST_Math(GE_, $1, $3);}
-        |  expression  GT  expr {$$ = new AST_Math(GT_, $1, $3);}
-        |  expression  LE  expr {$$ = new AST_Math(LE_, $1, $3);}
-        |  expression  LT  expr {$$ = new AST_Math(LT_, $1, $3);}
-        |  expression  EQUAL  expr {$$ = new AST_Math(EQUAL_, $1, $3);}
-        |  expression  UNEQUAL  expr {$$ = new AST_Math(UNEQUAL_, $1, $3);}
+        expression  GE  expr {
+        $$ = new AST_Math(GE_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expression  GT  expr {
+        $$ = new AST_Math(GT_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expression  LE  expr {
+        $$ = new AST_Math(LE_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expression  LT  expr {
+        $$ = new AST_Math(LT_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expression  EQUAL  expr {
+        $$ = new AST_Math(EQUAL_, $1, $3);
+        if($1->valType == $3->valType && $1->valType == SPL_TYPE::BOOL){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expression  UNEQUAL  expr {
+        $$ = new AST_Math(UNEQUAL_, $1, $3);
+        if($1->valType == $3->valType && $1->valType == SPL_TYPE::BOOL){
+		$$->valType = $1->valType;
+	}else{
+		// 类型不匹配
+	}
+        }
         |  expr {$$ = $1;}
         ;
 
 expr: 
-        expr  PLUS  term {$$ = new AST_Math(PLUS_, $1, $3);}
-        |  expr  MINUS  term {$$ = new AST_Math(MINUS_, $1, $3);}
-        |  expr  OR  term {$$ = new AST_Math(OR_, $1, $3);}
+        expr  PLUS  term {
+        $$ = new AST_Math(PLUS_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expr  MINUS  term {
+        $$ = new AST_Math(MINUS_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  expr  OR  term {
+        $$ = new AST_Math(OR_, $1, $3);
+        if($1->valType == $3->valType &&  $1->valType == SPL_TYPE::BOOL){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
         |  term {$$ = $1;}
         ;
 
 term: 
-        term  MUL  factor {$$ = new AST_Math(MUL_, $1, $3);}
-        |  term  DIV  factor {$$ = new AST_Math(DIV_, $1, $3);}
-        |  term  MOD  factor {$$ = new AST_Math(MOD_, $1, $3);}
-        |  term  AND  factor {$$ = new AST_Math(AND_, $1, $3);}
+        term  MUL  factor {
+        $$ = new AST_Math(MUL_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+        	$$->valType = $1->valType;
+        }else{
+         		// 类型不匹配
+         	}
+        }
+        |  term  DIV  factor {
+        $$ = new AST_Math(DIV_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+	}
+        |  term  MOD  factor {
+        $$ = new AST_Math(MOD_, $1, $3);
+        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
+        |  term  AND  factor {
+        $$ = new AST_Math(AND_, $1, $3);
+        if($1->valType == $3->valType && $1->valType == SPL_TYPE::BOOL){
+		$$->valType = $1->valType;
+	}else{
+         		// 类型不匹配
+         	}
+        }
         |  factor {$$ = $1;}
         ;
 
 factor: 
-        ID {$$ = new AST_Sym($1, nullptr);}
+        ID {
+        // 检查sym table查看table的类型
+        auto sym = driver.symtab.lookupVariable($1.c_str());
+        if(!sym) {
+        	// 变量未定义
+        }
+        $$ = new AST_Sym($1, nullptr);
+        $$->valType = sym->symbolType;
+        }
         |  ID  LP  RP
-                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func(false, $1, emptyVec);}
-        |  ID  LP  args_list  RP {$$ = new AST_Func(false, $1, $3);}
+        {
+        // 检查sym table 查看func的返回值类型
+        auto sym = driver.symtab.lookupFunction($1.c_str());
+        if(!sym) {
+                // 函数未定义
+        }
+	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+	$$ = new AST_Func(false, $1, emptyVec);
+        $$->valType = sym->symbolType;
+        }
+        |  ID  LP  args_list  RP {
+        // 检查sym table 查看func的返回值类型
+        auto sym = driver.symtab.lookupFunction($1.c_str());
+	if(!sym) {
+		// 函数未定义
+	}
+	// 查看参数列表的类型是否一致
+	auto args_list = sym->subSymbolList;
+	if(args_list->size()!=$3->size()){
+		// 传入参数数目与定义不一致
+	}
+	int size = $3->size();
+	for(auto i = 0 ; i < size ; i ++ ){
+		// 检查数据类型是否一致
+		if($3->at(i)->valType != args_list->at(i)->symbolType){
+			// 类型不一致
+		}
+	}
+        $$ = new AST_Func(false, $1, $3);
+        // 推导为返回值的数据类型
+        $$->valType = sym->symbolType;
+        }
         |  SYS_FUNCT  LP  RP
-                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func($1, emptyVec);}
-        |  SYS_FUNCT  LP  args_list  RP {$$ = new AST_Func($1, $3);}
-        |  const_value {$$ = $1;}
+                {
+                std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func($1, emptyVec);
+                }
+        |  SYS_FUNCT  LP  args_list  RP {
+        $$ = new AST_Func($1, $3);
+        }
+        |  const_value {
+        $$ = $1;
+        }
         |  LP  expression  RP {$$ = $2;}
-        |  NOT  factor {$$ = new AST_Math(NOT_, $2, nullptr);}
-        |  MINUS  factor {$$ = new AST_Math(MINUS__, $2, nullptr);}
+        |  NOT  factor {
+        $$ = new AST_Math(NOT_, $2, nullptr);
+        $$->valType = SPL_TYPE::BOOL;
+        }
+        |  MINUS  factor {
+        $$ = new AST_Math(MINUS__, $2, nullptr);
+        $$->valType = $2->valType;
+        }
         |  ID  LB  expression  RB {$$ = new AST_Array(
                                                 new AST_Sym($1, nullptr),
                                                 $3);}

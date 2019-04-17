@@ -27,7 +27,7 @@ type
 		end;
 
 var
-	ans : integer;
+	ans : char;
 	tmp : integer;
     arr : array [10] of integer;
 
@@ -61,7 +61,7 @@ end
 ;
 
 begin
-	ans := gcd(36, 9);
+	ans := 'C';
 	tmp := gcd(6, 3);
 	ans := tmp * ans;
 	writeln(ans);

@@ -83,11 +83,5 @@ void SPL::SPL_Driver::parse_helper(std::istream &stream)
 
 std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 {
-    // stream << red << "Results: " << norm << "\n";
-    // stream << blue << "Uppercase: " << norm << uppercase << "\n";
-    // stream << blue << "Lowercase: " << norm << lowercase << "\n";
-    // stream << blue << "Lines: " << norm << lines << "\n";
-    // stream << blue << "Words: " << norm << words << "\n";
-    // stream << blue << "Characters: " << norm << chars << "\n";
     return (stream);
 }

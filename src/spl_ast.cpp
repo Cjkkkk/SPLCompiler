@@ -31,8 +31,7 @@ AST_Math::~AST_Math()
 }
 void AST_Math::checkSemantic()
 {
-    // left->checkSemantic();
-    // if(right) right->checkSemantic();
+
 }
 int AST_Math::calculate()
 {
@@ -72,32 +71,37 @@ int AST_Math::calculate()
 }
 
 // ast node for constant expression
-AST_Const::AST_Const(int val): valType(INT)
+AST_Const::AST_Const(int val)
 {
+    this->valType = INT;
     this->nodeType = AST_CONST;
     this->value.valInt = val;
 }
 
-AST_Const::AST_Const(double val): valType(REAL)
+AST_Const::AST_Const(double val)
 {
+    this->valType = REAL;
     this->nodeType = AST_CONST;
     this->value.valDouble = val;
 }
 
-AST_Const::AST_Const(char val):valType(CHAR)
+AST_Const::AST_Const(char val)
 {
+    this->valType = CHAR;
     this->nodeType = AST_CONST;
     this->value.valChar = val;
 }
 
-AST_Const::AST_Const(bool val):valType(BOOL)
+AST_Const::AST_Const(bool val)
 {
+    this->valType = BOOL;
     this->nodeType = AST_CONST;
     this->value.valBool = val;
 }
 
-AST_Const::AST_Const(std::string &val): valType(STRING)
+AST_Const::AST_Const(std::string &val)
 {
+    this->valType = STRING;
     this->nodeType = AST_CONST;
     this->value.valString = new std::string(val);
 }
@@ -109,7 +113,6 @@ int AST_Const::calculate()
     return 0;
 }
 
-// todo add delete void*
 AST_Const::~AST_Const()
 {
     if(this->valType == STRING){

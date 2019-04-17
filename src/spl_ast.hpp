@@ -41,7 +41,7 @@ class AST_Exp : virtual public AST
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST_Exp() = 0;      //pure virtual function
-                                 //virtual void print(void) = 0;       //pure virtual function
+    SPL_TYPE valType;
 };
 
 // abstract class : ast trees that represent a statement without a value
@@ -63,7 +63,6 @@ class AST_Math : public AST_Exp
     int calculate() override;
     void checkSemantic() override;
     void print();
-
   protected:
     /* op: operator, including:
      * + - * / % & | -(neg) !(not) 
@@ -101,7 +100,6 @@ class AST_Const : public AST_Exp
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
      */
-    SPL_TYPE valType;
 
   protected:
     valueUnion value;
