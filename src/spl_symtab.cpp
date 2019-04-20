@@ -91,7 +91,11 @@ Symbol *SymbolTable::lookupVariable(const char *name)
         SymbolMapType::iterator iter = variables[scopeIndex]->find(name);
         if (iter != variables[scopeIndex]->end())
             return iter->second;
-        scopeIndex = prevScopeMap[scopeIndex];
+        if(scopeIndex == 0)
+            return nullptr;
+        else {
+            scopeIndex = prevScopeMap.find(scopeIndex)->second;
+        }
     }
     return nullptr;
 }
@@ -118,7 +122,11 @@ Symbol *SymbolTable::lookupFunction(const char *name)
         SymbolMapType::iterator iter = functions[scopeIndex]->find(name);
         if (iter != functions[scopeIndex]->end())
             return iter->second;
-        scopeIndex = prevScopeMap[scopeIndex];
+        if(scopeIndex == 0)
+            return nullptr;
+        else {
+            scopeIndex = prevScopeMap.find(scopeIndex)->second;
+        }
     }
     return nullptr;
 }
@@ -145,7 +153,11 @@ Symbol *SymbolTable::lookupType(const char *name)
         SymbolMapType::iterator iter = types[scopeIndex]->find(name);
         if (iter != types[scopeIndex]->end())
             return iter->second;
-        scopeIndex = prevScopeMap[scopeIndex];
+        if(scopeIndex == 0)
+            return nullptr;
+        else {
+            scopeIndex = prevScopeMap.find(scopeIndex)->second;
+        }
     }
     return nullptr;
 }

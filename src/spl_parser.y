@@ -58,6 +58,7 @@
     #include <vector>
     /* include for all driver functions */
     #include "spl_driver.hpp"
+    #include "spl_exception.hpp"
 #undef yylex
 #define yylex scanner.yylex
 }
@@ -791,27 +792,57 @@ expression:
 expr: 
         expr  PLUS  term {
         $$ = new AST_Math(PLUS_, $1, $3);
-        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+        if(($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
-         	}
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'PLUS' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+	}
+
+	if(($3->valType == SPL_TYPE::INT || $3->valType == SPL_TYPE::REAL)){
+		$$->valType = $3->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'PLUS' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
         }
         |  expr  MINUS  term {
         $$ = new AST_Math(MINUS_, $1, $3);
-        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+        if(($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
-         	}
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'MINUS' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+	}
+
+	if(($3->valType == SPL_TYPE::INT || $3->valType == SPL_TYPE::REAL)){
+		$$->valType = $3->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'MINUS' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
         }
         |  expr  OR  term {
         $$ = new AST_Math(OR_, $1, $3);
-        if($1->valType == $3->valType &&  $1->valType == SPL_TYPE::BOOL){
+        if($1->valType == SPL_TYPE::BOOL){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
-         	}
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'OR' expect type 'BOOL', got '" + std::to_string($1->valType) + "'.\n"};
+	}
+
+	if($3->valType == SPL_TYPE::BOOL){
+		$$->valType = $3->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'OR' expect type 'BOOL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
         }
         |  term {$$ = $1;}
         ;
@@ -819,36 +850,77 @@ expr:
 term: 
         term  MUL  factor {
         $$ = new AST_Math(MUL_, $1, $3);
-        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
-        	$$->valType = $1->valType;
-        }else{
-         		// 类型不匹配
-         	}
+        if(($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+		$$->valType = $1->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'MUL' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+	}
+
+	if(($3->valType == SPL_TYPE::INT || $3->valType == SPL_TYPE::REAL)){
+		$$->valType = $3->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'MUL' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
         }
         |  term  DIV  factor {
         $$ = new AST_Math(DIV_, $1, $3);
-        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+        if(($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
-         	}
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'DIV' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+	}
+
+	if(($3->valType == SPL_TYPE::INT || $3->valType == SPL_TYPE::REAL)){
+		$$->valType = $3->valType;
+	}else{
+	// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'DIV' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
+
 	}
         |  term  MOD  factor {
         $$ = new AST_Math(MOD_, $1, $3);
-        if($1->valType == $3->valType && ($1->valType == SPL_TYPE::INT || $1->valType == SPL_TYPE::REAL)){
+        if($1->valType == SPL_TYPE::INT ){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
-         	}
+         	// 类型不匹配
+         	throw splException{0, 0 ,
+			"operator 'MOD' expect type 'INT', got '" + std::to_string($1->valType) + "'.\n"};
+		}
+        if($3->valType == SPL_TYPE::INT ){
+		$$->valType = $3->valType;
+	}else{
+		// 类型不匹配
+		throw splException{0, 0 ,
+			"operator 'MOD' expect type 'INT', got '" + std::to_string($3->valType) + "'.\n"};
+		}
         }
         |  term  AND  factor {
         $$ = new AST_Math(AND_, $1, $3);
-        if($1->valType == $3->valType && $1->valType == SPL_TYPE::BOOL){
+        if($1->valType == SPL_TYPE::BOOL){
 		$$->valType = $1->valType;
 	}else{
-         		// 类型不匹配
+         	// 类型不匹配
+         	throw splException{0, 0 ,
+                		"operator 'AND' expect type 'BOOL', got '" + std::to_string($1->valType) + "'.\n"};
          	}
+        if($3->valType == SPL_TYPE::BOOL){
+        	$$->valType = $3->valType;
+	}else{
+		// 类型不匹配
+		throw splException{0, 0 ,
+		"operator 'AND' expect type 'BOOL', got '" + std::to_string($3->valType) + "'.\n"};
+	}
+
         }
+
         |  factor {$$ = $1;}
         ;
 
@@ -857,9 +929,10 @@ factor:
         // 检查sym table查看table的类型
         auto sym = driver.symtab.lookupVariable($1.c_str());
         if(!sym) {
-        	// 变量未定义
+        	throw splException{0, 0 , "variable '" + $1 + "' is not declared in this scope.\n"};
         }
         $$ = new AST_Sym($1, nullptr);
+        std::cout << sym->symbolType;
         $$->valType = sym->symbolType;
         }
         |  ID  LP  RP
@@ -868,7 +941,7 @@ factor:
         auto sym = driver.symtab.lookupFunction($1.c_str());
         if(!sym) {
                 // 函数未定义
-
+		throw splException{0, 0 , "function or procedure '" + $1 + "' is not declared in this scope.\n"};
         }
 	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
 	$$ = new AST_Func(false, $1, emptyVec);
@@ -879,17 +952,21 @@ factor:
         auto sym = driver.symtab.lookupFunction($1.c_str());
 	if(!sym) {
 		// 函数未定义
+		throw splException{0, 0 , "function or procedure '" + $1 + "' is not declared in this scope.\n"};
 	}
 	// 查看参数列表的类型是否一致
 	auto args_list = sym->subSymbolList;
 	if(args_list->size()!=$3->size()){
 		// 传入参数数目与定义不一致
+		throw splException{0, 0 ,
+		"function or procedure '" + $1 + "' expect " + std::to_string(args_list->size()) + " arguments, got " + std::to_string($3->size()) +".\n"};
 	}
 	int size = $3->size();
 	for(auto i = 0 ; i < size ; i ++ ){
 		// 检查数据类型是否一致
 		if($3->at(i)->valType != args_list->at(i)->symbolType){
-			// 类型不一致
+			throw splException{0, 0 ,
+                        "function or procedure '" + $1 + "' expect type '" + std::to_string(args_list->at(i)->symbolType) + "', got type '"+ std::to_string($3->at(i)->valType) +"'.\n"};
 		}
 	}
         $$ = new AST_Func(false, $1, $3);
