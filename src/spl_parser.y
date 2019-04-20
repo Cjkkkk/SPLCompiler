@@ -650,7 +650,7 @@ assign_stmt:
 //			throw splException{0, 0 , "variable '" + $1 + "' is not declared in this scope.\n"};
 //		}
 //		if(sym->symbolType != $3->valType) {
-//			throw splException{0, 0 , "invaild conversion from '" + std::to_string($3->valType) + "' to '" + std::to_string(sym->symbolType) + "'.\n"};
+//			throw splException{0, 0 , "invaild conversion from '" + typeToString($3->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
 //		}
 		AST_Sym* lhs = new AST_Sym($1, nullptr);
 		$$ = new AST_Assign(lhs, $3);
@@ -750,12 +750,12 @@ expression:
         if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '>=' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+			"operator '>=' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '>=' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+			"operator '>=' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
 	$$->valType = SPL_TYPE::BOOL;
@@ -765,12 +765,12 @@ expression:
         if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '>' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+			"operator '>' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '>' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+			"operator '>' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
 	$$->valType = SPL_TYPE::BOOL;
@@ -780,12 +780,12 @@ expression:
         if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '<=' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+			"operator '<=' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '<=' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+			"operator '<=' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
 	$$->valType = SPL_TYPE::BOOL;
@@ -795,12 +795,12 @@ expression:
         if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-                	"operator '<' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+                	"operator '<' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator '<' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+			"operator '<' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
 	$$->valType = SPL_TYPE::BOOL;
@@ -836,14 +836,14 @@ expr:
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '+' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+		"operator '+' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
 	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '+' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator '+' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
@@ -858,14 +858,14 @@ expr:
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '-' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+		"operator '-' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
 	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '-' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator '-' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
 		$$->valType == SPL_TYPE::REAL;
@@ -879,14 +879,14 @@ expr:
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator 'OR' expect type 'BOOL', got '" + std::to_string($1->valType) + "'.\n"};
+		"operator 'OR' expect type 'BOOL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
 	if($3->valType != SPL_TYPE::BOOL){
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator 'OR' expect type 'BOOL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator 'OR' expect type 'BOOL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	$$->valType = SPL_TYPE::BOOL;
         }
@@ -899,14 +899,14 @@ term:
         if(($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '*' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+		"operator '*' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
 	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '*' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator '*' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
 		$$->valType == SPL_TYPE::REAL;
@@ -919,13 +919,13 @@ term:
         if(($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '/' expect type 'INT' or 'REAL', got '" + std::to_string($1->valType) + "'.\n"};
+		"operator '/' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
 	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{0, 0 ,
-		"operator '/' expect type 'INT' or 'REAL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator '/' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
 		$$->valType == SPL_TYPE::REAL;
@@ -939,13 +939,13 @@ term:
 
          	// 类型不匹配
          	throw splException{0, 0 ,
-			"operator 'MOD' expect type 'INT', got '" + std::to_string($1->valType) + "'.\n"};
+			"operator 'MOD' expect type 'INT', got '" + typeToString($1->valType) + "'.\n"};
 		}
         if($3->valType != SPL_TYPE::INT ){
 
 		// 类型不匹配
 		throw splException{0, 0 ,
-			"operator 'MOD' expect type 'INT', got '" + std::to_string($3->valType) + "'.\n"};
+			"operator 'MOD' expect type 'INT', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	$$->valType = SPL_TYPE::INT;
         }
@@ -954,13 +954,13 @@ term:
         if($1->valType != SPL_TYPE::BOOL){
          	// 类型不匹配
          	throw splException{0, 0 ,
-                		"operator 'AND' expect type 'BOOL', got '" + std::to_string($1->valType) + "'.\n"};
+                		"operator 'AND' expect type 'BOOL', got '" + typeToString($1->valType) + "'.\n"};
          	}
         if($3->valType != SPL_TYPE::BOOL){
 
 		// 类型不匹配
 		throw splException{0, 0 ,
-		"operator 'AND' expect type 'BOOL', got '" + std::to_string($3->valType) + "'.\n"};
+		"operator 'AND' expect type 'BOOL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	$$->valType = SPL_TYPE::BOOL;
         }
@@ -1009,7 +1009,7 @@ factor:
 		// 检查数据类型是否一致
 		if($3->at(i)->valType != args_list->at(i)->symbolType){
 			throw splException{0, 0 ,
-                        "function or procedure '" + $1 + "' expect type '" + std::to_string(args_list->at(i)->symbolType) + "', got type '"+ std::to_string($3->at(i)->valType) +"'.\n"};
+                        "function or procedure '" + $1 + "' expect type '" + typeToString(args_list->at(i)->symbolType) + "', got type '"+ typeToString($3->at(i)->valType) +"'.\n"};
 		}
 	}
         $$ = new AST_Func(false, $1, $3);
