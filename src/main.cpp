@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
             driver.parse(argv[1]);
             driver.symtab.print();
         }catch (splException& e) {
-            std::cout << e.line << ":" << e.offset << ": error:" << e.errorMessage << "\n";
+            std::cout << "line " << e.line << ": col " << e.offset << ": error:" << e.errorMessage << "\n";
         }
         return 0;
     }
