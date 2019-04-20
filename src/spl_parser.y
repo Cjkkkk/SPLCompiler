@@ -868,6 +868,7 @@ factor:
         auto sym = driver.symtab.lookupFunction($1.c_str());
         if(!sym) {
                 // 函数未定义
+
         }
 	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
 	$$ = new AST_Func(false, $1, emptyVec);
@@ -915,9 +916,9 @@ factor:
         $$ = new AST_Math(MINUS__, $2, nullptr);
         $$->valType = $2->valType;
         }
-        |  ID  LB  expression  RB {$$ = new AST_Array(
-                                                new AST_Sym($1, nullptr),
-                                                $3);}
+        |  ID  LB  expression  RB {
+        $$ = new AST_Array(new AST_Sym($1, nullptr),$3);
+        }
         |  ID  DOT  ID {$$ = new AST_Dot(
                                         new AST_Sym($1, nullptr),
                                         new AST_Sym($3, nullptr));}
