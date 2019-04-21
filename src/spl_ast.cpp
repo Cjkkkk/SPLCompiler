@@ -80,9 +80,9 @@ void AST_Math::emit(spl_IR* ir) {
     }
     tempVariable = ir->genTempVariable();
     if(opType == MINUS__) {
-        ir->IR.push_back({"", MINUS__, left->tempVariable, "", tempVariable});
+        ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
     } else {
-        ir->IR.push_back({"", opType , left->tempVariable, right->tempVariable, tempVariable});
+        ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
     }
 }
 // ast node for constant expression
@@ -139,7 +139,7 @@ AST_Const::~AST_Const()
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(spl_IR* ir){
     tempVariable = ir->genTempVariable();
-    ir->IR.push_back({"", OP_ASSIGN, "const", "", tempVariable});
+    ir->addInstruction({"", OP_ASSIGN, "const", "", tempVariable});
 }
 AST_Sym::AST_Sym(std::string &id_, SymbolTable *scope_) : id(id_), scope(scope_) 
 {
@@ -165,7 +165,7 @@ void AST_Sym::checkSemantic()
 }
 void AST_Sym::emit(spl_IR* ir){
     tempVariable = ir->genTempVariable();
-    ir->IR.push_back({"", OP_ASSIGN, id, "", tempVariable});
+    ir->addInstruction({"", OP_ASSIGN, id, "", tempVariable});
 }
 
 // AST_Array
@@ -239,7 +239,7 @@ void AST_Assign::emit(spl_IR* ir){
 //    if(lhs->tempVariable == ""){
 //        lhs->emit(ir);
 //    }
-    ir->IR.push_back({"", OP_ASSIGN, rhs->tempVariable, "", ((AST_Sym*)lhs)->id});
+    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", ((AST_Sym*)lhs)->id});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
@@ -282,14 +282,19 @@ AST_Stmt *AST_If::getDoElse(void)
 void AST_If::checkSemantic() {}
 void AST_If::emit(spl_IR* ir){
     cond->emit(ir);
-    ir->IR.push_back({"", OP_IF, cond->tempVariable, "", ""});
-    auto index_1 = ir->IR.size() - 1; // 直接去else
+    auto elseLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", elseLabel});
+
     doIf->emit(ir);
-    ir->IR.push_back({"", OP_GOTO, "", "", ""}); // 去else后面
-    auto index_2 = ir->IR.size() - 1;
+    ir->addInstruction({"", OP_GOTO, "", "",exitLabel}); // if结束跳到exit
+
+    ir->addInstruction({elseLabel , OP_NULL, "", "",""}); // else标签
     if(doElse) {
         doElse->emit(ir);
     }
+    ir->addInstruction({exitLabel, OP_NULL, "", "", ""}); // exit标签
+
 }
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) 
 {

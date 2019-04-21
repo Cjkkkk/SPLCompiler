@@ -154,8 +154,8 @@ std::string SPL_OPToString(SPL_OP op){
         case OP_GOTO:
             return "OP_GOTO";
             break;
-        case OP_IF:
-            return "OP_IF";
+        case OP_IF_Z:
+            return "OP_IF_Z";
             break;
         case OP_CALL:
             return "OP_CALL";
@@ -165,6 +165,9 @@ std::string SPL_OPToString(SPL_OP op){
             break;
         case OP_NULL:
             return "";
+            break;
+        case OP_RET:
+            return "OP_RETURN";
             break;
         default:
             return "ERROR";

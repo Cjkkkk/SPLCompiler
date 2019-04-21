@@ -92,6 +92,7 @@ void SPL::SPL_Driver::emitIR(){
     for(auto func : *astmng.functions) {
         ir.IR.push_back({"func" + std::to_string(index), OP_NULL, "", "", ""});
         func->emit(&ir);
+        ir.IR.push_back({ "", OP_RET, "", "", ""});
         index ++;
     }
 }

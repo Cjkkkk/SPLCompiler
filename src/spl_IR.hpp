@@ -24,13 +24,18 @@ public:
     spl_IR():tempCount(0), labelCount(0){
 
     }
-    std::vector<Instruction> IR;
+
+    void addInstruction(Instruction ins) {
+        IR.push_back(ins);
+    }
     std::string genTempVariable(){
         return "_t" + std::to_string(tempCount ++);
     }
     std::string genLabel(){
         return "L" + std::to_string(labelCount ++);
     }
+
+    std::vector<Instruction> IR;
     int tempCount;
     int labelCount;
 };
