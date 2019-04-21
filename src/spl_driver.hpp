@@ -17,6 +17,7 @@
 
 #include "spl_parser.tab.hh"
 #include "spl_scanner.hpp"
+#include "spl_IR.hpp"
 
 namespace SPL
 {
@@ -39,12 +40,13 @@ class SPL_Driver
     void parse(std::istream &stream);
 
     std::ostream &print(std::ostream &stream);
-
+    void emitIR();
+    void printIR();
     SymbolTable symtab;
     AST_Manager astmng;
   private:
     void parse_helper(std::istream &stream);
-
+    spl_IR ir;
     SPL::SPL_Parser *parser = nullptr;
     SPL::SPL_Scanner *scanner = nullptr;
 };

@@ -85,3 +85,19 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 {
     return (stream);
 }
+
+
+void SPL::SPL_Driver::emitIR(){
+    int index = 0;
+    for(auto func : *astmng.functions) {
+        ir.IR.push_back({"func" + std::to_string(index), OP_NULL, "", "", ""});
+        func->emit(&ir);
+        index ++;
+    }
+}
+
+void SPL::SPL_Driver::printIR(){
+    for(const auto & ir : ir.IR) {
+        std::cout << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
+    }
+}

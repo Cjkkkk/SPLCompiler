@@ -63,13 +63,12 @@ end
 ;
 
 begin
-	ans := gcd(36, 9);
-	tmp := gcd(6, 3);
+
 	ans := tmp * ans;
 	ans := tmp + ans;
 	ans := tmp - ans;
 	ans := tmp / ans;
-	bool1 := bool1 >= bool2;
+	bool1 := bool1 and bool2;
 	bool1 := bool1 or bool2;
 
 	bool1 := 3 > 2;
