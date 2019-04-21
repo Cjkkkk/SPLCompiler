@@ -7,14 +7,14 @@
 
 #include <exception>
 #include <iostream>
-class splException : public std::exception {
+class splException : public std::exception
+{
 public:
     int line;
     int offset;
     std::string errorMessage;
     splException(int line_, int offset_, std::string errorMessage_)
-    :line(line_), offset(offset_), errorMessage(errorMessage_){}
+        : line(line_), offset(offset_), errorMessage(errorMessage_) {}
 };
-
 
 #endif //SPLCOMPILER_SPL_EXCEPTION_H

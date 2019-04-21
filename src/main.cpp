@@ -18,11 +18,14 @@ int main(int argc, char *argv[])
     SPL::SPL_Driver driver;
     if (argc > 1)
     {
-        try{
+        try
+        {
             driver.parse(argv[1]);
             driver.symtab.print();
-        }catch (splException& e) {
-            std::cout << "line " << e.line << ": col " << e.offset << ": error:" << e.errorMessage << "\n";
+        }
+        catch (splException &e)
+        {
+            std::cout << argv[1] << ": " << e.line << ":" << e.offset << ": error: " << e.errorMessage << "\n";
         }
         return 0;
     }
