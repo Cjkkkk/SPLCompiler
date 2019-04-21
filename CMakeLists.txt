@@ -29,7 +29,7 @@ add_executable(SPLCompiler
         src/spl_driver.cpp
         ${FLEX_lexer_OUTPUTS}
         ${BISON_parser_OUTPUTS}
-        src/spl_ast.cpp src/spl_symtab.cpp src/spl_compiler.cpp src/spl_exception.cpp src/spl_exception.hpp)
+        src/spl_ast.cpp src/spl_symtab.cpp src/spl_compiler.cpp src/spl_exception.cpp src/spl_exception.hpp src/consoleColor.hpp)
 
 target_include_directories(SPLCompiler
         PUBLIC

@@ -12,6 +12,7 @@
 #include <cstdio>
 #include "spl_driver.hpp"
 #include "spl_exception.hpp"
+//#include "consoleColor.hpp"
 
 int main(int argc, char *argv[])
 {
