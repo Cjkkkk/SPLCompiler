@@ -453,7 +453,15 @@ int AST_Func::calculate()
 
 void AST_Func::checkSemantic() {}
 void AST_Func::emit(spl_IR* ir) {
-
+    for(const auto& arg : *argList) {
+        if(arg->tempVariable == ""){
+            arg->emit(ir);
+        }
+    }
+    for(const auto& arg : *argList) {
+        ir->addInstruction({"", OP_PARAM, arg->tempVariable, "", ""});
+    }
+    ir->addInstruction({"", OP_CALL, funcId, "", ""});
 }
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)
