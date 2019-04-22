@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include "spl_compiler.hpp"
+#include "spl_exception.hpp"
 
 using namespace std;
 
@@ -115,7 +116,19 @@ public:
 
     void print();
     void printType(Symbol *sym);
-
+    unsigned int getCurrentScopeIndex() {
+        return currentScopeIndex;
+    }
+    void setCurrentScopeIndex(unsigned index) {
+        if(index >= variables.size()) {
+            throw splException{0,0,"illegal scope index"};
+        }else {
+            currentScopeIndex = index;
+        }
+    }
+    std::string getFunctionNameByIndex(unsigned int scopeIndex) {
+        return scopeNames[scopeIndex];
+    }
 private:
     /* containers */
     std::vector<std::string> scopeNames;

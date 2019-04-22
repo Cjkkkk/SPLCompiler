@@ -34,10 +34,9 @@ public:
     std::string genLabel(){
         return "L" + std::to_string(labelCount ++);
     }
-
     std::vector<Instruction> IR;
-    int tempCount;
-    int labelCount;
+    unsigned int tempCount;
+    unsigned int labelCount;
 };
 
 

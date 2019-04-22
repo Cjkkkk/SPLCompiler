@@ -316,17 +316,20 @@ class AST_Manager
   private:
 
   public:
-    std::vector<std::pair<AST*, string*>> *functions = nullptr;
-    AST_Manager(void){
-      functions = new std::vector<std::pair<AST*, string*>>();
-      functions->push_back({nullptr, nullptr});  //reserve for main()
+    std::vector<AST*> *functions = nullptr;
+    std::vector<unsigned int> *scopes = nullptr;
+    AST_Manager(){
+      functions = new std::vector<AST*>();
+      scopes = new std::vector<unsigned int>();
+//      functions->push_back({nullptr, nullptr});  //reserve for main()
     }
-    void addFunc(AST* func, string* id){
-      functions->push_back({func, id});
+    void addFunc(AST* func, unsigned int scope){
+      functions->emplace_back(func);
+      scopes->emplace_back(scope);
     }
-    void addMain(AST* func, string* id){
-      functions->at(0) = {func,id};
-    }
+//    void addMain(AST* func, string* id, SymbolTable* scope){
+//      functions->at(0) = {func,id};
+//    }
     ~AST_Manager(){}
 };
 

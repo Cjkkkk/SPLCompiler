@@ -88,12 +88,17 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 
 
 void SPL::SPL_Driver::emitIR(){
-    int index = 0;
-    for(auto func : *astmng.functions) {
-        ir.IR.emplace_back(*func.second, OP_NULL, "", "", "");
-        func.first->emit(&ir);
+    std::cout << astmng.functions->size() << "\n";
+    for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
+        AST* func = astmng.functions->at(index);
+        unsigned int scopeIndex = astmng.scopes->at(index);
+        // 设置作用域
+        symtab.setCurrentScopeIndex(scopeIndex);
+        ir.IR.emplace_back(symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, "", "", "");
+
+        func->emit(&ir);
+
         ir.IR.emplace_back( "", OP_RET, "", "", "");
-        index ++;
     }
 }
 
