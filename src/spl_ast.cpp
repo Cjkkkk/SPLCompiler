@@ -389,7 +389,10 @@ int AST_Goto::calculate()
     return ERROR_VAL;
 }
 void AST_Goto::checkSemantic() {}
-void AST_Goto::emit(spl_IR* ir) {}
+void AST_Goto::emit(spl_IR* ir) {
+    // todo label 真的存在吗
+    ir->IR.emplace_back("", OP_GOTO, "", "", std::to_string(label));
+}
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {
     this->nodeType = AST_COMPOUND;

@@ -77,7 +77,8 @@ begin
 
 	tmp := gcd(6, 3);
 	findMin(1, 2, 3, 4);
-	ans := tmp * ans;
+100:	ans := tmp * ans;
+    goto 100;
 	ans := tmp + ans;
 	ans := tmp - ans;
 	ans := tmp / ans;
