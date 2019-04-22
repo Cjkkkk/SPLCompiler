@@ -650,7 +650,6 @@ non_label_stmt:
         | goto_stmt {$$ = $1;}
         ;
 
-// todo: check symbol table to get sym
 // todo: add symbol share between nodes
 assign_stmt: 
         ID  ASSIGN  expression {
@@ -764,7 +763,7 @@ case_expr_list:
 case_expr:
         const_value  COLON  stmt  SEMI {$$ = new caseUnit($1, $3);}
         |  ID  COLON  stmt  SEMI {
-        //$$ = new caseUnit(new AST_Sym($1, nullptr),$3);
+        $$ = new caseUnit(new AST_Sym($1, 0),$3);
         }
         ;
 

@@ -85,6 +85,12 @@ begin
         tmp := 3;
     end;
 
+    case ans of
+        1 : ans := 5;
+        2 : ans := 6;
+        3 : ans := 7;
+    end;
+
 	ans := tmp + ans;
 	ans := tmp - ans;
 	ans := tmp / ans;
