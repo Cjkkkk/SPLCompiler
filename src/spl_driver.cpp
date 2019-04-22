@@ -93,9 +93,8 @@ void SPL::SPL_Driver::emitIR(){
         AST* func = astmng.functions->at(index);
         unsigned int scopeIndex = astmng.scopes->at(index);
         // 设置作用域
-        symtab.setCurrentScopeIndex(scopeIndex);
+        ir.symbolTable->setCurrentScopeIndex(scopeIndex);
         ir.IR.emplace_back(symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, "", "", "");
-
         func->emit(&ir);
 
         ir.IR.emplace_back( "", OP_RET, "", "", "");

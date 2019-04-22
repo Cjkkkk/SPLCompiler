@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include "spl_compiler.hpp"
+#include "spl_symtab.hpp"
 
 class Instruction {
 public:
@@ -21,7 +22,7 @@ public:
 };
 class spl_IR {
 public:
-    spl_IR():tempCount(0), labelCount(0){
+    spl_IR(SymbolTable* table):tempCount(0), labelCount(0), symbolTable(table){
 
     }
 
@@ -35,6 +36,7 @@ public:
         return "L" + std::to_string(labelCount ++);
     }
     std::vector<Instruction> IR;
+    SymbolTable* symbolTable;
     unsigned int tempCount;
     unsigned int labelCount;
 };
