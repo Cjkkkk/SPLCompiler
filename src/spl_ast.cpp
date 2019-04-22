@@ -312,7 +312,22 @@ int AST_While::calculate()
     return ERROR_VAL;
 }
 void AST_While::checkSemantic() {}
-void AST_While::emit(spl_IR* ir){}
+void AST_While::emit(spl_IR* ir){
+    auto whileLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
+
+    cond->emit(ir);
+
+
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", exitLabel});
+
+
+    stmt->emit(ir);
+    ir->addInstruction({"", OP_GOTO, "", "",whileLabel}); // if结束跳到exit
+
+    ir->addInstruction({exitLabel , OP_NULL, "", "",""}); // exit标签
+}
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : 
     stmtList(stmtList_), exp(exp_) 
 {

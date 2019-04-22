@@ -64,6 +64,11 @@ end
 
 begin
 	ans := gcd(36, 9);
+
+	while ans > 0 do begin
+	    ans := 3;
+	end;
+
 	tmp := gcd(6, 3);
 	findMin(1, 2, 3, 4);
 	ans := tmp * ans;

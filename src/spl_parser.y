@@ -720,7 +720,9 @@ repeat_stmt:
         ;
 
 while_stmt:
-        WHILE  expression  DO stmt {$$ = new AST_While($2, $4);}
+        WHILE  expression  DO stmt {
+        $$ = new AST_While($2, $4);
+        }
         ;
 
 for_stmt:
