@@ -43,7 +43,7 @@ begin
 		gcd := a;
 	end
 	else begin
-		c := a MOD b;
+		c := a MOD ans;
 		gcd := gcd(b, c);
 	end
 	;

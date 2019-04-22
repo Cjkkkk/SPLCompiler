@@ -10,8 +10,8 @@
 
 #include "spl_symtab.hpp"
 
-Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType)
-    : name(name), symbolClass(symbolClass), symbolType(symbolType)
+Symbol::Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType, unsigned int scopeIndex_)
+    : name(name), symbolClass(symbolClass), symbolType(symbolType), scopeIndex(scopeIndex_)
 {
     this->relevantASTNode = nullptr;
     this->elementType = SPL_TYPE::UNKNOWN;

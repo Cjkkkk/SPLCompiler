@@ -228,14 +228,14 @@ const_part:
 const_expr_list: 
         const_expr_list  ID  EQUAL  const_value  SEMI 
         {
-            Symbol* symbol = new Symbol($2, CONST, $4->valType);
+            Symbol* symbol = new Symbol($2, CONST, $4->valType, driver.symtab.getCurrentScopeIndex());
             symbol->relevantASTNode = $4;
             driver.symtab.addVariable(symbol);
         }
         |  ID  EQUAL  const_value  SEMI 
         {
              // 检查变量是否已经被定义过， 没定义过则添加到符号表
-            Symbol* symbol =  new Symbol($1, CONST, $3->valType);
+            Symbol* symbol =  new Symbol($1, CONST, $3->valType, driver.symtab.getCurrentScopeIndex());
             symbol->relevantASTNode = $3;
             driver.symtab.addVariable(symbol);
         }
@@ -316,7 +316,7 @@ type_decl:
 simple_type_decl: 
         SYS_TYPE  
         {
-            $$ = new Symbol("", TYPE, (SPL_TYPE)$1);
+            $$ = new Symbol("", TYPE, (SPL_TYPE)$1, driver.symtab.getCurrentScopeIndex());
         }
         |  ID  
         {
@@ -353,7 +353,7 @@ array_type_decl:
         {
             Assert($3 >= 1, "spl.exe: error: illegal array index");
             SPL_TYPE elementType = $6->symbolType;
-            Symbol* symbol = new Symbol("", TYPE, ARRAY);
+            Symbol* symbol = new Symbol("", TYPE, ARRAY, driver.symtab.getCurrentScopeIndex());
             symbol->elementType = elementType;
             symbol->scalarSize = $3;
             if (elementType >= BOOL && elementType <= STRING)
@@ -367,7 +367,7 @@ array_type_decl:
 record_type_decl: 
         RECORD  field_decl_list  _END 
         {
-            Symbol* symbol = new Symbol("", TYPE, RECORD);
+            Symbol* symbol = new Symbol("", TYPE, RECORD, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $2->size(); i++)
             {
@@ -492,7 +492,7 @@ function_decl:
 function_head:  
         FUNCTION  ID  parameters  COLON  simple_type_decl 
         {
-            Symbol* symbol = new Symbol($2, FUNC, $5->symbolType);
+            Symbol* symbol = new Symbol($2, FUNC, $5->symbolType, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
@@ -512,8 +512,14 @@ function_head:
             driver.symtab.addFunction(symbol);
             // new scope
             driver.symtab.pushScope($2);
-            for(size_t i = 0; i < $3->size(); i++)
+
+            // 默认添加function名字到symbo table中作为一个变量
+            driver.symtab.addVariable(new Symbol($2, VAR, $5->symbolType, driver.symtab.getCurrentScopeIndex()));
+            for(size_t i = 0; i < $3->size(); i++){
+            	(*$3)[i]->scopeIndex = driver.symtab.getCurrentScopeIndex();
                 driver.symtab.addVariable((*$3)[i]);
+            }
+
         }
         ;
 
@@ -524,7 +530,7 @@ procedure_decl:
 procedure_head:  
         PROCEDURE ID parameters 
         {
-            Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
+            Symbol* symbol = new Symbol($2, FUNC, UNKNOWN, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
@@ -649,40 +655,55 @@ non_label_stmt:
 assign_stmt: 
         ID  ASSIGN  expression {
 		auto sym = driver.symtab.lookupVariable($1.c_str());
-//		if(!sym) {
-//			throw splException{0, 0 , "variable '" + $1 + "' is not declared in this scope.\n"};
-//		}
-//		if(sym->symbolType != $3->valType) {
-//			throw splException{0, 0 , "invaild conversion from '" + typeToString($3->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
-//		}
-		AST_Sym* lhs = new AST_Sym($1, nullptr);
+		if(!sym) {
+			throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+		}
+		if(sym->symbolType != $3->valType) {
+			throw splException{@1.begin.line, @1.begin.column, "invaild conversion from '" + typeToString($3->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
+		}
+		AST_Sym* lhs = new AST_Sym($1, sym->scopeIndex);
 		$$ = new AST_Assign(lhs, $3);
 
         }
         | ID LB expression RB ASSIGN expression {
-            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
-            $$ = new AST_Assign(lhs, $6);
+//            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
+//            $$ = new AST_Assign(lhs, $6);
         }
         | ID  DOT  ID  ASSIGN  expression {
-            AST_Dot* lhs = new AST_Dot(new AST_Sym($1, nullptr),
-                                       new AST_Sym($3, nullptr));
-            $$ = new AST_Assign(lhs, $5);
+//            AST_Dot* lhs = new AST_Dot(new AST_Sym($1, nullptr),
+//                                       new AST_Sym($3, nullptr));
+//            $$ = new AST_Assign(lhs, $5);
         }
         ;
 
 proc_stmt:
         ID  LP  RP
-                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func(true, $1, emptyVec);}
-        |  ID  LP  args_list  RP {$$ = new AST_Func(true, $1, $3);}
+                {
+                auto sym = driver.symtab.lookupFunction($1.c_str());
+		if(!sym) {
+			// 函数未定义
+			throw splException{@1.begin.line, @1.begin.column , "procedure '" + $1 + "' is not declared in this scope.\n"};
+		}
+                std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+                $$ = new AST_Func(true, $1, emptyVec, sym->scopeIndex);
+                }
+        |  ID  LP  args_list  RP {
+        $$ = new AST_Func(true, $1, $3, 0);
+        }
         |  SYS_PROC  LP  RP
-                {std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func($1, emptyVec);}
-        |  SYS_PROC  LP  args_list  RP {$$ = new AST_Func($1, $3);}
+	{
+	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+	$$ = new AST_Func($1, emptyVec);
+	}
+        |  SYS_PROC  LP  args_list  RP {
+        $$ = new AST_Func($1, $3);
+        }
         |  READ  LP  factor  RP
-                {std::vector<AST_Exp*>* factorVec = new std::vector<AST_Exp*>();
-                factorVec->push_back($3);
-                $$ = new AST_Func($1, factorVec);}
+	{
+//                std::vector<AST_Exp*>* factorVec = new std::vector<AST_Exp*>();
+//                factorVec->push_back($3);
+//                $$ = new AST_Func($1, factorVec);
+	}
         ;
 
 if_stmt:
@@ -704,8 +725,8 @@ while_stmt:
 
 for_stmt:
         FOR  ID  ASSIGN  expression  direction  expression  DO stmt {
-            AST_Assign* init = new AST_Assign(new AST_Sym($2, nullptr), $4);
-            $$ = new AST_For(init, $5, $6, $8);
+//            AST_Assign* init = new AST_Assign(new AST_Sym($2, nullptr), $4);
+//            $$ = new AST_For(init, $5, $6, $8);
         }
         ;
 
@@ -739,8 +760,9 @@ case_expr_list:
 
 case_expr:
         const_value  COLON  stmt  SEMI {$$ = new caseUnit($1, $3);}
-        |  ID  COLON  stmt  SEMI {$$ = new caseUnit(new AST_Sym($1, nullptr),
-                                                    $3);}
+        |  ID  COLON  stmt  SEMI {
+        //$$ = new caseUnit(new AST_Sym($1, nullptr),$3);
+        }
         ;
 
 goto_stmt:
@@ -978,7 +1000,7 @@ factor:
         if(!sym) {
         	throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
         }
-        $$ = new AST_Sym($1, nullptr);
+        $$ = new AST_Sym($1, sym->scopeIndex);
         $$->valType = sym->symbolType;
         }
         |  ID  LP  RP
@@ -990,7 +1012,7 @@ factor:
 		throw splException{@1.begin.line, @1.begin.column , "function or procedure '" + $1 + "' is not declared in this scope.\n"};
         }
 	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-	$$ = new AST_Func(false, $1, emptyVec);
+	$$ = new AST_Func(false, $1, emptyVec, sym->scopeIndex);
         $$->valType = sym->symbolType;
         }
         |  ID  LP  args_list  RP {
@@ -1015,17 +1037,17 @@ factor:
                         "function or procedure '" + $1 + "' expect type '" + typeToString(args_list->at(i)->symbolType) + "', got type '"+ typeToString($3->at(i)->valType) +"'.\n"};
 		}
 	}
-        $$ = new AST_Func(false, $1, $3);
+        $$ = new AST_Func(false, $1, $3, sym->scopeIndex);
         // 推导为返回值的数据类型
         $$->valType = sym->symbolType;
         }
         |  SYS_FUNCT  LP  RP
-                {
-                std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func($1, emptyVec);
-                }
+	{
+            std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+            $$ = new AST_Func($1, emptyVec);
+	}
         |  SYS_FUNCT  LP  args_list  RP {
-        $$ = new AST_Func($1, $3);
+        	$$ = new AST_Func($1, $3);
         }
         |  const_value {
         $$ = $1;
@@ -1040,11 +1062,13 @@ factor:
         $$->valType = $2->valType;
         }
         |  ID  LB  expression  RB {
-        $$ = new AST_Array(new AST_Sym($1, nullptr),$3);
+        //$$ = new AST_Array(new AST_Sym($1, nullptr),$3);
         }
-        |  ID  DOT  ID {$$ = new AST_Dot(
-                                        new AST_Sym($1, nullptr),
-                                        new AST_Sym($3, nullptr));}
+        |  ID  DOT  ID {
+//        $$ = new AST_Dot(
+//	new AST_Sym($1, nullptr),
+//	new AST_Sym($3, nullptr));
+	}
         ;
 
 args_list: 

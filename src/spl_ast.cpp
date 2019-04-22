@@ -141,7 +141,7 @@ void AST_Const::emit(spl_IR* ir){
     tempVariable = ir->genTempVariable();
     ir->addInstruction({"", OP_ASSIGN, "const", "", tempVariable});
 }
-AST_Sym::AST_Sym(std::string &id_, SymbolTable *scope_) : id(id_), scope(scope_) 
+AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {
     this->nodeType = AST_SYM;
 }
@@ -165,7 +165,7 @@ void AST_Sym::checkSemantic()
 }
 void AST_Sym::emit(spl_IR* ir){
     tempVariable = ir->genTempVariable();
-    ir->addInstruction({"", OP_ASSIGN, id, "", tempVariable});
+    ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
 
 // AST_Array
@@ -384,14 +384,14 @@ void AST_Compound::emit(spl_IR* ir) {
         stmt->emit(ir);
     }
 }
-AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_) : 
-    isProc(isProc_), funcId(funcId_), argList(argList_)
+AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex_) :
+    isProc(isProc_), funcId(funcId_), argList(argList_), scopeIndex(scopeIndex_)
 {
     this->nodeType = AST_FUNC;
 }
 
 
-AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_)
+AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_), scopeIndex(0)
 {
     switch (sysFuncId_)
     {
@@ -461,7 +461,7 @@ void AST_Func::emit(spl_IR* ir) {
     for(const auto& arg : *argList) {
         ir->addInstruction({"", OP_PARAM, arg->tempVariable, "", ""});
     }
-    ir->addInstruction({"", OP_CALL, funcId, "", ""});
+    ir->addInstruction({"", OP_CALL, std::to_string(scopeIndex) + "." + funcId, "", ""});
 }
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)

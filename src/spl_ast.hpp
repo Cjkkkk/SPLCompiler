@@ -116,15 +116,14 @@ class AST_Const : public AST_Exp
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string &id_, SymbolTable *scope_);
+    AST_Sym(std::string &id_, unsigned int scopeIndex_);
     ~AST_Sym() override;
     int calculate() override;
     void checkSemantic() override;
     void emit(spl_IR* ir) override;
     //void print(void);
     std::string id;
-  protected:
-    SymbolTable *scope;
+    unsigned int scopeIndex;
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
@@ -276,7 +275,7 @@ class AST_Compound : public AST_Stmt
 class AST_Func : public AST_Exp, public AST_Stmt
 {
   public:
-    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_);
+    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex);
     AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_);
     ~AST_Func() override;
     int calculate() override;
@@ -287,6 +286,7 @@ class AST_Func : public AST_Exp, public AST_Stmt
     bool isProc;
     std::string funcId;
     std::vector<AST_Exp *> *argList;
+    unsigned int scopeIndex;
 };
 
 
