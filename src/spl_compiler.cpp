@@ -157,6 +157,9 @@ std::string SPL_OPToString(SPL_OP op){
         case OP_IF_Z:
             return "OP_IF_Z";
             break;
+        case OP_IF:
+            return "OP_IF";
+            break;
         case OP_CALL:
             return "OP_CALL";
             break;

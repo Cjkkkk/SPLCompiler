@@ -345,7 +345,18 @@ int AST_Repeat::calculate()
     return ERROR_VAL;
 }
 void AST_Repeat::checkSemantic() {}
-void AST_Repeat::emit(spl_IR* ir){}
+void AST_Repeat::emit(spl_IR* ir){
+    auto repeatLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
+
+    for(const auto& stmt : *stmtList) {
+        stmt->emit(ir);
+    }
+
+    exp->emit(ir);
+    ir->addInstruction({"", OP_IF, exp->tempVariable, "", repeatLabel});
+}
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : 
     init(init_), dir(dir_), fin(fin_), stmt(stmt_)

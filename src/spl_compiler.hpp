@@ -39,6 +39,7 @@ enum SPL_OP : unsigned int
 
     OP_ASSIGN,
     OP_IF_Z,
+    OP_IF,
     OP_PARAM,
     OP_CALL,
     OP_REF,
