@@ -65,6 +65,7 @@ end
 begin
 	ans := gcd(36, 9);
 	tmp := gcd(6, 3);
+	findMin(1, 2, 3, 4);
 	ans := tmp * ans;
 	ans := tmp + ans;
 	ans := tmp - ans;

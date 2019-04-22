@@ -88,7 +88,6 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 
 
 void SPL::SPL_Driver::emitIR(){
-    std::cout << astmng.functions->size() << "\n";
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
         AST* func = astmng.functions->at(index);
         unsigned int scopeIndex = astmng.scopes->at(index);

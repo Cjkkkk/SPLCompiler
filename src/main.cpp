@@ -23,14 +23,15 @@ int main(int argc, char *argv[])
         {
             driver.parse(argv[1]);
             //driver.symtab.print();
+
+            // emit IR
+            driver.emitIR();
+            driver.printIR();
         }
         catch (splException &e)
         {
             std::cout << argv[1] << ": " << e.line << ":" << e.offset << ": error: " << e.errorMessage << "\n";
         }
-        // emit IR
-        driver.emitIR();
-        driver.printIR();
         return 0;
     }
     else

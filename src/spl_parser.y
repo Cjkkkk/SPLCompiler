@@ -838,7 +838,7 @@ expression:
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator '==' expect two operands with same type .\n"};
 	}
-	$$->valType == SPL_TYPE::BOOL;
+	$$->valType = SPL_TYPE::BOOL;
         }
         |  expression  UNEQUAL  expr {
         $$ = new AST_Math(UNEQUAL_, $1, $3);
@@ -848,7 +848,7 @@ expression:
                 "operator '!=' expect two operands with same type .\n"};
 	}
 
-        $$->valType == SPL_TYPE::BOOL;
+        $$->valType = SPL_TYPE::BOOL;
 
         }
         |  expr {$$ = $1;}
@@ -872,9 +872,9 @@ expr:
 	}
 
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
-		$$->valType == SPL_TYPE::REAL;
+		$$->valType = SPL_TYPE::REAL;
 	}else{
-		$$->valType == SPL_TYPE::INT;
+		$$->valType = SPL_TYPE::INT;
 	}
         }
         |  expr  MINUS  term {
@@ -893,9 +893,9 @@ expr:
 		"operator '-' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
-		$$->valType == SPL_TYPE::REAL;
+		$$->valType = SPL_TYPE::REAL;
 	}else{
-		$$->valType == SPL_TYPE::INT;
+		$$->valType = SPL_TYPE::INT;
 	}
         }
         |  expr  OR  term {
@@ -934,9 +934,9 @@ term:
 		"operator '*' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
-		$$->valType == SPL_TYPE::REAL;
+		$$->valType = SPL_TYPE::REAL;
 	}else{
-		$$->valType == SPL_TYPE::INT;
+		$$->valType = SPL_TYPE::INT;
 	}
         }
         |  term  DIV  factor {
@@ -953,9 +953,9 @@ term:
 		"operator '/' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
-		$$->valType == SPL_TYPE::REAL;
+		$$->valType = SPL_TYPE::REAL;
 	}else{
-		$$->valType == SPL_TYPE::INT;
+		$$->valType = SPL_TYPE::INT;
 	}
 	}
         |  term  MOD  factor {
@@ -1021,6 +1021,11 @@ factor:
 	if(!sym) {
 		// 函数未定义
 		throw splException{@1.begin.line, @1.begin.column , "function or procedure '" + $1 + "' is not declared in this scope.\n"};
+	}
+	if(sym->symbolType == UNKNOWN) {
+		// procedure 不可以做为函数右值
+		throw splException{@1.begin.line, @1.begin.column , "procedure '" + $1 + "' can not be used as rvalue.\n"};
+
 	}
 	// 查看参数列表的类型是否一致
 	auto args_list = sym->subSymbolList;
