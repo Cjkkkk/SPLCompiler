@@ -79,6 +79,12 @@ begin
 	findMin(1, 2, 3, 4);
 100:	ans := tmp * ans;
     goto 100;
+
+    for ans:= 1 to 10 do
+    begin
+        tmp := 3;
+    end;
+
 	ans := tmp + ans;
 	ans := tmp - ans;
 	ans := tmp / ans;

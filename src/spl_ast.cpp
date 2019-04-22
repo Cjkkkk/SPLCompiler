@@ -376,7 +376,33 @@ int AST_For::calculate()
     return ERROR_VAL;
 }
 void AST_For::checkSemantic() {}
-void AST_For::emit(spl_IR* ir) {}
+void AST_For::emit(spl_IR* ir) {
+    init->emit(ir);
+    fin->emit(ir);
+    auto forLabel = ir->genLabel();
+    auto exitLabel = ir ->genLabel();
+
+    ir->addInstruction({forLabel, OP_NULL, "", "", ""});
+
+    auto temp = ir->genTempVariable();
+    auto op = dir ? LE_ : GE_;
+
+    // 判断语句
+    ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
+
+    //判断失败则直接跳到exitLabel
+    ir->addInstruction({"", OP_IF_Z, temp, "", exitLabel});
+
+    // 生成判断成功需要执行的代码
+    stmt->emit(ir);
+
+    // 回到判断的位置
+    ir->addInstruction({"", OP_GOTO, "", "", forLabel});
+
+    // 添加exitLabel
+    ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
+
+}
 AST_Goto::AST_Goto(int label_) : label(label_)
 {
     this->nodeType = AST_GOTO;

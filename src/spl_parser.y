@@ -633,7 +633,7 @@ stmt_list:
         |  {$$ = new std::vector<AST_Stmt*>();}
         ;
 // todo
-stmt: 
+stmt:
         INTEGER  COLON  non_label_stmt {$$ = $3; /*add the label into the symtable*/ }
         |  non_label_stmt {$$ = $1;}
         ;
@@ -727,8 +727,9 @@ while_stmt:
 
 for_stmt:
         FOR  ID  ASSIGN  expression  direction  expression  DO stmt {
-//            AST_Assign* init = new AST_Assign(new AST_Sym($2, nullptr), $4);
-//            $$ = new AST_For(init, $5, $6, $8);
+        	// todo 查询变量是否存在
+            AST_Assign* init = new AST_Assign(new AST_Sym($2, 0), $4);
+            $$ = new AST_For(init, $5, $6, $8);
         }
         ;
 
