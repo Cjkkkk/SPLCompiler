@@ -164,7 +164,7 @@ void AST_Sym::checkSemantic()
     //scope->lookupVariable(id.c_str());
 }
 void AST_Sym::emit(spl_IR* ir){
-    tempVariable = ir->genTempVariable();
+    tempVariable = ir->genTempVariable(id);
     ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
 
