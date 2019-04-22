@@ -150,8 +150,8 @@
 %token  SEMI
 
 %type   <bool> direction
-%type	<std::string*> program_head
-%type   <AST_Compound*> routine_body
+%type	<std::string*> program_head procedure_head function_head
+%type   <AST_Compound*> routine_body sub_routine routine
 %type   <AST_Exp*> factor term expr expression
 %type   <AST_Const*> const_value
 %type   <AST_Assign*> assign_stmt
@@ -178,7 +178,7 @@
 program: 
         program_head  routine  DOT 
         {
-
+		driver.astmng.addMain($2, $1);
         }
         ;
 
@@ -192,14 +192,14 @@ program_head:
 routine: 
         routine_head  routine_body 
         {
-            driver.astmng.addMain($2);
+            $$ = $2;
         }
         ;
 
 sub_routine: 
         routine_head  routine_body 
         {
-            driver.astmng.addFunc($2);
+            $$ = $2;
         }
         ;
 
@@ -486,12 +486,15 @@ routine_part:
         ;
 
 function_decl: 
-        function_head  SEMI  sub_routine  SEMI {}
+        function_head  SEMI  sub_routine  SEMI {
+        	driver.astmng.addFunc($3, $1);
+        }
         ;
 
 function_head:  
         FUNCTION  ID  parameters  COLON  simple_type_decl 
         {
+            $$ = new std::string($2);
             Symbol* symbol = new Symbol($2, FUNC, $5->symbolType);
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
@@ -518,12 +521,15 @@ function_head:
         ;
 
 procedure_decl:  
-        procedure_head  SEMI  sub_routine  SEMI {}
+        procedure_head  SEMI  sub_routine  SEMI {
+        driver.astmng.addFunc($3, $1);
+        }
         ;
 
 procedure_head:  
         PROCEDURE ID parameters 
         {
+            $$ = new std::string($2);
             Symbol* symbol = new Symbol($2, FUNC, UNKNOWN);
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)

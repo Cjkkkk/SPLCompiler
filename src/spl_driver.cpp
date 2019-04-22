@@ -90,9 +90,9 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 void SPL::SPL_Driver::emitIR(){
     int index = 0;
     for(auto func : *astmng.functions) {
-        ir.IR.push_back({"func" + std::to_string(index), OP_NULL, "", "", ""});
-        func->emit(&ir);
-        ir.IR.push_back({ "", OP_RET, "", "", ""});
+        ir.IR.emplace_back(*func.second, OP_NULL, "", "", "");
+        func.first->emit(&ir);
+        ir.IR.emplace_back( "", OP_RET, "", "", "");
         index ++;
     }
 }

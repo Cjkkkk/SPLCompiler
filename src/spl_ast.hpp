@@ -316,16 +316,16 @@ class AST_Manager
   private:
 
   public:
-    std::vector<AST*> *functions = nullptr;
+    std::vector<std::pair<AST*, string*>> *functions = nullptr;
     AST_Manager(void){
-      functions = new std::vector<AST*>();
-      functions->push_back(nullptr);  //reserve for main()
+      functions = new std::vector<std::pair<AST*, string*>>();
+      functions->push_back({nullptr, nullptr});  //reserve for main()
     }
-    void addFunc(AST* func){
-      functions->push_back(func);
+    void addFunc(AST* func, string* id){
+      functions->push_back({func, id});
     }
-    void addMain(AST* func){
-      functions->at(0) = func;
+    void addMain(AST* func, string* id){
+      functions->at(0) = {func,id};
     }
     ~AST_Manager(){}
 };
