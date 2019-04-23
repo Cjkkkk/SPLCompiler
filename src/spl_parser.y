@@ -245,22 +245,27 @@ const_value:
         INTEGER  
         { 
             $$ = new AST_Const($1);
+            $$->valType = INT;
         }
         |  REAL  
         { 
             $$ = new AST_Const($1);
+            $$->valType = REAL;
         }
         |  CHAR 
         { 
             $$ = new AST_Const($1);
+            $$->valType = CHAR;
         }
         |  STRING  
         { 
-            $$ = new AST_Const($1); 
+            $$ = new AST_Const($1);
+            $$->valType = STRING;
         }
         |  BOOL 
         {
             $$ = new AST_Const($1);
+            $$->valType = BOOL;
         }
         |  SYS_CON 
         {

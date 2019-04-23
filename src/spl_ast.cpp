@@ -139,7 +139,28 @@ AST_Const::~AST_Const()
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(SPL_IR* ir){
     tempVariable = ir->genTempVariable();
-    ir->addInstruction({"", OP_ASSIGN, "const", "", tempVariable});
+    std::string arg1;
+    switch(valType) {
+        case INT:
+            arg1 = std::to_string(getValue().valInt);
+            break;
+        case REAL:
+            arg1 = std::to_string(getValue().valDouble);
+            break;
+        case BOOL:
+            arg1 = getValue().valBool ? "true" : "false";
+            break;
+        case CHAR:
+            arg1 = "'" + string(1, getValue().valChar) + "'";
+            break;
+        case STRING:
+            arg1 = "\"" + *getValue().valString + "\"";
+            break;
+        default:
+            arg1 = "type is not supported!";
+
+    }
+    ir->addInstruction({"", OP_ASSIGN, arg1, "", tempVariable});
 }
 AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {
@@ -240,6 +261,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == ""){
         lhs->emit(ir);
     }
+    tempVariable = lhs->tempVariable;
     ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
@@ -401,7 +423,7 @@ void AST_For::emit(SPL_IR* ir) {
     stmt->emit(ir);
 
     // 更改初始值
-    ir->addInstruction({"", plusOrMinus, init->tempVariable , "const",  init->tempVariable });
+    ir->addInstruction({"", plusOrMinus, init->tempVariable , "1",  init->tempVariable });
     // 回到判断的位置
     ir->addInstruction({"", OP_GOTO, "", "", forLabel});
 

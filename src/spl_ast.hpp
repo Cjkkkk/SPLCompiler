@@ -103,6 +103,9 @@ class AST_Const : public AST_Exp
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     void print();
+    valueUnion getValue() {
+        return value;
+    }
 
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
