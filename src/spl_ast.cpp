@@ -78,10 +78,18 @@ void AST_Math::emit(SPL_IR* ir) {
     if(right && right->tempVariable == "") {
         right->emit(ir);
     }
-    tempVariable = ir->genTempVariable();
+
     if(opType == MINUS__) {
+        if(left->tempVariable[0] == '_')
+            ir->decreasTempCount(1);
+        tempVariable = ir->genTempVariable();
         ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
     } else {
+        if(left->tempVariable[0] == '_')
+            ir->decreasTempCount(1);
+        if(right->tempVariable[0] == '_')
+            ir->decreasTempCount(1);
+        tempVariable = ir->genTempVariable();
         ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
     }
 }
@@ -260,6 +268,10 @@ void AST_Assign::emit(SPL_IR* ir){
     }
     if(lhs->tempVariable == ""){
         lhs->emit(ir);
+    }
+    if(rhs->tempVariable[0] == '_') {
+        // 右边是临时变量 减一
+        ir->decreasTempCount(1);
     }
     tempVariable = lhs->tempVariable;
     ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
@@ -541,10 +553,31 @@ void AST_Func::emit(SPL_IR* ir) {
             arg->emit(ir);
         }
     }
+    int totalSize = 0;
     for(const auto& arg : *argList) {
         ir->addInstruction({"", OP_PARAM, arg->tempVariable, "", ""});
+        switch(arg->valType){
+            case INT:
+                totalSize += 4;
+                break;
+            case REAL:
+                totalSize += 8;
+                break;
+            case CHAR:
+                totalSize += 1;
+                break;
+            case BOOL:
+                totalSize += 1;
+                break;
+            case STRING:
+                totalSize += 4; // 无法计算具体的size
+                break;
+            default:
+                totalSize += 100; //
+        }
     }
     ir->addInstruction({"", OP_CALL, std::to_string(scopeIndex) + "." + funcId, "", ""});
+    ir->addInstruction({"", OP_POP, std::to_string(totalSize), "", ""});
 }
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)

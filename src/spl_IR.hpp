@@ -30,24 +30,14 @@ public:
     std::string genTempVariable(){
         return "_t" + std::to_string(tempCount ++);
     }
-
-    std::string genTempVariable(std::string name){
-        auto it = tempMap.find(name);
-        if(it != tempMap.end()) {
-            //找到了
-            return it->second;
-        }
-        else {
-            auto temp = genTempVariable();
-            tempMap.insert({name, temp});
-            return temp;
-        }
+    void decreasTempCount(int number) {
+        tempCount -= number;
     }
+
     std::string genLabel(){
         return "L" + std::to_string(labelCount ++);
     }
     std::vector<Instruction> IR;
-    std::map<std::string, std::string> tempMap;
     SymbolTable* symbolTable;
     unsigned int tempCount;
     unsigned int labelCount;

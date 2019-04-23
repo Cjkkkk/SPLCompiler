@@ -491,7 +491,9 @@ routine_part:
         ;
 
 function_decl: 
-        function_head  SEMI  sub_routine  SEMI {}
+        function_head  SEMI  sub_routine  SEMI {
+        	// 检查是否有返回值节点 很麻烦...
+        }
         ;
 
 function_head:  

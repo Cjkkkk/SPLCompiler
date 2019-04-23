@@ -95,3 +95,9 @@ git commit -m"ADD new class"
 ### output file
 
 `out.bc`
+
+## todo
+* 检查函数定义是否有返回值，以及返回值类型是否正确
+
+## useful link
+* [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)

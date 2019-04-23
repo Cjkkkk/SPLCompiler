@@ -166,6 +166,9 @@ std::string SPL_OPToString(SPL_OP op){
         case OP_PARAM:
             return "OP_PARAM";
             break;
+        case OP_POP:
+            return "OP_POP";
+            break;
         case OP_NULL:
             return "";
             break;
