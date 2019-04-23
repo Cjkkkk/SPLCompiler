@@ -164,8 +164,9 @@ void AST_Sym::checkSemantic()
     //scope->lookupVariable(id.c_str());
 }
 void AST_Sym::emit(SPL_IR* ir){
-    tempVariable = ir->genTempVariable(id);
-    ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
+    tempVariable = std::to_string(scopeIndex) + "." + id;
+    //tempVariable = ir->genTempVariable(id);
+    //ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
 
 // AST_Array
@@ -236,10 +237,10 @@ void AST_Assign::emit(SPL_IR* ir){
     if(rhs->tempVariable == ""){
         rhs->emit(ir);
     }
-//    if(lhs->tempVariable == ""){
-//        lhs->emit(ir);
-//    }
-    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", ((AST_Sym*)lhs)->id});
+    if(lhs->tempVariable == ""){
+        lhs->emit(ir);
+    }
+    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
