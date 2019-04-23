@@ -311,9 +311,15 @@ AST_Stmt *AST_If::getDoElse(void)
 void AST_If::checkSemantic() {}
 void AST_If::emit(SPL_IR* ir){
     cond->emit(ir);
+    auto ifLabel = ir->genLabel();
     auto elseLabel = ir->genLabel();
     auto exitLabel = ir->genLabel();
+
     ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", elseLabel});
+
+    ir->addInstruction({"", OP_GOTO, "", "", ifLabel}); // trival goto
+    // if 开始
+    ir->addInstruction({ifLabel, OP_NULL, "", "", ""});
 
     doIf->emit(ir);
     ir->addInstruction({"", OP_GOTO, "", "",exitLabel}); // if结束跳到exit
@@ -322,6 +328,9 @@ void AST_If::emit(SPL_IR* ir){
     if(doElse) {
         doElse->emit(ir);
     }
+
+    ir->addInstruction({"", OP_GOTO, "", "", exitLabel}); // trival goto
+
     ir->addInstruction({exitLabel, OP_NULL, "", "", ""}); // exit标签
 
 }
@@ -343,6 +352,7 @@ int AST_While::calculate()
 void AST_While::checkSemantic() {}
 void AST_While::emit(SPL_IR* ir){
     auto whileLabel = ir->genLabel();
+    auto stmtLabel = ir->genLabel();
     auto exitLabel = ir->genLabel();
     ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
 
@@ -351,6 +361,8 @@ void AST_While::emit(SPL_IR* ir){
 
     ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", exitLabel});
 
+    ir->addInstruction({"", OP_GOTO, "", "", stmtLabel}); // trival goto
+    ir->addInstruction({stmtLabel, OP_NULL, "", "", ""}); // trival label
 
     stmt->emit(ir);
     ir->addInstruction({"", OP_GOTO, "", "",whileLabel}); // if结束跳到exit

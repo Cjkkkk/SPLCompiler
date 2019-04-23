@@ -111,7 +111,6 @@ void SPL::SPL_Driver::printIR() {
 }
 
 
-SSANode* SPL::SPL_Driver::genSSA(int idx) {
-
+void SPL::SPL_Driver::genSSATree() {
 
 }

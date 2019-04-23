@@ -42,10 +42,7 @@ class SPL_Driver
     std::ostream &print(std::ostream &stream);
     void emitIR();
     void printIR();
-    void genSSATree() {
-        ssaIr.root = genSSA(0);
-    }
-    SSANode* genSSA(int index);
+    void genSSATree();
     SymbolTable symtab;
     AST_Manager astmng;
   private:
