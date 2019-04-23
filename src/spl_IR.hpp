@@ -30,8 +30,8 @@ public:
     std::string genTempVariable(){
         return "_t" + std::to_string(tempCount ++);
     }
-    void decreasTempCount(int number) {
-        tempCount -= number;
+    void decreasTempCount(const string& name) {
+        if(name[0] == '_') tempCount -= 1;
     }
 
     std::string genLabel(){

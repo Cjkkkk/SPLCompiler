@@ -80,15 +80,12 @@ void AST_Math::emit(SPL_IR* ir) {
     }
 
     if(opType == MINUS__) {
-        if(left->tempVariable[0] == '_')
-            ir->decreasTempCount(1);
+        ir->decreasTempCount(left->tempVariable);
         tempVariable = ir->genTempVariable();
         ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
     } else {
-        if(left->tempVariable[0] == '_')
-            ir->decreasTempCount(1);
-        if(right->tempVariable[0] == '_')
-            ir->decreasTempCount(1);
+        ir->decreasTempCount(left->tempVariable);
+        ir->decreasTempCount(right->tempVariable);
         tempVariable = ir->genTempVariable();
         ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
     }
@@ -269,10 +266,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == ""){
         lhs->emit(ir);
     }
-    if(rhs->tempVariable[0] == '_') {
-        // 右边是临时变量 减一
-        ir->decreasTempCount(1);
-    }
+    ir->decreasTempCount(rhs->tempVariable);
     tempVariable = lhs->tempVariable;
     ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
 }
