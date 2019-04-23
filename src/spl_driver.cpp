@@ -87,7 +87,7 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 }
 
 
-void SPL::SPL_Driver::emitIR(){
+void SPL::SPL_Driver::emitIR() {
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
         AST* func = astmng.functions->at(index);
         unsigned int scopeIndex = astmng.scopes->at(index);
@@ -100,8 +100,14 @@ void SPL::SPL_Driver::emitIR(){
     }
 }
 
-void SPL::SPL_Driver::printIR(){
+void SPL::SPL_Driver::printIR() {
     for(const auto & ir : ir.IR) {
         std::cout << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
     }
+}
+
+
+SSANode* SPL::SPL_Driver::genSSA(int idx) {
+
+
 }

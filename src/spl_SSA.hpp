@@ -5,9 +5,16 @@
 #ifndef SPLCOMPILER_SPL_SSA_H
 #define SPLCOMPILER_SPL_SSA_H
 
-
-class spl_SSA {
-
+#include <vector>
+#include "spl_IR.hpp"
+class SSANode {
+public:
+    std::vector<Instruction*> instruSet;
+    std::vector<SSANode*> nodeSet;
+};
+class SPL_SSA {
+public:
+    SSANode* root;
 };
 
 

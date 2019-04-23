@@ -20,11 +20,9 @@ public:
     std::string arg2;
     std::string result;
 };
-class spl_IR {
+class SPL_IR {
 public:
-    spl_IR(SymbolTable* table):tempCount(0), labelCount(0), symbolTable(table){
-
-    }
+    SPL_IR(SymbolTable* table):tempCount(0), labelCount(0), symbolTable(table){}
 
     void addInstruction(Instruction ins) {
         IR.push_back(ins);

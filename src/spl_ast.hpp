@@ -29,7 +29,7 @@ class AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
-    virtual void emit(spl_IR* ir) = 0; //pure virtual function
+    virtual void emit(SPL_IR* ir) = 0; //pure virtual function
     virtual ~AST() = 0;          //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
   protected:
@@ -43,7 +43,7 @@ class AST_Exp : virtual public AST
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST_Exp() = 0;      //pure virtual function
-    virtual void emit(spl_IR* ir) = 0;
+    virtual void emit(SPL_IR* ir) = 0;
     SPL_TYPE valType;
     std::string tempVariable;
 };
@@ -54,7 +54,7 @@ class AST_Stmt : virtual public AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
-    virtual void emit(spl_IR* ir) = 0;
+    virtual void emit(SPL_IR* ir) = 0;
     virtual ~AST_Stmt() = 0;     //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
 };
@@ -67,7 +67,7 @@ class AST_Math : public AST_Exp
     ~AST_Math() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     void print();
   protected:
     /* op: operator, including:
@@ -101,7 +101,7 @@ class AST_Const : public AST_Exp
     ~AST_Const() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     void print();
 
     /* valType: type of the constant, including:
@@ -120,7 +120,7 @@ class AST_Sym : public AST_Exp
     ~AST_Sym() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
     std::string id;
     unsigned int scopeIndex;
@@ -134,7 +134,7 @@ class AST_Array : public AST_Exp
     ~AST_Array() override;
     int calculate(void) override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
   protected:
     AST_Sym *sym;
@@ -149,7 +149,7 @@ class AST_Dot : public AST_Exp
     ~AST_Dot() override;
     int calculate(void) override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
   protected:
     AST_Sym *record;
@@ -165,7 +165,7 @@ class AST_Assign : public AST_Exp, public AST_Stmt
     ~AST_Assign() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     void print();
 
   protected:
@@ -184,7 +184,7 @@ class AST_If : public AST_Stmt
     void addRight(AST_Stmt *doElse_);
     AST_Stmt *getDoElse(void);
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
     void print();
 
   protected:
@@ -209,7 +209,7 @@ class AST_While : public AST_Stmt
     ~AST_While() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     AST_Exp *cond;
@@ -223,7 +223,7 @@ class AST_Repeat : public AST_Stmt
     ~AST_Repeat() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -237,7 +237,7 @@ class AST_For : public AST_Stmt
     ~AST_For() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     AST_Assign *init;
@@ -253,7 +253,7 @@ class AST_Goto : public AST_Stmt
     ~AST_Goto() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     int label;
@@ -266,7 +266,7 @@ class AST_Compound : public AST_Stmt
     ~AST_Compound() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -280,7 +280,7 @@ class AST_Func : public AST_Exp, public AST_Stmt
     ~AST_Func() override;
     int calculate() override;
     void checkSemantic() override;
-    void emit(spl_IR* ir) override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     bool isProc;

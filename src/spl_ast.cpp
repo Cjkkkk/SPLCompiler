@@ -71,7 +71,7 @@ int AST_Math::calculate()
     }
 }
 
-void AST_Math::emit(spl_IR* ir) {
+void AST_Math::emit(SPL_IR* ir) {
     if(left->tempVariable == "") {
         left->emit(ir);
     }
@@ -137,7 +137,7 @@ AST_Const::~AST_Const()
 }
 
 void AST_Const::checkSemantic() {}
-void AST_Const::emit(spl_IR* ir){
+void AST_Const::emit(SPL_IR* ir){
     tempVariable = ir->genTempVariable();
     ir->addInstruction({"", OP_ASSIGN, "const", "", tempVariable});
 }
@@ -163,7 +163,7 @@ void AST_Sym::checkSemantic()
     // std::cout << "check symbol " + id +" semantic" << std::endl;
     //scope->lookupVariable(id.c_str());
 }
-void AST_Sym::emit(spl_IR* ir){
+void AST_Sym::emit(SPL_IR* ir){
     tempVariable = ir->genTempVariable(id);
     ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
@@ -186,7 +186,7 @@ int AST_Array::calculate()
     return ERROR_VAL;
 }
 void AST_Array::checkSemantic() {}
-void AST_Array::emit(spl_IR* ir){
+void AST_Array::emit(SPL_IR* ir){
 
 }
 // AST_Dot
@@ -207,7 +207,7 @@ int AST_Dot::calculate()
     return ERROR_VAL;
 }
 void AST_Dot::checkSemantic() {}
-void AST_Dot::emit(spl_IR* ir){}
+void AST_Dot::emit(SPL_IR* ir){}
 // AST_Assign
 AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(rhs_)
 {
@@ -232,7 +232,7 @@ void AST_Assign::checkSemantic()
     // rhs->checkSemantic();
 }
 
-void AST_Assign::emit(spl_IR* ir){
+void AST_Assign::emit(SPL_IR* ir){
     if(rhs->tempVariable == ""){
         rhs->emit(ir);
     }
@@ -280,7 +280,7 @@ AST_Stmt *AST_If::getDoElse(void)
     return this->doElse;
 }
 void AST_If::checkSemantic() {}
-void AST_If::emit(spl_IR* ir){
+void AST_If::emit(SPL_IR* ir){
     cond->emit(ir);
     auto elseLabel = ir->genLabel();
     auto exitLabel = ir->genLabel();
@@ -312,7 +312,7 @@ int AST_While::calculate()
     return ERROR_VAL;
 }
 void AST_While::checkSemantic() {}
-void AST_While::emit(spl_IR* ir){
+void AST_While::emit(SPL_IR* ir){
     auto whileLabel = ir->genLabel();
     auto exitLabel = ir->genLabel();
     ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
@@ -345,7 +345,7 @@ int AST_Repeat::calculate()
     return ERROR_VAL;
 }
 void AST_Repeat::checkSemantic() {}
-void AST_Repeat::emit(spl_IR* ir){
+void AST_Repeat::emit(SPL_IR* ir){
     auto repeatLabel = ir->genLabel();
     auto exitLabel = ir->genLabel();
     ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
@@ -376,16 +376,19 @@ int AST_For::calculate()
     return ERROR_VAL;
 }
 void AST_For::checkSemantic() {}
-void AST_For::emit(spl_IR* ir) {
+void AST_For::emit(SPL_IR* ir) {
     init->emit(ir);
     fin->emit(ir);
     auto forLabel = ir->genLabel();
     auto exitLabel = ir ->genLabel();
+    auto temp = ir->genTempVariable();
+
+    auto op = dir ? LE_ : GE_;
+    auto plusOrMinus = dir ? PLUS_ : MINUS_;
+
 
     ir->addInstruction({forLabel, OP_NULL, "", "", ""});
 
-    auto temp = ir->genTempVariable();
-    auto op = dir ? LE_ : GE_;
 
     // 判断语句
     ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
@@ -396,6 +399,8 @@ void AST_For::emit(spl_IR* ir) {
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
 
+    // 更改初始值
+    ir->addInstruction({"", plusOrMinus, init->tempVariable , "const",  init->tempVariable });
     // 回到判断的位置
     ir->addInstruction({"", OP_GOTO, "", "", forLabel});
 
@@ -415,7 +420,7 @@ int AST_Goto::calculate()
     return ERROR_VAL;
 }
 void AST_Goto::checkSemantic() {}
-void AST_Goto::emit(spl_IR* ir) {
+void AST_Goto::emit(SPL_IR* ir) {
     // todo label 真的存在吗
     ir->IR.emplace_back("", OP_GOTO, "", "", std::to_string(label));
 }
@@ -434,7 +439,7 @@ int AST_Compound::calculate()
     return ERROR_VAL;
 }
 void AST_Compound::checkSemantic() {}
-void AST_Compound::emit(spl_IR* ir) {
+void AST_Compound::emit(SPL_IR* ir) {
     for(const auto& stmt : *stmtList) {
         stmt->emit(ir);
     }
@@ -507,7 +512,7 @@ int AST_Func::calculate()
 }
 
 void AST_Func::checkSemantic() {}
-void AST_Func::emit(spl_IR* ir) {
+void AST_Func::emit(SPL_IR* ir) {
     for(const auto& arg : *argList) {
         if(arg->tempVariable == ""){
             arg->emit(ir);

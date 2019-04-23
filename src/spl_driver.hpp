@@ -18,7 +18,7 @@
 #include "spl_parser.tab.hh"
 #include "spl_scanner.hpp"
 #include "spl_IR.hpp"
-
+#include "spl_SSA.hpp"
 namespace SPL
 {
 class SPL_Driver
@@ -42,11 +42,16 @@ class SPL_Driver
     std::ostream &print(std::ostream &stream);
     void emitIR();
     void printIR();
+    void genSSATree() {
+        ssaIr.root = genSSA(0);
+    }
+    SSANode* genSSA(int index);
     SymbolTable symtab;
     AST_Manager astmng;
   private:
     void parse_helper(std::istream &stream);
-    spl_IR ir;
+    SPL_IR ir;
+    SPL_SSA ssaIr;
     SPL::SPL_Parser *parser = nullptr;
     SPL::SPL_Scanner *scanner = nullptr;
 };
