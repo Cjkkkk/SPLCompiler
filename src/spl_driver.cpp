@@ -85,3 +85,33 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 {
     return (stream);
 }
+
+
+void SPL::SPL_Driver::emitIR() {
+    for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
+        AST* func = astmng.functions->at(index);
+        unsigned int scopeIndex = astmng.scopes->at(index);
+        // 设置作用域
+        ir.symbolTable->setCurrentScopeIndex(scopeIndex);
+        ir.IR.emplace_back(symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, "", "", "");
+        func->emit(&ir);
+
+        ir.IR.emplace_back( "", OP_RET, "", "", "");
+    }
+}
+
+void SPL::SPL_Driver::printIR() {
+    std::ofstream outfile;
+    outfile.open("out.bc", std::ios::out);
+    for(const auto & ir : ir.IR) {
+        std::cout << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
+        outfile << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
+    }
+    outfile.close();
+}
+
+
+SSANode* SPL::SPL_Driver::genSSA(int idx) {
+
+
+}

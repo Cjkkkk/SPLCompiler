@@ -91,3 +91,92 @@ std::string typeToString(SPL_TYPE typeId)
             break;
     }
 }
+
+std::string SPL_OPToString(SPL_OP op){
+    switch (op)
+    {
+        case PLUS_:
+            return "OP_PLUS";
+            break;
+
+        case MINUS_:
+            return "OP_MINUS";
+            break;
+
+        case MUL_:
+            return "OP_MUL";
+            break;
+
+        case DIV_:
+            return "OP_DIV";
+            break;
+
+        case AND_:
+            return "OP_AND";
+            break;
+
+        case OR_:
+            return "OP_OR";
+            break;
+
+        case NOT_:
+            return "OP_NOT";
+            break;
+
+        case MINUS__:
+            return "OP_MINUS_";
+            break;
+
+        case MOD_:
+            return "OP_MOD";
+            break;
+        case EQUAL_:
+            return "OP_EQUAL";
+            break;
+        case UNEQUAL_:
+            return "OP_UNEQUAL";
+            break;
+        case GE_:
+            return "OP_GE";
+            break;
+        case GT_:
+            return "OP_GT";
+            break;
+        case LE_:
+            return "OP_LE";
+            break;
+        case LT_:
+            return "OP_LT";
+            break;
+        case OP_ASSIGN:
+            return "OP_ASSIGN";
+            break;
+        case OP_GOTO:
+            return "OP_GOTO";
+            break;
+        case OP_IF_Z:
+            return "OP_IF_Z";
+            break;
+        case OP_IF:
+            return "OP_IF";
+            break;
+        case OP_CALL:
+            return "OP_CALL";
+            break;
+        case OP_PARAM:
+            return "OP_PARAM";
+            break;
+        case OP_POP:
+            return "OP_POP";
+            break;
+        case OP_NULL:
+            return "";
+            break;
+        case OP_RET:
+            return "OP_RETURN";
+            break;
+        default:
+            return "ERROR";
+            break;
+    }
+}

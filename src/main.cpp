@@ -22,7 +22,12 @@ int main(int argc, char *argv[])
         try
         {
             driver.parse(argv[1]);
-            driver.symtab.print();
+            //driver.symtab.print();
+
+            // emit IR
+            driver.emitIR();
+            driver.printIR();
+            driver.genSSATree();
         }
         catch (splException &e)
         {

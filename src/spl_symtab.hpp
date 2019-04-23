@@ -16,6 +16,7 @@
 #include <vector>
 #include <map>
 #include "spl_compiler.hpp"
+#include "spl_exception.hpp"
 
 using namespace std;
 
@@ -26,7 +27,7 @@ typedef std::map<std::string, Symbol *> SymbolMapType;
 class Symbol
 {
 public:
-    Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType);
+    Symbol(const std::string &name, SPL_CLASS symbolClass, SPL_TYPE symbolType, unsigned int scopeIndex_);
 
     /* Symbol's name */
     std::string name;
@@ -76,6 +77,9 @@ public:
      * the pointer returnTypePtr is needed.
      */
     Symbol *returnTypePtr;
+
+    // scopeIndex
+    unsigned int scopeIndex;
 };
 
 class SymbolTable
@@ -115,7 +119,19 @@ public:
 
     void print();
     void printType(Symbol *sym);
-
+    unsigned int getCurrentScopeIndex() {
+        return currentScopeIndex;
+    }
+    void setCurrentScopeIndex(unsigned index) {
+        if(index >= variables.size()) {
+            throw splException{0,0,"illegal scope index"};
+        }else {
+            currentScopeIndex = index;
+        }
+    }
+    std::string getFunctionNameByIndex(unsigned int scopeIndex) {
+        return scopeNames[scopeIndex];
+    }
 private:
     /* containers */
     std::vector<std::string> scopeNames;

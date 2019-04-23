@@ -43,7 +43,7 @@ begin
 		gcd := a;
 	end
 	else begin
-		c := a MOD b;
+		c := a MOD ans;
 		gcd := gcd(b, c);
 	end
 	;
@@ -64,12 +64,37 @@ end
 
 begin
 	ans := gcd(36, 9);
+
+	while ans > 0 do begin
+	    ans := 3;
+	end;
+
+    repeat
+    begin
+        ans := 3;
+    end;
+    until ans < 3;
+
 	tmp := gcd(6, 3);
-	ans := tmp * ans;
+	findMin(1, 2, 3, 4);
+100:	ans := tmp * ans;
+    goto 100;
+
+    for ans:= 1 to 10 do
+    begin
+        tmp := 3;
+    end;
+
+    case ans of
+        1 : ans := 5;
+        2 : ans := 6;
+        3 : ans := 7;
+    end;
+
 	ans := tmp + ans;
 	ans := tmp - ans;
 	ans := tmp / ans;
-	bool1 := bool1 >= bool2;
+	bool1 := bool1 and bool2;
 	bool1 := bool1 or bool2;
 
 	bool1 := 3 > 2;

@@ -17,6 +17,7 @@
 #include <vector>
 #include "spl_symtab.hpp"
 #include "spl_compiler.hpp"
+#include "spl_IR.hpp"
 
 #define ERROR_VAL -1
 
@@ -28,6 +29,7 @@ class AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
+    virtual void emit(SPL_IR* ir) = 0; //pure virtual function
     virtual ~AST() = 0;          //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
   protected:
@@ -41,7 +43,9 @@ class AST_Exp : virtual public AST
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual ~AST_Exp() = 0;      //pure virtual function
+    virtual void emit(SPL_IR* ir) = 0;
     SPL_TYPE valType;
+    std::string tempVariable;
 };
 
 // abstract class : ast trees that represent a statement without a value
@@ -50,6 +54,7 @@ class AST_Stmt : virtual public AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
+    virtual void emit(SPL_IR* ir) = 0;
     virtual ~AST_Stmt() = 0;     //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
 };
@@ -58,17 +63,18 @@ class AST_Stmt : virtual public AST
 class AST_Math : public AST_Exp
 {
   public:
-    AST_Math(int opType, class AST_Exp *left, class AST_Exp *right);
+    AST_Math(SPL_OP opType, class AST_Exp *left, class AST_Exp *right);
     ~AST_Math() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     void print();
   protected:
     /* op: operator, including:
      * + - * / % & | -(neg) !(not) 
      * < <= > >= == <> 
      */
-    int opType;
+    SPL_OP opType;
     AST_Exp *left;
     AST_Exp *right;
 };
@@ -95,7 +101,11 @@ class AST_Const : public AST_Exp
     ~AST_Const() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     void print();
+    valueUnion getValue() {
+        return value;
+    }
 
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
@@ -109,14 +119,14 @@ class AST_Const : public AST_Exp
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string &id_, SymbolTable *scope_);
+    AST_Sym(std::string &id_, unsigned int scopeIndex_);
     ~AST_Sym() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
-  protected:
     std::string id;
-    SymbolTable *scope;
+    unsigned int scopeIndex;
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
@@ -127,6 +137,7 @@ class AST_Array : public AST_Exp
     ~AST_Array() override;
     int calculate(void) override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
   protected:
     AST_Sym *sym;
@@ -141,6 +152,7 @@ class AST_Dot : public AST_Exp
     ~AST_Dot() override;
     int calculate(void) override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     //void print(void);
   protected:
     AST_Sym *record;
@@ -156,6 +168,7 @@ class AST_Assign : public AST_Exp, public AST_Stmt
     ~AST_Assign() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     void print();
 
   protected:
@@ -174,6 +187,7 @@ class AST_If : public AST_Stmt
     void addRight(AST_Stmt *doElse_);
     AST_Stmt *getDoElse(void);
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
     void print();
 
   protected:
@@ -198,6 +212,7 @@ class AST_While : public AST_Stmt
     ~AST_While() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     AST_Exp *cond;
@@ -211,6 +226,7 @@ class AST_Repeat : public AST_Stmt
     ~AST_Repeat() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -224,6 +240,7 @@ class AST_For : public AST_Stmt
     ~AST_For() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     AST_Assign *init;
@@ -239,6 +256,7 @@ class AST_Goto : public AST_Stmt
     ~AST_Goto() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     int label;
@@ -251,6 +269,7 @@ class AST_Compound : public AST_Stmt
     ~AST_Compound() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     std::vector<AST_Stmt *> *stmtList;
@@ -259,16 +278,18 @@ class AST_Compound : public AST_Stmt
 class AST_Func : public AST_Exp, public AST_Stmt
 {
   public:
-    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_);
+    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex);
     AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_);
     ~AST_Func() override;
     int calculate() override;
     void checkSemantic() override;
+    void emit(SPL_IR* ir) override;
 
   protected:
     bool isProc;
     std::string funcId;
     std::vector<AST_Exp *> *argList;
+    unsigned int scopeIndex;
 };
 
 
@@ -296,18 +317,22 @@ class AST_Func : public AST_Exp, public AST_Stmt
 class AST_Manager
 {
   private:
+
+  public:
     std::vector<AST*> *functions = nullptr;
-  public: 
-    AST_Manager(void){
+    std::vector<unsigned int> *scopes = nullptr;
+    AST_Manager(){
       functions = new std::vector<AST*>();
-      functions->push_back((AST*)nullptr);  //reserve for main()
+      scopes = new std::vector<unsigned int>();
+//      functions->push_back({nullptr, nullptr});  //reserve for main()
     }
-    void addFunc(AST* func){
-      functions->push_back(func);
+    void addFunc(AST* func, unsigned int scope){
+      functions->emplace_back(func);
+      scopes->emplace_back(scope);
     }
-    void addMain(AST* func){
-      functions->at(0) = func;
-    }
+//    void addMain(AST* func, string* id, SymbolTable* scope){
+//      functions->at(0) = {func,id};
+//    }
     ~AST_Manager(){}
 };
 

@@ -9,6 +9,7 @@
  */
 
 #include "spl_ast.hpp"
+#include "spl_IR.hpp"
 #include <algorithm>
 using namespace SPL;
 
@@ -19,7 +20,7 @@ AST_Exp::~AST_Exp() {}
 AST_Stmt::~AST_Stmt() {}
 
 // ast node for math expression
-AST_Math::AST_Math(int opType_, AST_Exp *left_, AST_Exp *right_)
+AST_Math::AST_Math(SPL_OP opType_, AST_Exp *left_, AST_Exp *right_)
 :opType(opType_), left(left_), right(right_) {
     this->nodeType = AST_MATH;
 }
@@ -70,6 +71,25 @@ int AST_Math::calculate()
     }
 }
 
+void AST_Math::emit(SPL_IR* ir) {
+    if(left->tempVariable == "") {
+        left->emit(ir);
+    }
+    if(right && right->tempVariable == "") {
+        right->emit(ir);
+    }
+
+    if(opType == MINUS__) {
+        ir->decreasTempCount(left->tempVariable);
+        tempVariable = ir->genTempVariable();
+        ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
+    } else {
+        ir->decreasTempCount(left->tempVariable);
+        ir->decreasTempCount(right->tempVariable);
+        tempVariable = ir->genTempVariable();
+        ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
+    }
+}
 // ast node for constant expression
 AST_Const::AST_Const(int val)
 {
@@ -122,7 +142,32 @@ AST_Const::~AST_Const()
 }
 
 void AST_Const::checkSemantic() {}
-AST_Sym::AST_Sym(std::string &id_, SymbolTable *scope_) : id(id_), scope(scope_) 
+void AST_Const::emit(SPL_IR* ir){
+    tempVariable = ir->genTempVariable();
+    std::string arg1;
+    switch(valType) {
+        case INT:
+            arg1 = std::to_string(getValue().valInt);
+            break;
+        case REAL:
+            arg1 = std::to_string(getValue().valDouble);
+            break;
+        case BOOL:
+            arg1 = getValue().valBool ? "true" : "false";
+            break;
+        case CHAR:
+            arg1 = "'" + string(1, getValue().valChar) + "'";
+            break;
+        case STRING:
+            arg1 = "\"" + *getValue().valString + "\"";
+            break;
+        default:
+            arg1 = "type is not supported!";
+
+    }
+    ir->addInstruction({"", OP_ASSIGN, arg1, "", tempVariable});
+}
+AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {
     this->nodeType = AST_SYM;
 }
@@ -144,6 +189,11 @@ void AST_Sym::checkSemantic()
     // std::cout << "check symbol " + id +" semantic" << std::endl;
     //scope->lookupVariable(id.c_str());
 }
+void AST_Sym::emit(SPL_IR* ir){
+    tempVariable = std::to_string(scopeIndex) + "." + id;
+    //tempVariable = ir->genTempVariable(id);
+    //ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
+}
 
 // AST_Array
 AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_) 
@@ -163,7 +213,9 @@ int AST_Array::calculate()
     return ERROR_VAL;
 }
 void AST_Array::checkSemantic() {}
+void AST_Array::emit(SPL_IR* ir){
 
+}
 // AST_Dot
 
 AST_Dot::AST_Dot(AST_Sym *record_, AST_Sym *field_) : record(record_), field(field_)
@@ -182,7 +234,7 @@ int AST_Dot::calculate()
     return ERROR_VAL;
 }
 void AST_Dot::checkSemantic() {}
-
+void AST_Dot::emit(SPL_IR* ir){}
 // AST_Assign
 AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(rhs_)
 {
@@ -205,6 +257,18 @@ void AST_Assign::checkSemantic()
     // std::cout << "check assignment semantic" << std::endl;
     // lhs->checkSemantic();
     // rhs->checkSemantic();
+}
+
+void AST_Assign::emit(SPL_IR* ir){
+    if(rhs->tempVariable == ""){
+        rhs->emit(ir);
+    }
+    if(lhs->tempVariable == ""){
+        lhs->emit(ir);
+    }
+    ir->decreasTempCount(rhs->tempVariable);
+    tempVariable = lhs->tempVariable;
+    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
@@ -245,7 +309,22 @@ AST_Stmt *AST_If::getDoElse(void)
     return this->doElse;
 }
 void AST_If::checkSemantic() {}
+void AST_If::emit(SPL_IR* ir){
+    cond->emit(ir);
+    auto elseLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", elseLabel});
 
+    doIf->emit(ir);
+    ir->addInstruction({"", OP_GOTO, "", "",exitLabel}); // if结束跳到exit
+
+    ir->addInstruction({elseLabel , OP_NULL, "", "",""}); // else标签
+    if(doElse) {
+        doElse->emit(ir);
+    }
+    ir->addInstruction({exitLabel, OP_NULL, "", "", ""}); // exit标签
+
+}
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) 
 {
     this->nodeType = AST_WHILE;
@@ -262,7 +341,22 @@ int AST_While::calculate()
     return ERROR_VAL;
 }
 void AST_While::checkSemantic() {}
+void AST_While::emit(SPL_IR* ir){
+    auto whileLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
 
+    cond->emit(ir);
+
+
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", exitLabel});
+
+
+    stmt->emit(ir);
+    ir->addInstruction({"", OP_GOTO, "", "",whileLabel}); // if结束跳到exit
+
+    ir->addInstruction({exitLabel , OP_NULL, "", "",""}); // exit标签
+}
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : 
     stmtList(stmtList_), exp(exp_) 
 {
@@ -280,7 +374,18 @@ int AST_Repeat::calculate()
     return ERROR_VAL;
 }
 void AST_Repeat::checkSemantic() {}
+void AST_Repeat::emit(SPL_IR* ir){
+    auto repeatLabel = ir->genLabel();
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
 
+    for(const auto& stmt : *stmtList) {
+        stmt->emit(ir);
+    }
+
+    exp->emit(ir);
+    ir->addInstruction({"", OP_IF, exp->tempVariable, "", repeatLabel});
+}
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : 
     init(init_), dir(dir_), fin(fin_), stmt(stmt_)
@@ -300,7 +405,38 @@ int AST_For::calculate()
     return ERROR_VAL;
 }
 void AST_For::checkSemantic() {}
+void AST_For::emit(SPL_IR* ir) {
+    init->emit(ir);
+    fin->emit(ir);
+    auto forLabel = ir->genLabel();
+    auto exitLabel = ir ->genLabel();
+    auto temp = ir->genTempVariable();
 
+    auto op = dir ? LE_ : GE_;
+    auto plusOrMinus = dir ? PLUS_ : MINUS_;
+
+
+    ir->addInstruction({forLabel, OP_NULL, "", "", ""});
+
+
+    // 判断语句
+    ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
+
+    //判断失败则直接跳到exitLabel
+    ir->addInstruction({"", OP_IF_Z, temp, "", exitLabel});
+
+    // 生成判断成功需要执行的代码
+    stmt->emit(ir);
+
+    // 更改初始值
+    ir->addInstruction({"", plusOrMinus, init->tempVariable , "1",  init->tempVariable });
+    // 回到判断的位置
+    ir->addInstruction({"", OP_GOTO, "", "", forLabel});
+
+    // 添加exitLabel
+    ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
+
+}
 AST_Goto::AST_Goto(int label_) : label(label_)
 {
     this->nodeType = AST_GOTO;
@@ -313,7 +449,10 @@ int AST_Goto::calculate()
     return ERROR_VAL;
 }
 void AST_Goto::checkSemantic() {}
-
+void AST_Goto::emit(SPL_IR* ir) {
+    // todo label 真的存在吗
+    ir->IR.emplace_back("", OP_GOTO, "", "", std::to_string(label));
+}
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {
     this->nodeType = AST_COMPOUND;
@@ -329,15 +468,19 @@ int AST_Compound::calculate()
     return ERROR_VAL;
 }
 void AST_Compound::checkSemantic() {}
-
-AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_) : 
-    isProc(isProc_), funcId(funcId_), argList(argList_)
+void AST_Compound::emit(SPL_IR* ir) {
+    for(const auto& stmt : *stmtList) {
+        stmt->emit(ir);
+    }
+}
+AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex_) :
+    isProc(isProc_), funcId(funcId_), argList(argList_), scopeIndex(scopeIndex_)
 {
     this->nodeType = AST_FUNC;
 }
 
 
-AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_)
+AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_), scopeIndex(0)
 {
     switch (sysFuncId_)
     {
@@ -398,7 +541,38 @@ int AST_Func::calculate()
 }
 
 void AST_Func::checkSemantic() {}
-
+void AST_Func::emit(SPL_IR* ir) {
+    for(const auto& arg : *argList) {
+        if(arg->tempVariable == ""){
+            arg->emit(ir);
+        }
+    }
+    int totalSize = 0;
+    for(const auto& arg : *argList) {
+        ir->addInstruction({"", OP_PARAM, arg->tempVariable, "", ""});
+        switch(arg->valType){
+            case INT:
+                totalSize += 4;
+                break;
+            case REAL:
+                totalSize += 8;
+                break;
+            case CHAR:
+                totalSize += 1;
+                break;
+            case BOOL:
+                totalSize += 1;
+                break;
+            case STRING:
+                totalSize += 4; // 无法计算具体的size
+                break;
+            default:
+                totalSize += 100; //
+        }
+    }
+    ir->addInstruction({"", OP_CALL, std::to_string(scopeIndex) + "." + funcId, "", ""});
+    ir->addInstruction({"", OP_POP, std::to_string(totalSize), "", ""});
+}
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)
 // {

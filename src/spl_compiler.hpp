@@ -34,7 +34,19 @@ enum SPL_OP : unsigned int
     LE_,
     LT_,
     NOT_,
-    MINUS__
+    MINUS__,
+
+
+    OP_ASSIGN,
+    OP_IF_Z,
+    OP_IF,
+    OP_PARAM,
+    OP_CALL,
+    OP_POP,
+    OP_REF,
+    OP_RET,
+    OP_GOTO,
+    OP_NULL,
 };
 
 // class of a symbol
@@ -88,6 +100,7 @@ enum SPL_PARA : bool
 
 void DoAssert(const char *errorMsg);
 
+std::string SPL_OPToString(SPL_OP op);
 std::string classToString(SPL_CLASS classId);
 std::string typeToString(SPL_TYPE typeId);
 

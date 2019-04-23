@@ -69,5 +69,35 @@ link /subsystem:console test.obj
 ```
 
 ```shell
-git commit -m"src/main.cpp: ADD new class"
+git commit -m"ADD new class"
 ```
+
+## TAC format
+
+`label` : `string`
+
+`op` : `SPL_OP`
+
+`arg1`: `string`
+
+`arg2` : `string`
+
+`result` : `string`
+
+### Label
+
+`return "L" + to_string(labelCount ++)`
+
+### temp variable
+
+`"_t" + to_string(tempCount ++)`
+
+### output file
+
+`out.bc`
+
+## todo
+* 检查函数定义是否有返回值，以及返回值类型是否正确
+
+## useful link
+* [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
