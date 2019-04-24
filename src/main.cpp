@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
             // emit IR
             driver.emitIR();
             driver.printIR();
-            driver.genSSATree();
+            driver.optimizeIR();
         }
         catch (splException &e)
         {

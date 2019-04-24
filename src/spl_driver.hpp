@@ -42,7 +42,7 @@ class SPL_Driver
     std::ostream &print(std::ostream &stream);
     void emitIR();
     void printIR();
-    void genSSATree();
+    void optimizeIR();
     SymbolTable symtab;
     AST_Manager astmng;
   private:

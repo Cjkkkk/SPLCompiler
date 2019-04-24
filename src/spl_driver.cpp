@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cctype>
 #include <fstream>
+#include <set>
 
 #include "spl_driver.hpp"
 
@@ -109,44 +110,7 @@ void SPL::SPL_Driver::printIR() {
     }
     outfile.close();
 }
-
-
-void SPL::SPL_Driver::genSSATree() {
-    std::vector<SSANode*> nodeSet;
-    SSANode* current;
-    std::map<std::string, int> labelIndexMap;
-    for(auto ins : ir.IR){
-        if(ins.label != "") {
-            // start target
-            SSANode* newNode = new SSANode();
-            nodeSet.push_back(newNode);
-            current = newNode;
-            current->label = &ins.label;
-            labelIndexMap.insert({*current->label, nodeSet.size() - 1});
-        } else if (ins.op == OP_IF || ins.op == OP_IF_Z || ins.op == OP_GOTO) {
-            // 添加子节点
-            current->LabelSet.push_back(&ins.result);
-        } else {
-            // 添加指针
-            current->instruSet.push_back(&ins);
-        }
-    }
-    
-    // generate CFG
-    for(auto node: nodeSet) {
-        auto currentNodeOffset = &node - &nodeSet[0];
-        for(auto label : node->LabelSet) {
-            auto offset = labelIndexMap.find(*label)->second; // 找到子女的label对应的offset
-            node->childSet.push_back(offset); // child set
-            nodeSet[offset]->parentSet.push_back(currentNodeOffset); // parent set
-        }
-    }
-
-    // compute SD
-    for(auto node : nodeSet) {
-        if(node->parentSet.size() != 0) {
-
-        }
-    }
-    
+void SPL::SPL_Driver::optimizeIR() {
+    SPL_SSA s;
+    s.genSSATree(ir.IR);
 }

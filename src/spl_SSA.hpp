@@ -9,6 +9,7 @@
 #include "spl_IR.hpp"
 class SSANode {
 public:
+    SSANode():idom (-1) {};
     std::vector<Instruction*> instruSet;
     std::vector<int> childSet;
     std::vector<int> parentSet;
@@ -19,7 +20,9 @@ public:
 };
 class SPL_SSA {
 public:
-    SSANode* root;
+    std::vector<SSANode*> set;
+    void genSSATree(std::vector<Instruction>& ins);
+    void computeIdom(int index, std::vector<SSANode*>& nodeSet);
 };
 
 

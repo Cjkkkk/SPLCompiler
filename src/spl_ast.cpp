@@ -352,13 +352,9 @@ int AST_While::calculate()
 }
 void AST_While::checkSemantic() {}
 void AST_While::emit(SPL_IR* ir){
-    string whileLabel;
-    if(ir->IR.size() > 0 && ir->getLastInstruction()->label != "") {
-        whileLabel = ir->getLastInstruction()->label;
-    } else {
-        whileLabel = ir->genLabel();
-        ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
-    }
+    string whileLabel = ir->genLabel();
+    ir->addInstruction({"", OP_GOTO, "", "", whileLabel});
+    ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
     auto stmtLabel = ir->genLabel();
 
 
@@ -397,14 +393,9 @@ int AST_Repeat::calculate()
 void AST_Repeat::checkSemantic() {}
 void AST_Repeat::emit(SPL_IR* ir){
 
-    string repeatLabel;
-    if(ir->IR.size() > 0 && ir->getLastInstruction()->label != "") {
-        repeatLabel = ir->getLastInstruction()->label;
-    } else {
-        repeatLabel = ir->genLabel();
-        ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
-    }
-
+    string repeatLabel = ir->genLabel();;
+    ir->addInstruction({"", OP_GOTO, "", "", repeatLabel});
+    ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
 
     for(const auto& stmt : *stmtList) {
         stmt->emit(ir);
@@ -441,14 +432,9 @@ void AST_For::emit(SPL_IR* ir) {
     init->emit(ir);
     fin->emit(ir);
 
-
-    string forLabel;
-    if(ir->IR.size() > 0 && ir->getLastInstruction()->label != "") { //是否可以直接使用上一个label
-        forLabel = ir->getLastInstruction()->label;
-    } else {
-        forLabel = ir->genLabel();
-        ir->addInstruction({forLabel, OP_NULL, "", "", ""}); // while判断条件
-    }
+    auto forLabel = ir->genLabel();
+    ir->addInstruction({"", OP_GOTO, "", "", forLabel}); // trival goto
+    ir->addInstruction({forLabel, OP_NULL, "", "", ""}); // while判断条件
 
     auto ifLabel = ir->genLabel(); // trival if label
     auto temp = ir->genTempVariable();
