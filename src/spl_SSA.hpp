@@ -10,7 +10,12 @@
 class SSANode {
 public:
     std::vector<Instruction*> instruSet;
-    std::vector<SSANode*> nodeSet;
+    std::vector<int> childSet;
+    std::vector<int> parentSet;
+    std::vector<int> DF;
+    int idom;
+    std::vector<std::string*> LabelSet;
+    std::string* label;
 };
 class SPL_SSA {
 public:

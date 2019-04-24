@@ -4,9 +4,16 @@ var
 
 begin
     if ans < 1 then
-        ans := 2
+        begin
+        ans := 2;
+        if ans > 2 then
+            ans := 3
+        else
+            ans := 4;
+        end
     else
         ans := 3;
+
 	while ans > 0 do begin
 	    ans := 3;
 	end;

@@ -33,10 +33,13 @@ public:
     void decreasTempCount(const string& name) {
         if(name[0] == '_') tempCount -= 1;
     }
-
+    Instruction* getLastInstruction() {
+        return &IR[IR.size() - 1];
+    }
     std::string genLabel(){
         return "L" + std::to_string(labelCount ++);
     }
+
     std::vector<Instruction> IR;
     SymbolTable* symbolTable;
     unsigned int tempCount;
