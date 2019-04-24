@@ -82,7 +82,7 @@ void SPL_SSA::generateCFG() {
         SSANode* node = nodeSet[index];
         for(auto label : node->LabelSet) {
             int offset = labelIndexMap.find(*label)->second; // 找到子女的label对应的offset
-            node->childSet.push_back(offset); // child set
+//            node->childSet.push_back(offset); // child set
             nodeSet[offset]->parentSet.push_back(currentNodeOffset); // parent set
         }
     }
@@ -133,7 +133,33 @@ void SPL_SSA::insertPhiFunction() {
     }
 }
 void SPL_SSA::renameVariable() {
-
+    vector<int> walkDTree = {0};
+    map<std::string, int> m;
+    for(auto& pair : variableListBlock) {
+        m.insert({pair.first, 0});
+    }
+    while(!walkDTree.empty()) {
+        int index = walkDTree.back();
+        walkDTree.pop_back();
+        for(auto& childIndex : nodeSet[index]->DSet) {
+            walkDTree.push_back(childIndex);
+        }
+        for(auto& ins : nodeSet[index]->instruSet) {
+            if(ins->op == OP_ASSIGN || ins->op == OP_PHI) {
+                auto it = m.find(ins->result);
+                if(it != m.end()){
+                    ins->result = ins->result + std::to_string(it->second);
+                    it->second ++;
+                }
+            }
+            if(m.find(ins->arg1) != m.end()) {
+                ins->arg1 = ins->arg1 + std::to_string(m.find(ins->arg1)->second - 1);
+            }
+            if(m.find(ins->arg2) != m.end()) {
+                ins->arg2 = ins->arg2 + std::to_string(m.find(ins->arg2)->second - 1);
+            }
+        }
+    }
 }
 void SPL_SSA::computeTreeIdom() {
     for(int index = 0; index < nodeSet.size() ; index++ ) {
@@ -150,6 +176,7 @@ void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
     }
     if(current->parentSet.size() == 1) {
         current->idom = current->parentSet[0];
+        nodeSet[current->idom]->DSet.push_back(index);
         return;
     }
     if(current->parentSet.size() > 1) {
@@ -168,6 +195,7 @@ void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
                 s.clear();
             } else {
                 current->idom = *s.begin();
+                nodeSet[current->idom]->DSet.push_back(index);
                 return;
             }
         }

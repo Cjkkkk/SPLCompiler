@@ -11,7 +11,7 @@ class SSANode {
 public:
     SSANode():idom (-1) {};
     std::vector<Instruction*> instruSet;
-    std::vector<int> childSet;
+    std::vector<int> DSet;
     std::vector<int> parentSet;
     std::vector<int> DF;
     int idom;
