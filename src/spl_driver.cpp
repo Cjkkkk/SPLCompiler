@@ -104,9 +104,9 @@ void SPL::SPL_Driver::emitIR() {
 void SPL::SPL_Driver::printIR() {
     std::ofstream outfile;
     outfile.open("out.bc", std::ios::out);
-    for(const auto & ir : ir.IR) {
-        std::cout << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
-        outfile << ir.label << "\t" << SPL_OPToString(ir.op) << "\t" << ir.arg1 << "\t" << ir.arg2 << "\t" << ir.result << "\n";
+    for( auto & irs : ir.IR) {
+        irs.output(std::cout);
+        irs.output(outfile);
     }
     outfile.close();
 }

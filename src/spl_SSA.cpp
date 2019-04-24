@@ -6,11 +6,18 @@
 #include "spl_SSA.hpp"
 
 void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
-    std::vector<SSANode*> nodeSet;
     SSANode* current;
-    std::map<std::string, int> labelIndexMap;
     for(Instruction& ins : insSet){
-        if(ins.label != "") {
+        if(ins.op == OP_ASSIGN && ins.result[0] != '_') {
+            current->instruSet.push_back(&ins);
+            auto it = variableListBlock.find(ins.result);
+            if(it == variableListBlock.end()) {
+                variableListBlock.insert({ins.result, {nodeSet.size() - 1}});
+            } else{
+                it->second.push_back(nodeSet.size() - 1);
+            }
+        }
+        else if(ins.label != "") {
             // start target
             SSANode* newNode = new SSANode();
             nodeSet.push_back(newNode);
@@ -19,6 +26,7 @@ void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
             labelIndexMap.insert({*current->label, nodeSet.size() - 1});
         } else if (ins.op == OP_IF || ins.op == OP_IF_Z || ins.op == OP_GOTO) {
             // 添加子节点
+            current->instruSet.push_back(&ins);
             current->LabelSet.push_back(&ins.result);
         } else {
             // 添加指针
@@ -38,9 +46,7 @@ void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
     }
 
     // compute SD
-    for(int index = 0; index < nodeSet.size() ; index++ ) {
-        computeIdom(index, nodeSet);
-    }
+    computeTreeIdom();
     for(int index = 0 ; index < nodeSet.size() ; index ++) {
         std::cout << index  << ": " << nodeSet[index]->idom << "\n";
     }
@@ -66,6 +72,55 @@ void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
         std::cout << "\n";
     }
 
+    insertPhiFunction();
+    renameVariable();
+    outputPhiInstruction();
+}
+
+void SPL_SSA::outputPhiInstruction() {
+    for(auto &node : nodeSet) {
+        std::cout << *node->label << "\n";
+        for(auto ins : node->instruSet) {
+            ins->output(std::cout);
+        }
+    }
+}
+void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
+    nodeSet[nodeIndex]->instruSet.push_back(new PhiInstruction{variableName});
+}
+void SPL_SSA::insertPhiFunction() {
+    for(auto &pair : variableListBlock) {
+        vector<bool> PhiInserted(nodeSet.size(), false);
+        vector<bool> added(nodeSet.size(), false);
+        for(auto& nodeIndex : pair.second) {
+            added[nodeIndex] = true;
+        }
+        while (!pair.second.empty()) {
+            int b = pair.second.back();
+            pair.second.pop_back();
+            // get DF(b)
+            auto DFb = nodeSet[b]->DF;
+            for(auto& nodeIndex : DFb) {
+                if(!PhiInserted[nodeIndex]) {
+                    // add phiFunction
+                    insertPhi(nodeIndex, pair.first);
+                    PhiInserted[nodeIndex] = true;
+                    if(!added[nodeIndex]) {
+                        added[nodeIndex] = true;
+                        pair.second.push_back(nodeIndex);
+                    }
+                }
+            }
+        }
+    }
+}
+void SPL_SSA::renameVariable() {
+
+}
+void SPL_SSA::computeTreeIdom() {
+    for(int index = 0; index < nodeSet.size() ; index++ ) {
+        computeIdom(index, nodeSet);
+    }
 }
 void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
     auto current = nodeSet[index];

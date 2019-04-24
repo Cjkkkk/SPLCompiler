@@ -96,84 +96,87 @@ std::string SPL_OPToString(SPL_OP op){
     switch (op)
     {
         case PLUS_:
-            return "OP_PLUS";
+            return "PLUS";
             break;
 
         case MINUS_:
-            return "OP_MINUS";
+            return "MINUS";
             break;
 
         case MUL_:
-            return "OP_MUL";
+            return "MUL";
             break;
 
         case DIV_:
-            return "OP_DIV";
+            return "DIV";
             break;
 
         case AND_:
-            return "OP_AND";
+            return "AND";
             break;
 
         case OR_:
-            return "OP_OR";
+            return "OR";
             break;
 
         case NOT_:
-            return "OP_NOT";
+            return "NOT";
             break;
 
         case MINUS__:
-            return "OP_MINUS_";
+            return "MINUS_";
             break;
 
         case MOD_:
-            return "OP_MOD";
+            return "MOD";
             break;
         case EQUAL_:
-            return "OP_EQUAL";
+            return "EQUAL";
             break;
         case UNEQUAL_:
-            return "OP_UNEQUAL";
+            return "UNEQUAL";
             break;
         case GE_:
-            return "OP_GE";
+            return "GE";
             break;
         case GT_:
-            return "OP_GT";
+            return "GT";
             break;
         case LE_:
-            return "OP_LE";
+            return "LE";
             break;
         case LT_:
-            return "OP_LT";
+            return "LT";
             break;
         case OP_ASSIGN:
-            return "OP_ASSIGN";
+            return "ASSIGN";
             break;
         case OP_GOTO:
-            return "OP_GOTO";
+            return "GOTO";
             break;
         case OP_IF_Z:
-            return "OP_IF_Z";
+            return "IF_Z";
             break;
         case OP_IF:
-            return "OP_IF";
+            return "IF";
             break;
         case OP_CALL:
-            return "OP_CALL";
+            return "CALL";
             break;
         case OP_PARAM:
-            return "OP_PARAM";
+            return "PARAM";
             break;
         case OP_POP:
-            return "OP_POP";
+            return "POP";
             break;
         case OP_NULL:
             return "";
             break;
         case OP_RET:
-            return "OP_RETURN";
+            return "RETURN";
+            break;
+        case OP_PHI:
+            return "PHI";
             break;
         default:
             return "ERROR";

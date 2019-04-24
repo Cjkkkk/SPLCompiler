@@ -20,9 +20,17 @@ public:
 };
 class SPL_SSA {
 public:
-    std::vector<SSANode*> set;
+    std::vector<SSANode*> nodeSet;
+    std::map<std::string, int> labelIndexMap;
+    std::map<std::string, std::vector<int>> variableListBlock;
+
     void genSSATree(std::vector<Instruction>& ins);
+    void computeTreeIdom();
     void computeIdom(int index, std::vector<SSANode*>& nodeSet);
+    void insertPhiFunction();
+    void insertPhi(int nodeIndex, const string& variableName);
+    void outputPhiInstruction();
+    void renameVariable();
 };
 
 
