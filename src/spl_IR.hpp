@@ -16,7 +16,7 @@ public:
     Instruction(std::string label_, SPL_OP op_, std::string arg1_, std::string arg2_, std::string result_)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), result(result_){}
     void output(ostream& s) {
-        s << label << " " << SPL_OPToString(op) << " " << arg1 << " " << arg2 << " " <<result <<"\n";
+        s << label << "\t" << SPL_OPToString(op) << "\t" << arg1 << "\t" << arg2 << "\t" <<result <<"\n";
     }
     std::string label;
     SPL_OP op;

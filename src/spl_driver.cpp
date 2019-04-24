@@ -112,5 +112,5 @@ void SPL::SPL_Driver::printIR() {
 }
 void SPL::SPL_Driver::optimizeIR() {
     SPL_SSA s;
-    s.genSSATree(ir.IR);
+    s.OptimizeIR(ir.IR);
 }

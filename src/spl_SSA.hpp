@@ -23,8 +23,10 @@ public:
     std::vector<SSANode*> nodeSet;
     std::map<std::string, int> labelIndexMap;
     std::map<std::string, std::vector<int>> variableListBlock;
-
+    void OptimizeIR(std::vector<Instruction>& ins);
     void genSSATree(std::vector<Instruction>& ins);
+    void debug();
+    void generateCFG();
     void computeTreeIdom();
     void computeIdom(int index, std::vector<SSANode*>& nodeSet);
     void insertPhiFunction();
