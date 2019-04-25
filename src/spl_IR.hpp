@@ -15,7 +15,8 @@ public:
     Instruction() = default;
     Instruction(std::string label_, SPL_OP op_, std::string arg1_, std::string arg2_, std::string result_)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), result(result_){}
-    void output(ostream& s) {
+    virtual void addVariable(std::string name) {};
+    virtual void output(ostream& s) {
         s << label << "\t" << SPL_OPToString(op) << "\t" << arg1 << "\t" << arg2 << "\t" <<result <<"\n";
     }
     std::string label;
@@ -31,7 +32,17 @@ public:
         op = OP_PHI;
         result = result_;
     }
-    std::vector<std::string*> variableCluster;
+    std::vector<std::string> variableCluster;
+    virtual void addVariable(std::string name) {variableCluster.push_back(name);}
+    virtual void output(ostream& s) {
+        s << label << "\t" << SPL_OPToString(op) << "\t" <<result;
+        s << "(";
+        for(auto & var : variableCluster) {
+            s << var << " ,";
+        }
+        s << ")\n";
+
+    }
 };
 class SPL_IR {
 public:

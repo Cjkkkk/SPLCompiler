@@ -4,6 +4,7 @@ var
 
 begin
     ans := 2;
+    ans := 4;
 	while ans > 0 do begin
 	    if ans < 1 then
             ans := 4

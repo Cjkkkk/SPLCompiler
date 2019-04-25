@@ -5,6 +5,9 @@
 #include <set>
 #include "spl_SSA.hpp"
 #include <fstream>
+#include <stack>
+#include <queue>
+
 void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     genSSATree(ins);
     // generate CFG
@@ -133,36 +136,75 @@ void SPL_SSA::insertPhiFunction() {
     }
 }
 void SPL_SSA::renameVariable() {
-    vector<int> walkDTree = {0};
-    map<std::string, int> m;
+    std::queue<int> walkDTree;
+    walkDTree.push(0);
+    std::map<std::string, int> currentDef;
+
+
     for(auto& pair : variableListBlock) {
-        m.insert({pair.first, 0});
+        currentDef.insert({pair.first, 0});
     }
+
+    // 定义最近的def的位置
+    std::vector<map<std::string, int>> closestDef;
+    for(auto i = 0 ; i < nodeSet.size(); i++) {
+        closestDef.push_back(currentDef);
+    }
+
+    // 遍历D tree
     while(!walkDTree.empty()) {
-        int index = walkDTree.back();
-        walkDTree.pop_back();
+        int index = walkDTree.front();
+        walkDTree.pop();
+
+        // 拷贝子节点到列表中用于之后遍历
         for(auto& childIndex : nodeSet[index]->DSet) {
-            walkDTree.push_back(childIndex);
+            walkDTree.push(childIndex);
         }
+
+        // 拷贝idom节点中的所有变量的定义作为最新定义
+        auto idom = nodeSet[index]->idom;
+        closestDef[index] = closestDef[idom];
+
+
         for(auto& ins : nodeSet[index]->instruSet) {
             if(ins->op == OP_ASSIGN || ins->op == OP_PHI) {
-                auto it = m.find(ins->result);
-                if(it != m.end()){
-                    ins->result = ins->result + std::to_string(it->second);
+                auto it = currentDef.find(ins->result); // 更新定义
+                if(it != currentDef.end()){
+                    closestDef[index].find(ins->result)->second = it->second;
+                    ins->result = ins->result + "." + std::to_string(it->second);
                     it->second ++;
                 }
             }
-            if(m.find(ins->arg1) != m.end()) {
-                ins->arg1 = ins->arg1 + std::to_string(m.find(ins->arg1)->second - 1);
+
+            auto it1 = closestDef[index].find(ins->arg1);
+            if(it1 != closestDef[index].end()) {
+                ins->arg1 = ins->arg1 + "." + std::to_string(it1->second);
+
             }
-            if(m.find(ins->arg2) != m.end()) {
-                ins->arg2 = ins->arg2 + std::to_string(m.find(ins->arg2)->second - 1);
+            auto it2 = closestDef[index].find(ins->arg2);
+            if(it2 != closestDef[index].end()) {
+                ins->arg2 = ins->arg2 + "." + std::to_string(it2->second);
+            }
+        }
+    }
+
+
+    //
+    for(int index = 0 ; index < nodeSet.size() ; index ++ ) {
+        for(auto& ins : nodeSet[index]->instruSet) {
+            if (ins->op == OP_PHI) {
+                auto pos = ins->result.rfind('.');
+                std::string variableName = ins->result.substr(0, pos);
+                for(auto& parent : nodeSet[index]->parentSet) {
+                    auto it = closestDef[parent].find(variableName);
+                    ins->addVariable(variableName + std::to_string(it->second));
+                }
             }
         }
     }
 }
 void SPL_SSA::computeTreeIdom() {
-    for(int index = 0; index < nodeSet.size() ; index++ ) {
+    for(auto index = 0; index < nodeSet.size() ; index++ ) {
         computeIdom(index, nodeSet);
     }
 }
