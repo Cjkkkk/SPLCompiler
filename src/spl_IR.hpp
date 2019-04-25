@@ -41,7 +41,6 @@ public:
             index == 0 ? s << variableCluster[index] : s << " ," << variableCluster[index];
         }
         s << ")\n";
-
     }
 };
 class SPL_IR {

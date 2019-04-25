@@ -56,7 +56,7 @@ main proc
 main endp
 end main
 ```
-- - 然后，运行以下两条命令行，即可将asm文件汇编成exe可执行文件
+-  然后，运行以下两条命令行，即可将asm文件汇编成exe可执行文件
 
 ```bash
 ml /c /coff /Cp test.asm
@@ -97,14 +97,29 @@ git commit -m"ADD new class"
 `out.bc`
 
 ## todo
+
+### AST
+* record / array translation
 * 检查函数定义是否有返回值，以及返回值类型是否正确
+
+### IR generation
+* 短路翻译
+
+### IR optimization
 * reuse temp variable [done]
 * control flow graph [done]
-* SSA
-* record / array translation
+* SSA [done]
+* constant propagation
+* common subexpression
+
+### code generation
+* x86
 
 ## useful link
+### IR optimization
 * [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
 * [control flow graph](https://en.wikipedia.org/wiki/Control-flow_graph)
 * [SSA phi insertion](http://pages.cs.wisc.edu/~fischer/cs701.f08/lectures/Lecture23.4up.pdf)
 * [rename variable](https://www.cs.cmu.edu/afs/cs/academic/class/15745-s16/www/lectures/L8-SSA.pdf)
+* [UD chain/DU chain](https://en.wikipedia.org/wiki/Use-define_chain)
+* [constant folding/constant propagation](https://www.zhihu.com/question/55976094/answer/147302764)
