@@ -6,3 +6,4 @@ cmake-build-debug/
 *.cc
 *.output
 ~m4*
+calLines.bash

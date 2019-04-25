@@ -1,13 +1,22 @@
 program test;
-
-var 
+var
 	ans : integer;
-	tmp : integer;
 
 begin
-	ans := gcd(36, 9);
-	tmp := gcd(6, 3);
-	ans := tmp * ans;
-	writeln(ans);
+    if ans < 1 then
+        begin
+        ans := 2;
+        if ans > 2 then
+            ans := 3
+        else
+            ans := 4;
+        end
+    else
+        ans := 3;
+
+	while ans > 0 do begin
+	    ans := 3;
+	end;
+
 end
 .

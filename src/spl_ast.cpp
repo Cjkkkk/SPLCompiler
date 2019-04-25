@@ -80,12 +80,12 @@ void AST_Math::emit(SPL_IR* ir) {
     }
 
     if(opType == MINUS__) {
-        ir->decreasTempCount(left->tempVariable);
+        ir->decreaseTempCount(left->tempVariable);
         tempVariable = ir->genTempVariable();
         ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
     } else {
-        ir->decreasTempCount(left->tempVariable);
-        ir->decreasTempCount(right->tempVariable);
+        ir->decreaseTempCount(left->tempVariable);
+        ir->decreaseTempCount(right->tempVariable);
         tempVariable = ir->genTempVariable();
         ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
     }
@@ -266,7 +266,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == ""){
         lhs->emit(ir);
     }
-    ir->decreasTempCount(rhs->tempVariable);
+    ir->decreaseTempCount(rhs->tempVariable);
     tempVariable = lhs->tempVariable;
     ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
 }
@@ -311,17 +311,29 @@ AST_Stmt *AST_If::getDoElse(void)
 void AST_If::checkSemantic() {}
 void AST_If::emit(SPL_IR* ir){
     cond->emit(ir);
+    auto ifLabel = ir->genLabel();
     auto elseLabel = ir->genLabel();
-    auto exitLabel = ir->genLabel();
+
     ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", elseLabel});
+    // if 开始
+    ir->addInstruction({ifLabel, OP_NULL, "", "", ""});
 
     doIf->emit(ir);
-    ir->addInstruction({"", OP_GOTO, "", "",exitLabel}); // if结束跳到exit
+
+    ir->addInstruction({"", OP_GOTO, "", "", ""}); // if结束跳到exit
+
+    auto indexOfGoto = ir->IR.size() - 1;
 
     ir->addInstruction({elseLabel , OP_NULL, "", "",""}); // else标签
+
     if(doElse) {
         doElse->emit(ir);
     }
+
+    auto exitLabel = ir->genLabel();
+
+    ir->IR[indexOfGoto].result = exitLabel;
+
     ir->addInstruction({exitLabel, OP_NULL, "", "", ""}); // exit标签
 
 }
@@ -343,16 +355,22 @@ int AST_While::calculate()
 void AST_While::checkSemantic() {}
 void AST_While::emit(SPL_IR* ir){
     auto whileLabel = ir->genLabel();
-    auto exitLabel = ir->genLabel();
+    auto stmtLabel = ir->genLabel();
+
     ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
+
 
     cond->emit(ir);
 
 
-    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", exitLabel});
-
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", ""});
+    auto indexOfGoto = ir->IR.size() - 1;
+    ir->addInstruction({stmtLabel, OP_NULL, "", "", ""}); // trival label
 
     stmt->emit(ir);
+
+    auto exitLabel = ir->genLabel();
+    ir->IR[indexOfGoto].result = exitLabel;
     ir->addInstruction({"", OP_GOTO, "", "",whileLabel}); // if结束跳到exit
 
     ir->addInstruction({exitLabel , OP_NULL, "", "",""}); // exit标签
@@ -375,8 +393,9 @@ int AST_Repeat::calculate()
 }
 void AST_Repeat::checkSemantic() {}
 void AST_Repeat::emit(SPL_IR* ir){
-    auto repeatLabel = ir->genLabel();
-    auto exitLabel = ir->genLabel();
+
+    string repeatLabel = ir->genLabel();;
+
     ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
 
     for(const auto& stmt : *stmtList) {
@@ -385,6 +404,10 @@ void AST_Repeat::emit(SPL_IR* ir){
 
     exp->emit(ir);
     ir->addInstruction({"", OP_IF, exp->tempVariable, "", repeatLabel});
+
+    // trival exit
+    auto exitLabel = ir->genLabel();
+    ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
 }
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : 
@@ -408,32 +431,30 @@ void AST_For::checkSemantic() {}
 void AST_For::emit(SPL_IR* ir) {
     init->emit(ir);
     fin->emit(ir);
-    auto forLabel = ir->genLabel();
-    auto exitLabel = ir ->genLabel();
-    auto temp = ir->genTempVariable();
 
+    auto forLabel = ir->genLabel();
+    auto ifLabel = ir->genLabel(); // trival if label
+    auto temp = ir->genTempVariable();
     auto op = dir ? LE_ : GE_;
     auto plusOrMinus = dir ? PLUS_ : MINUS_;
 
-
-    ir->addInstruction({forLabel, OP_NULL, "", "", ""});
-
-
+    ir->addInstruction({forLabel, OP_NULL, "", "", ""}); // while判断条件
     // 判断语句
     ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
-
     //判断失败则直接跳到exitLabel
-    ir->addInstruction({"", OP_IF_Z, temp, "", exitLabel});
+    ir->addInstruction({"", OP_IF_Z, temp, "", ""});
+    auto indexOfGoto = ir->IR.size() - 1;
 
+    ir->addInstruction({ifLabel, OP_NULL, "", "", ""});// trival goto
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
-
     // 更改初始值
     ir->addInstruction({"", plusOrMinus, init->tempVariable , "1",  init->tempVariable });
     // 回到判断的位置
     ir->addInstruction({"", OP_GOTO, "", "", forLabel});
-
     // 添加exitLabel
+    auto exitLabel = ir ->genLabel();
+    ir->IR[indexOfGoto].result = exitLabel;
     ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
 
 }

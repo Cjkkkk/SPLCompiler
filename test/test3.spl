@@ -1,0 +1,16 @@
+program test;
+var
+	ans : integer;
+
+begin
+    ans := 2;
+    ans := 4;
+	while ans > 0 do begin
+	    if ans < 1 then
+            ans := 4
+        else
+            ans := 3;
+	end;
+    ans := 5;
+end
+.

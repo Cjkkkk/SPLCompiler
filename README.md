@@ -98,6 +98,13 @@ git commit -m"ADD new class"
 
 ## todo
 * 检查函数定义是否有返回值，以及返回值类型是否正确
+* reuse temp variable [done]
+* control flow graph [done]
+* SSA
+* record / array translation
 
 ## useful link
 * [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
+* [control flow graph](https://en.wikipedia.org/wiki/Control-flow_graph)
+* [SSA phi insertion](http://pages.cs.wisc.edu/~fischer/cs701.f08/lectures/Lecture23.4up.pdf)
+* [rename variable](https://www.cs.cmu.edu/afs/cs/academic/class/15745-s16/www/lectures/L8-SSA.pdf)

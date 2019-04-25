@@ -47,6 +47,7 @@ enum SPL_OP : unsigned int
     OP_RET,
     OP_GOTO,
     OP_NULL,
+    OP_PHI,
 };
 
 // class of a symbol
