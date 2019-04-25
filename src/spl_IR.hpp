@@ -33,12 +33,12 @@ public:
         result = result_;
     }
     std::vector<std::string> variableCluster;
-    virtual void addVariable(std::string name) {variableCluster.push_back(name);}
-    virtual void output(ostream& s) {
+    void addVariable(std::string name) override {variableCluster.push_back(name);}
+    void output(ostream& s) override {
         s << label << "\t" << SPL_OPToString(op) << "\t" <<result;
         s << "(";
-        for(auto & var : variableCluster) {
-            s << var << " ,";
+        for(auto index = 0 ; index < variableCluster.size() ; index ++) {
+            index == 0 ? s << variableCluster[index] : s << " ," << variableCluster[index];
         }
         s << ")\n";
 
