@@ -1,19 +1,21 @@
-//
-// Created by DELL on 2019/4/22.
-//
-
-#include <set>
 #include "spl_SSA.hpp"
+#include "spl_exception.hpp"
+#include <set>
 #include <fstream>
-#include <stack>
 #include <queue>
 
 void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     genSSATree(ins);
+
     // generate CFG
     generateCFG();
-    // compute SD
+
+    // compute idom
     computeTreeIdom();
+
+    // compute DF
+    generateDF();
+
     // output debug info
     debug();
 
@@ -27,57 +29,65 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     outputPhiInstruction();
 }
 
-void SPL_SSA::debug() {
-    for(int index = 0 ; index < nodeSet.size() ; index ++) {
-        std::cout << index  << ": " << nodeSet[index]->idom << "\n";
-    }
-    std::cout << "-----------\n";
-    for(int index = 0 ; index < nodeSet.size(); index ++){
-        SSANode* b = nodeSet[index];
-        if(b->parentSet.size() >= 2) {
-            for(int parent_index = 0 ; parent_index < b->parentSet.size() ; parent_index ++) {
-                int runner = b->parentSet[parent_index];
-                while (runner != b->idom) {
-                    nodeSet[runner]->DF.push_back(index);
+void SPL_SSA::generateDF() {
+    for(auto& node: nodeSet){
+        if(node->parentSet.size() >= 2) {
+            for(auto& parent : node->parentSet) {
+                int runner = node->parentSet[&parent - &node->parentSet[0]];
+                while (runner != node->idom) {
+                    nodeSet[runner]->DF.push_back(&node - &nodeSet[0]);
                     runner = nodeSet[runner]->idom;
                 }
             }
         }
     }
+}
 
-    for(int index = 0 ; index < nodeSet.size() ; index ++){
-        std::cout << index << ": ";
-        for(int i = 0 ; i < nodeSet[index]->DF.size() ; i ++){
-            std::cout << nodeSet[index]->DF[i] << " ";
+
+void SPL_SSA::debug() {
+    for(auto& node: nodeSet) {
+        std::cout << &node - &nodeSet[0]  << ": " << node->idom << "\n";
+    }
+    std::cout << "-----------\n";
+    for(auto& node: nodeSet){
+        std::cout << &node - &nodeSet[0] << ": ";
+        for(auto& df :node->DF){
+            std::cout << df << " ";
         }
         std::cout << "\n";
     }
 }
+
+
 void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
-    SSANode* current;
+    SSANode* current = nullptr;
     for(Instruction& ins : insSet){
         if(ins.op == OP_ASSIGN && ins.result[0] != '_') {
             auto it = variableListBlock.find(ins.result);
+
+            // 记录每一个变量出现的node列表
             if(it == variableListBlock.end()) {
                 variableListBlock.insert({ins.result, {nodeSet.size() - 1}});
             } else{
                 it->second.push_back(nodeSet.size() - 1);
             }
         }
-        else if(ins.label != "") {
-            // start target
-            SSANode* newNode = new SSANode();
-            nodeSet.push_back(newNode);
+        // 开始新的node
+        else if(!ins.label.empty()) {
+            auto newNode = new SSANode();
             current = newNode;
+            nodeSet.push_back(newNode);
             current->label = &ins.label;
             labelIndexMap.insert({*current->label, nodeSet.size() - 1});
         } else if (ins.op == OP_IF || ins.op == OP_IF_Z || ins.op == OP_GOTO) {
             // 添加子节点
+            if ( current == nullptr) throw splException{0, 0, "no label at start of target."};
             current->LabelSet.push_back(&ins.result);
         } else {}
         current->instruSet.push_back(&ins);
     }
 }
+
 
 void SPL_SSA::generateCFG() {
     for(int index = 0 ; index < nodeSet.size() ; index ++) {
@@ -203,16 +213,20 @@ void SPL_SSA::renameVariable() {
         }
     }
 }
+
+
 void SPL_SSA::computeTreeIdom() {
     for(auto index = 0; index < nodeSet.size() ; index++ ) {
         computeIdom(index, nodeSet);
     }
 }
 
+
+
 void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
     auto current = nodeSet[index];
     if(current->idom != -1) return; // 已经算出来了
-    if(current->parentSet.size() == 0) {
+    if(current->parentSet.empty()) {
         current->idom = index;
         return; // 根节点没有idom
     }
@@ -224,7 +238,7 @@ void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
     if(current->parentSet.size() > 1) {
         std::set<int> s;
         std::vector<int> temp(current->parentSet);
-        while(1) {
+        while(true) {
             for(auto parent : temp) {
                 if (parent < index ) {
                     if(nodeSet[parent]->idom == -1) computeIdom(parent, nodeSet);

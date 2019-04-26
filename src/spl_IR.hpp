@@ -37,15 +37,15 @@ public:
     void output(ostream& s) override {
         s << label << "\t" << SPL_OPToString(op) << "\t" <<result;
         s << "(";
-        for(auto index = 0 ; index < variableCluster.size() ; index ++) {
-            index == 0 ? s << variableCluster[index] : s << " ," << variableCluster[index];
+        for(auto& variable : variableCluster) {
+            (&variable - &variableCluster[0]) == 0 ? s << variable : s << " ," << variable;
         }
         s << ")\n";
     }
 };
 class SPL_IR {
 public:
-    SPL_IR(SymbolTable* table):tempCount(0), labelCount(0), symbolTable(table){}
+    SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
 
     void addInstruction(Instruction ins) {
         if(ins.label != "" && getLastInstruction()->op != OP_GOTO) {

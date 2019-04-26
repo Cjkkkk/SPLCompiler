@@ -9,7 +9,7 @@
 project(SPLCompiler CXX)
 set(CXXDEBUG "-g -Wall")
 set(CXXSTD "-std=c++14")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-register -O3 ${CXXDEBUG} ${CXXSTD} -I D:/winFlexBison")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 ${CXXDEBUG} ${CXXSTD}")
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -30,6 +30,8 @@ add_executable(SPLCompiler
         ${FLEX_lexer_OUTPUTS}
         ${BISON_parser_OUTPUTS}
         src/spl_ast.cpp src/spl_symtab.cpp src/spl_compiler.cpp src/spl_exception.cpp src/spl_exception.hpp src/consoleColor.hpp src/SPL_IR.cpp src/SPL_IR.hpp src/spl_SSA.cpp src/spl_SSA.hpp)
+
+target_include_directories(SPLCompiler PUBLIC include)
 
 target_include_directories(SPLCompiler
         PUBLIC
