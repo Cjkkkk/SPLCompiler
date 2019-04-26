@@ -5,7 +5,7 @@
 #include <queue>
 
 void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
-    genSSATree(ins);
+    genCFGNode(ins);
 
     // generate CFG
     generateCFG();
@@ -27,6 +27,8 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 
     // output optimized IR
     outputPhiInstruction();
+
+    outputDUChain();
 }
 
 void SPL_SSA::generateDF() {
@@ -45,10 +47,13 @@ void SPL_SSA::generateDF() {
 
 
 void SPL_SSA::debug() {
+    // 输出idom
     for(auto& node: nodeSet) {
         std::cout << &node - &nodeSet[0]  << ": " << node->idom << "\n";
     }
+
     std::cout << "-----------\n";
+    // 输出DF
     for(auto& node: nodeSet){
         std::cout << &node - &nodeSet[0] << ": ";
         for(auto& df :node->DF){
@@ -59,7 +64,7 @@ void SPL_SSA::debug() {
 }
 
 
-void SPL_SSA::genSSATree(std::vector<Instruction> &insSet) {
+void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
     SSANode* current = nullptr;
     for(Instruction& ins : insSet){
         if(ins.op == OP_ASSIGN && ins.result[0] != '_') {
@@ -163,6 +168,45 @@ void SPL_SSA::insertPhiFunction() {
         }
     }
 }
+
+void addVersionToVariable(std::string& variable, int version) {
+    variable = variable + "." + std::to_string(version);
+}
+
+void SPL_SSA::mayBeUsage(map<std::string, int>& def,
+        string& variableName,
+        int& nodeIndex,
+        int offset) {
+    auto it1 = def.find(variableName);
+    if(it1 != def.end()) {
+        addVersionToVariable(variableName, it1->second);
+        // 添加u-d链指针
+        auto it = duChain.find(variableName);
+        it->second.push_back({nodeIndex, offset});
+    }
+}
+
+void SPL_SSA::mayBeDefinition(map<std::string, int>& currentDef,
+        map<std::string, int>& closestDef,
+        string& variableName,
+        int& nodeIndex,
+        int offset) {
+    auto it = currentDef.find(variableName); // 更新定义
+    if (it != currentDef.end()) {
+        closestDef.find(variableName)->second = it->second;
+        addVersionToVariable(variableName, it->second);
+        it->second++;
+    } else {
+        currentDef.insert({variableName, 1});
+        closestDef.insert({variableName, 0});
+        addVersionToVariable(variableName, 0);
+    }
+
+    // 添加 d - u 链入口
+    duChain.insert({variableName, {}});
+    definition.insert({variableName, {nodeIndex, offset}});
+}
+
 void SPL_SSA::renameVariable() {
     std::queue<int> walkDTree;
     walkDTree.push(0);
@@ -194,45 +238,17 @@ void SPL_SSA::renameVariable() {
 
         // 首先遍历phi定义,反正本来就是定义在开头的
         for(auto& ins : nodeSet[index]->phiInstruSet) {
-            auto it = currentDef.find(ins->result); // 更新定义
-            if (it != currentDef.end()) {
-                closestDef[index].find(ins->result)->second = it->second;
-                ins->result = ins->result + "." + std::to_string(it->second);
-                it->second++;
-            } else {
-                currentDef.insert({ins->result, 1});
-                ins->result = ins->result + ".0";
-                closestDef[index].insert({ins->result, 0});
-            }
+            mayBeDefinition(currentDef, closestDef[index], ins->result, index, &nodeSet[index]->phiInstruSet[0] - &ins);
         }
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN && !ins->result.empty() && ins->result[0] != '_') {
-                auto it = currentDef.find(ins->result); // 更新定义
-                if(it != currentDef.end()){
-                    closestDef[index].find(ins->result)->second = it->second;
-                    ins->result = ins->result + "." + std::to_string(it->second);
-                    it->second ++;
-                } else {
-                    currentDef.insert({ins->result, 1});
-                    ins->result = ins->result + ".0";
-                    closestDef[index].insert({ins->result, 0});
-                }
+            if(ins->op == OP_ASSIGN && ins->result[0] != '_') {
+                mayBeDefinition(currentDef, closestDef[index], ins->result, index, &ins - &nodeSet[index]->instruSet[0]);
             }
-
-            auto it1 = closestDef[index].find(ins->arg1);
-            if(it1 != closestDef[index].end()) {
-                ins->arg1 = ins->arg1 + "." + std::to_string(it1->second);
-
-            }
-
-            auto it2 = closestDef[index].find(ins->arg2);
-            if(it2 != closestDef[index].end()) {
-                ins->arg2 = ins->arg2 + "." + std::to_string(it2->second);
-            }
+            mayBeUsage(closestDef[index], ins->arg1, index, &ins - &nodeSet[index]->instruSet[0]);
+            mayBeUsage(closestDef[index], ins->arg2, index, &ins - &nodeSet[index]->instruSet[0]);
         }
-
     }
 
 
@@ -242,13 +258,32 @@ void SPL_SSA::renameVariable() {
             auto pos = ins->result.rfind('.');
             std::string variableName = ins->result.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
-                auto it = closestDef[parent].find(variableName);
+
+                auto it = closestDef[parent].find(variableName); // 寻找最近的变量定义
                 ins->addVariable(variableName + "." + std::to_string(it->second));
+
+                // 更新d-u链
+                duChain.find(variableName + "." + std::to_string(it->second))->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
+
             }
         }
     }
+
 }
 
+
+void SPL_SSA::outputDUChain() {
+
+    std::cout << "------------------DU Chain-----------------\n";
+    for(auto& variable : duChain) {
+        std::cout << variable.first << ":\n";
+        for(auto& pair: variable.second) {
+            auto ins = pair.second > 0 ? nodeSet[pair.first]->instruSet[pair.second] : nodeSet[pair.first]->phiInstruSet[-pair.second];
+            ins->output(std::cout);
+        }
+        std::cout << "\n";
+    }
+}
 
 void SPL_SSA::computeTreeIdom() {
     for(auto index = 0; index < nodeSet.size() ; index++ ) {

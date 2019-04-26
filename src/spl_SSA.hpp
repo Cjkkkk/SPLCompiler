@@ -54,10 +54,16 @@ public:
 
     std::set<int> phiBlock;
 
+    // 每一个定义对应的所有使用的位置<nodeIndex, offset>
+    std::map<std::string, std::vector<std::pair<int, int>>> duChain;
+
+    // 每一个定义出现的位置<nodeIndex, offset>
+    std::map<std::string, std::pair<int, int>> definition;
+
     // 优化IR
     void OptimizeIR(std::vector<Instruction>& ins);
 
-    void genSSATree(std::vector<Instruction>& ins);
+    void genCFGNode(std::vector<Instruction>& ins);
 
 
     void debug();
@@ -79,6 +85,19 @@ public:
 
     // 重命名变量
     void renameVariable();
+
+
+    void mayBeUsage(map<std::string, int>& def,
+                    string& variableName,
+                    int& nodeIndex,
+                    int offset);
+
+    void mayBeDefinition(map<std::string, int>& currentDef,
+                         map<std::string, int>& closestDef,
+                         string& variableName,
+                         int& nodeIndex,
+                         int offset);
+    void outputDUChain();
 };
 
 

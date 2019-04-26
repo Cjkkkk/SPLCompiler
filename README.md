@@ -123,3 +123,4 @@ git commit -m"ADD new class"
 * [rename variable](https://www.cs.cmu.edu/afs/cs/academic/class/15745-s16/www/lectures/L8-SSA.pdf)
 * [UD chain/DU chain](https://en.wikipedia.org/wiki/Use-define_chain)
 * [constant folding/constant propagation](https://www.zhihu.com/question/55976094/answer/147302764)
+* [constant propagation implementation](http://lampwww.epfl.ch/resources/lamp/teaching/advancedCompiler/2005/slides/05-UsingSSA_CP-1on1.pdf)

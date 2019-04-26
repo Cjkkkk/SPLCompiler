@@ -54,15 +54,19 @@ public:
         }
         IR.push_back(ins);
     }
+
     std::string genTempVariable() {
         return "_t" + std::to_string(tempCount ++);
     }
+
     void decreaseTempCount(const string& name) {
         if(name[0] == '_') tempCount -= 1;
     }
+
     Instruction* getLastInstruction() {
         return &IR[IR.size() - 1];
     }
+
     std::string genLabel(){
         return "L" + std::to_string(labelCount ++);
     }
