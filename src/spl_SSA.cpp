@@ -207,7 +207,7 @@ void SPL_SSA::renameVariable() {
                 std::string variableName = ins->result.substr(0, pos);
                 for(auto& parent : nodeSet[index]->parentSet) {
                     auto it = closestDef[parent].find(variableName);
-                    ins->addVariable(variableName + std::to_string(it->second));
+                    ins->addVariable(variableName + "." + std::to_string(it->second));
                 }
             }
         }
