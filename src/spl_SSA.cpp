@@ -167,7 +167,9 @@ void SPL_SSA::renameVariable() {
 
 
     for(auto& pair : variableListBlock) {
-        currentDef.insert({pair.first, 0});
+        for(auto& index : pair.second) {
+            if(index == 0) currentDef.insert({pair.first, 0});
+        }
     }
 
     // 定义最近的def的位置
@@ -197,6 +199,9 @@ void SPL_SSA::renameVariable() {
                 closestDef[index].find(ins->result)->second = it->second;
                 ins->result = ins->result + "." + std::to_string(it->second);
                 it->second++;
+            } else {
+                currentDef.insert({ins->result, 0});
+                closestDef[index].insert({ins->result, 0});
             }
         }
 
@@ -208,6 +213,9 @@ void SPL_SSA::renameVariable() {
                     closestDef[index].find(ins->result)->second = it->second;
                     ins->result = ins->result + "." + std::to_string(it->second);
                     it->second ++;
+                } else {
+                    currentDef.insert({ins->result, 0});
+                    closestDef[index].insert({ins->result, 0});
                 }
             }
 
