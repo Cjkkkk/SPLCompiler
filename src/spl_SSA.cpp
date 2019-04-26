@@ -135,15 +135,17 @@ void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
 }
 
 void SPL_SSA::insertPhiFunction() {
+
     for(auto &pair : variableListBlock) {
+        vector<int> copy(pair.second);
         vector<bool> PhiInserted(nodeSet.size(), false);
         vector<bool> added(nodeSet.size(), false);
         for(auto& nodeIndex : pair.second) {
             added[nodeIndex] = true;
         }
-        while (!pair.second.empty()) {
-            int b = pair.second.back();
-            pair.second.pop_back();
+        while (!copy.empty()) {
+            int b = copy.back();
+            copy.pop_back();
             // get DF(b)
             auto DFb = nodeSet[b]->DF;
             for(auto& nodeIndex : DFb) {
@@ -153,6 +155,7 @@ void SPL_SSA::insertPhiFunction() {
                     PhiInserted[nodeIndex] = true;
                     if(!added[nodeIndex]) {
                         added[nodeIndex] = true;
+                        copy.push_back(nodeIndex);
                         pair.second.push_back(nodeIndex);
                     }
                 }
@@ -173,10 +176,7 @@ void SPL_SSA::renameVariable() {
     }
 
     // 定义最近的def的位置
-    std::vector<map<std::string, int>> closestDef;
-    for(auto i = 0 ; i < nodeSet.size(); i++) {
-        closestDef.push_back(currentDef);
-    }
+    std::vector<map<std::string, int>> closestDef(nodeSet.size(), currentDef);
 
     // 遍历D tree
     while(!walkDTree.empty()) {
@@ -200,21 +200,23 @@ void SPL_SSA::renameVariable() {
                 ins->result = ins->result + "." + std::to_string(it->second);
                 it->second++;
             } else {
-                currentDef.insert({ins->result, 0});
+                currentDef.insert({ins->result, 1});
+                ins->result = ins->result + ".0";
                 closestDef[index].insert({ins->result, 0});
             }
         }
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN) {
+            if(ins->op == OP_ASSIGN && !ins->result.empty() && ins->result[0] != '_') {
                 auto it = currentDef.find(ins->result); // 更新定义
                 if(it != currentDef.end()){
                     closestDef[index].find(ins->result)->second = it->second;
                     ins->result = ins->result + "." + std::to_string(it->second);
                     it->second ++;
                 } else {
-                    currentDef.insert({ins->result, 0});
+                    currentDef.insert({ins->result, 1});
+                    ins->result = ins->result + ".0";
                     closestDef[index].insert({ins->result, 0});
                 }
             }
