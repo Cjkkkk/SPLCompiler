@@ -106,17 +106,32 @@ void SPL_SSA::outputPhiInstruction() {
     std::ofstream outfile;
     outfile.open("out.optimized.bc", std::ios::out);
     for(auto &node : nodeSet) {
-        for(auto ins : node->instruSet) {
+        // 输出标签
+        node->instruSet[0]->output(std::cout);
+        node->instruSet[0]->output(outfile);
+
+        for(auto& ins : node->phiInstruSet) {
             ins->output(std::cout);
             ins->output(outfile);
         }
+
+        for(auto ins = node->instruSet.begin() + 1 ; ins != node->instruSet.end(); ins ++) {
+            (*ins)->output(std::cout);
+            (*ins)->output(outfile);
+        }
+
     }
     outfile.close();
 }
 
+
 // 插入phi 函数
 void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
-    nodeSet[nodeIndex]->instruSet.insert(nodeSet[nodeIndex]->instruSet.begin() + 1, new PhiInstruction{variableName});
+    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{variableName});
+
+    // 更新有定义phi函数的node的index
+    phiBlock.insert(nodeIndex);
+    //nodeSet[nodeIndex]->instruSet.insert(nodeSet[nodeIndex]->instruSet.begin() + 1, new PhiInstruction{variableName});
 }
 
 void SPL_SSA::insertPhiFunction() {
@@ -175,9 +190,19 @@ void SPL_SSA::renameVariable() {
         auto idom = nodeSet[index]->idom;
         closestDef[index] = closestDef[idom];
 
+        // 首先遍历phi定义,反正本来就是定义在开头的
+        for(auto& ins : nodeSet[index]->phiInstruSet) {
+            auto it = currentDef.find(ins->result); // 更新定义
+            if (it != currentDef.end()) {
+                closestDef[index].find(ins->result)->second = it->second;
+                ins->result = ins->result + "." + std::to_string(it->second);
+                it->second++;
+            }
+        }
 
+        // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN || ins->op == OP_PHI) {
+            if(ins->op == OP_ASSIGN) {
                 auto it = currentDef.find(ins->result); // 更新定义
                 if(it != currentDef.end()){
                     closestDef[index].find(ins->result)->second = it->second;
@@ -191,24 +216,24 @@ void SPL_SSA::renameVariable() {
                 ins->arg1 = ins->arg1 + "." + std::to_string(it1->second);
 
             }
+
             auto it2 = closestDef[index].find(ins->arg2);
             if(it2 != closestDef[index].end()) {
                 ins->arg2 = ins->arg2 + "." + std::to_string(it2->second);
             }
         }
+
     }
 
 
-    //
-    for(int index = 0 ; index < nodeSet.size() ; index ++ ) {
-        for(auto& ins : nodeSet[index]->instruSet) {
-            if (ins->op == OP_PHI) {
-                auto pos = ins->result.rfind('.');
-                std::string variableName = ins->result.substr(0, pos);
-                for(auto& parent : nodeSet[index]->parentSet) {
-                    auto it = closestDef[parent].find(variableName);
-                    ins->addVariable(variableName + "." + std::to_string(it->second));
-                }
+    // 重新命名phi变量
+    for(const int& nodeIndex : phiBlock) {
+        for(auto& ins : nodeSet[nodeIndex]->phiInstruSet) {
+            auto pos = ins->result.rfind('.');
+            std::string variableName = ins->result.substr(0, pos);
+            for(auto& parent : nodeSet[nodeIndex]->parentSet) {
+                auto it = closestDef[parent].find(variableName);
+                ins->addVariable(variableName + "." + std::to_string(it->second));
             }
         }
     }

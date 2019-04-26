@@ -6,6 +6,7 @@
 #define SPLCOMPILER_SPL_SSA_H
 
 #include <vector>
+#include <set>
 #include "spl_IR.hpp"
 class SSANode {
 public:
@@ -13,6 +14,7 @@ public:
     // 每一个CFG node中对应的IR
     std::vector<Instruction*> instruSet;
 
+    std::vector<PhiInstruction*> phiInstruSet;
     // 每一个CFG node dominate的节点列表
     std::vector<int> DSet;
 
@@ -48,10 +50,16 @@ public:
     // 每个变量出现的block
     std::map<std::string, std::vector<int>> variableListBlock;
 
+    // 记录所有Phi出现的block
+
+    std::set<int> phiBlock;
+
     // 优化IR
     void OptimizeIR(std::vector<Instruction>& ins);
 
     void genSSATree(std::vector<Instruction>& ins);
+
+
     void debug();
 
     // 生成CFG
