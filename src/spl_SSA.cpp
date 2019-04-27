@@ -3,6 +3,7 @@
 #include <set>
 #include <fstream>
 #include <queue>
+#include <assert.h>
 
 void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     genCFGNode(ins);
@@ -34,6 +35,11 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     // constantPropagation();
 }
 
+void SPL_SSA::constantPropagation() {
+
+}
+
+
 void SPL_SSA::removeUnusedVariable() {
     for(auto& variable: duChain) {
         if(variable.second.empty()) {
@@ -41,9 +47,9 @@ void SPL_SSA::removeUnusedVariable() {
             // 追踪到定义处
             pair<int, int> pos = definition.find(variable.first)->second;
             if(pos.second <= 0) {
-                nodeSet[pos.first]->phiInstruSet[pos.second] = nullptr;
+               // nodeSet[pos.first]->phiInstruSet[pos.second] = nullptr;
             } else {
-                nodeSet[pos.first]->instruSet[pos.second] = nullptr;
+               // nodeSet[pos.first]->instruSet[pos.second] = nullptr;
             }
         }
     }
@@ -158,34 +164,42 @@ void addVersionToVariable(std::string& variable, int version) {
 }
 
 
-void SPL_SSA::mayBeUsage(map<std::string, int>& def,
+void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
         string& variableName,
         int& nodeIndex,
         int offset) {
-    auto it1 = def.find(variableName);
-    if(it1 != def.end()) {
-        addVersionToVariable(variableName, it1->second);
-        // 添加u-d链指针
-        auto it = duChain.find(variableName);
-        it->second.push_back({nodeIndex, offset});
-    }
+
+    int index = nodeIndex;
+    do {
+        auto it = def[index].find(variableName);
+        if(it != def[index].end()) {
+            addVersionToVariable(variableName, it->second);
+            // 添加u-d链指针
+            auto it = duChain.find(variableName);
+            it->second.push_back({nodeIndex, offset});
+            return;
+        } else {
+            // 向上寻找
+            index = nodeSet[index]->idom;
+        }
+    } while (index > 0);
 }
 
-void SPL_SSA::mayBeDefinition(map<std::string, int>& currentDef,
-        map<std::string, int>& closestDef,
+void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
+        std::vector<map<std::string, int>>& closestDef,
         string& variableName,
         int& nodeIndex,
         int offset) {
+
     auto it = currentDef.find(variableName); // 更新定义
-    if (it != currentDef.end()) {
-        closestDef.find(variableName)->second = it->second;
-        addVersionToVariable(variableName, it->second);
-        it->second++;
+    auto it1 = closestDef[nodeIndex].find(variableName);
+
+    if(it1 == closestDef[nodeIndex].end()) {
+        closestDef[nodeIndex].insert({variableName, it->second});
     } else {
-        currentDef.insert({variableName, 1});
-        closestDef.insert({variableName, 0});
-        addVersionToVariable(variableName, 0);
+        it1->second = it->second;
     }
+    addVersionToVariable(variableName, it->second ++ );
 
     // 添加 d - u 链入口
     duChain.insert({variableName, {}});
@@ -199,14 +213,12 @@ void SPL_SSA::renameVariable() {
 
 
     for(auto& pair : variableListBlock) {
-        for(auto& index : pair.second) {
-            if(index == 0) currentDef.insert({pair.first, 0});
-        }
+        currentDef.insert({pair.first, 0});
     }
 
     // 定义最近的def的位置
-    std::vector<map<std::string, int>> closestDef(nodeSet.size(), currentDef);
-
+    std::vector<map<std::string, int>> closestDef(nodeSet.size(), map<std::string, int>{});
+    closestDef[0] = currentDef;
     // 遍历D tree
     while(!walkDTree.empty()) {
         int index = walkDTree.front();
@@ -217,24 +229,20 @@ void SPL_SSA::renameVariable() {
             walkDTree.push(childIndex);
         }
 
-        // 拷贝idom节点中的所有变量的定义作为最新定义
-        auto idom = nodeSet[index]->idom;
-        closestDef[index] = closestDef[idom];
-
         // 首先遍历phi定义,反正本来就是定义在开头的
         for(auto& ins : nodeSet[index]->phiInstruSet) {
-            mayBeDefinition(currentDef, closestDef[index], ins->res->name, index, &nodeSet[index]->phiInstruSet[0] - &ins);
+            updateDefinition(currentDef, closestDef, ins->res->name, index, &nodeSet[index]->phiInstruSet[0] - &ins);
         }
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
             if(ins->op == OP_ASSIGN && ins->res->cl == VAR) {
-                mayBeDefinition(currentDef, closestDef[index], ins->res->name, index, &ins - &nodeSet[index]->instruSet[0]);
+                updateDefinition(currentDef, closestDef, ins->res->name, index, &ins - &nodeSet[index]->instruSet[0]);
             }
             if(ins->arg1 != nullptr && ins->arg1->cl == VAR)
-                mayBeUsage(closestDef[index], ins->arg1->name, index, &ins - &nodeSet[index]->instruSet[0]);
+                updateUsage(closestDef, ins->arg1->name, index, &ins - &nodeSet[index]->instruSet[0]);
             if(ins->arg2 != nullptr && ins->arg2->cl == VAR)
-                mayBeUsage(closestDef[index], ins->arg2->name, index, &ins - &nodeSet[index]->instruSet[0]);
+                updateUsage(closestDef, ins->arg2->name, index, &ins - &nodeSet[index]->instruSet[0]);
         }
     }
 
@@ -246,13 +254,23 @@ void SPL_SSA::renameVariable() {
             std::string variableName = ins->res->name.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
 
-                auto it = closestDef[parent].find(variableName); // 寻找最近的变量定义
-                ins->addVariable(variableName + "." + std::to_string(it->second));
 
-                // 更新d-u链
-                auto it1 = duChain.find(variableName + "." + std::to_string(it->second));
-                it1->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
-
+                // 寻找最近的变量定义
+                int index = parent;
+                do {
+                    auto it = closestDef[index].find(variableName);
+                    if(it != closestDef[index].end()) {
+                        auto temp = variableName + "." + std::to_string(it->second);
+                        ins->addVariable(temp);
+                        // 添加u-d链指针
+                        auto it1 = duChain.find(temp);
+                        it1->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
+                        break;
+                    } else {
+                        // 向上寻找
+                        index = nodeSet[index]->idom;
+                    }
+                } while (index > 0);
             }
         }
     }

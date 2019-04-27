@@ -109,7 +109,10 @@ git commit -m"ADD new class"
 * reuse temp variable [done]
 * control flow graph [done]
 * SSA [done]
+
 * constant propagation
+* copy propagation
+* dead code elimination (copy propagation can help)
 * common subexpression
 
 ### code generation

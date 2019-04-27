@@ -84,17 +84,19 @@ public:
     void renameVariable();
 
 
-    void mayBeUsage(map<std::string, int>& def,
+    void updateUsage(std::vector<map<std::string, int>>& def,
                     string& variableName,
                     int& nodeIndex,
                     int offset);
 
-    void mayBeDefinition(map<std::string, int>& currentDef,
-                         map<std::string, int>& closestDef,
+    void updateDefinition(map<std::string, int>& currentDef,
+                         std::vector<map<std::string, int>>& def,
                          string& variableName,
                          int& nodeIndex,
                          int offset);
+
     void removeUnusedVariable();
+    void constantPropagation();
 
     void outputPhiInstruction();
     void outputDUChain();

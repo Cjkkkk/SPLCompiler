@@ -34,9 +34,10 @@ public:
             Operand* arg1_ = nullptr,
             Operand* arg2_ = nullptr,
             Operand* res_ = nullptr)
-    :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_)
-    {}
+    :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
+
     virtual void addVariable(std::string name) {};
+
     virtual void outputOperand(Operand* operand, ostream& s) {
         if(operand == nullptr) return;
         else if(operand->cl == LABEL) {
