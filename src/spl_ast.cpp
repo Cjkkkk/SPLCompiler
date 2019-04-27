@@ -144,7 +144,7 @@ AST_Const::~AST_Const()
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(SPL_IR* ir){
     tempVariable = ir->genTempVariable(valType);
-    auto literal = new Operand(valType, "");
+    auto literal = new Operand(valType, "", CONST);
 
     switch (valType) {
         case INT: literal->valInt = getValue().valInt;
@@ -182,7 +182,7 @@ void AST_Sym::checkSemantic()
 }
 void AST_Sym::emit(SPL_IR* ir){
 
-    tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id);
+    tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id, VAR);
     //tempVariable = ir->genTempVariable(id);
     //ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
@@ -441,7 +441,7 @@ void AST_For::emit(SPL_IR* ir) {
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
     // 更改初始值
-    auto literal = new Operand(INT, "");
+    auto literal = new Operand(INT, "", CONST);
     literal->valInt = 1;
     ir->addInstruction({"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
     // 回到判断的位置
@@ -466,7 +466,7 @@ int AST_Goto::calculate()
 void AST_Goto::checkSemantic() {}
 void AST_Goto::emit(SPL_IR* ir) {
     // todo label 真的存在吗
-    ir->IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label))});
+    ir->IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
 }
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {
@@ -585,9 +585,9 @@ void AST_Func::emit(SPL_IR* ir) {
                 totalSize += 100; //
         }
     }
-    auto literal = new Operand(INT, "");
+    auto literal = new Operand(INT, "", CONST);
     literal->valInt = totalSize;
-    ir->addInstruction({"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId), nullptr, nullptr});
+    ir->addInstruction({"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
     ir->addInstruction({"", OP_POP, literal, nullptr, nullptr});
 }
 

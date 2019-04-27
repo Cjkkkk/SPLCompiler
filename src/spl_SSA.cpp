@@ -69,7 +69,7 @@ void SPL_SSA::generateDF() {
 void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
     SSANode* current = nullptr;
     for(Instruction& ins : insSet){
-        if(ins.op == OP_ASSIGN && ins.res->name[0] != '_') {
+        if(ins.op == OP_ASSIGN && ins.res->cl == VAR){
             auto it = variableListBlock.find(ins.res->name);
 
             // 记录每一个变量出现的node列表
@@ -90,6 +90,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
             // 添加子节点
             if ( current == nullptr) throw splException{0, 0, "no label at start of target."};
             current->LabelSet.push_back(&ins.res->name);
+
         } else {}
         current->instruSet.push_back(&ins);
     }
@@ -111,7 +112,7 @@ void SPL_SSA::generateCFG() {
 
 // 插入phi 函数
 void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
-    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{new Operand(UNKNOWN, variableName)});
+    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{new Operand(UNKNOWN, variableName, VAR)});
 
     // 更新有定义phi函数的node的index
     phiBlock.insert(nodeIndex);
@@ -151,9 +152,11 @@ void SPL_SSA::insertPhiFunction() {
     }
 }
 
+
 void addVersionToVariable(std::string& variable, int version) {
     variable = variable + "." + std::to_string(version);
 }
+
 
 void SPL_SSA::mayBeUsage(map<std::string, int>& def,
         string& variableName,
@@ -225,12 +228,12 @@ void SPL_SSA::renameVariable() {
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN && ins->res->name[0] != '_') {
+            if(ins->op == OP_ASSIGN && ins->res->cl == VAR) {
                 mayBeDefinition(currentDef, closestDef[index], ins->res->name, index, &ins - &nodeSet[index]->instruSet[0]);
             }
-            if(ins->arg1 != nullptr)
+            if(ins->arg1 != nullptr && ins->arg1->cl == VAR)
                 mayBeUsage(closestDef[index], ins->arg1->name, index, &ins - &nodeSet[index]->instruSet[0]);
-            if(ins->arg2 != nullptr)
+            if(ins->arg2 != nullptr && ins->arg2->cl == VAR)
                 mayBeUsage(closestDef[index], ins->arg2->name, index, &ins - &nodeSet[index]->instruSet[0]);
         }
     }
@@ -247,7 +250,8 @@ void SPL_SSA::renameVariable() {
                 ins->addVariable(variableName + "." + std::to_string(it->second));
 
                 // 更新d-u链
-                duChain.find(variableName + "." + std::to_string(it->second))->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
+                auto it1 = duChain.find(variableName + "." + std::to_string(it->second));
+                it1->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
 
             }
         }

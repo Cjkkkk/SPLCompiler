@@ -125,3 +125,5 @@ git commit -m"ADD new class"
 * [UD chain/DU chain](https://en.wikipedia.org/wiki/Use-define_chain)
 * [constant folding/constant propagation](https://www.zhihu.com/question/55976094/answer/147302764)
 * [constant propagation implementation](http://lampwww.epfl.ch/resources/lamp/teaching/advancedCompiler/2005/slides/05-UsingSSA_CP-1on1.pdf)
+
+* [cs143](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures)

@@ -56,7 +56,8 @@ enum SPL_CLASS : unsigned char
     CONST, // constant
     TYPE,  // user-defined type
     FUNC,  // function/procedure
-    LABEL  // label
+    LABEL,  // label
+    TEMP
 };
 
 // type of a variable symbol
