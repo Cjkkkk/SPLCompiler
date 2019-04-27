@@ -16,9 +16,6 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     // compute DF
     generateDF();
 
-    // output debug info
-    debug();
-
     // insert Phi
     insertPhiFunction();
 
@@ -26,10 +23,32 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     renameVariable();
 
     // output optimized IR
+    // removeUnusedVariable();
+
+    outputIdom();
+
     outputPhiInstruction();
 
     outputDUChain();
+
+    // constantPropagation();
 }
+
+void SPL_SSA::removeUnusedVariable() {
+    for(auto& variable: duChain) {
+        if(variable.second.empty()) {
+            // 没有使用过
+            // 追踪到定义处
+            pair<int, int> pos = definition.find(variable.first)->second;
+            if(pos.second <= 0) {
+                nodeSet[pos.first]->phiInstruSet[pos.second] = nullptr;
+            } else {
+                nodeSet[pos.first]->instruSet[pos.second] = nullptr;
+            }
+        }
+    }
+}
+
 
 void SPL_SSA::generateDF() {
     for(auto& node: nodeSet){
@@ -46,33 +65,16 @@ void SPL_SSA::generateDF() {
 }
 
 
-void SPL_SSA::debug() {
-    // 输出idom
-    for(auto& node: nodeSet) {
-        std::cout << &node - &nodeSet[0]  << ": " << node->idom << "\n";
-    }
-
-    std::cout << "-----------\n";
-    // 输出DF
-    for(auto& node: nodeSet){
-        std::cout << &node - &nodeSet[0] << ": ";
-        for(auto& df :node->DF){
-            std::cout << df << " ";
-        }
-        std::cout << "\n";
-    }
-}
-
 
 void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
     SSANode* current = nullptr;
     for(Instruction& ins : insSet){
-        if(ins.op == OP_ASSIGN && ins.result[0] != '_') {
-            auto it = variableListBlock.find(ins.result);
+        if(ins.op == OP_ASSIGN && ins.res->name[0] != '_') {
+            auto it = variableListBlock.find(ins.res->name);
 
             // 记录每一个变量出现的node列表
             if(it == variableListBlock.end()) {
-                variableListBlock.insert({ins.result, {nodeSet.size() - 1}});
+                variableListBlock.insert({ins.res->name, {nodeSet.size() - 1}});
             } else{
                 it->second.push_back(nodeSet.size() - 1);
             }
@@ -87,7 +89,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
         } else if (ins.op == OP_IF || ins.op == OP_IF_Z || ins.op == OP_GOTO) {
             // 添加子节点
             if ( current == nullptr) throw splException{0, 0, "no label at start of target."};
-            current->LabelSet.push_back(&ins.result);
+            current->LabelSet.push_back(&ins.res->name);
         } else {}
         current->instruSet.push_back(&ins);
     }
@@ -107,36 +109,12 @@ void SPL_SSA::generateCFG() {
 }
 
 
-void SPL_SSA::outputPhiInstruction() {
-    std::ofstream outfile;
-    outfile.open("out.optimized.bc", std::ios::out);
-    for(auto &node : nodeSet) {
-        // 输出标签
-        node->instruSet[0]->output(std::cout);
-        node->instruSet[0]->output(outfile);
-
-        for(auto& ins : node->phiInstruSet) {
-            ins->output(std::cout);
-            ins->output(outfile);
-        }
-
-        for(auto ins = node->instruSet.begin() + 1 ; ins != node->instruSet.end(); ins ++) {
-            (*ins)->output(std::cout);
-            (*ins)->output(outfile);
-        }
-
-    }
-    outfile.close();
-}
-
-
 // 插入phi 函数
 void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
-    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{variableName});
+    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{new Operand(UNKNOWN, variableName)});
 
     // 更新有定义phi函数的node的index
     phiBlock.insert(nodeIndex);
-    //nodeSet[nodeIndex]->instruSet.insert(nodeSet[nodeIndex]->instruSet.begin() + 1, new PhiInstruction{variableName});
 }
 
 void SPL_SSA::insertPhiFunction() {
@@ -157,11 +135,15 @@ void SPL_SSA::insertPhiFunction() {
                 if(!PhiInserted[nodeIndex]) {
                     // add phiFunction
                     insertPhi(nodeIndex, pair.first);
+
                     PhiInserted[nodeIndex] = true;
+
                     if(!added[nodeIndex]) {
+
                         added[nodeIndex] = true;
                         copy.push_back(nodeIndex);
                         pair.second.push_back(nodeIndex);
+
                     }
                 }
             }
@@ -238,25 +220,27 @@ void SPL_SSA::renameVariable() {
 
         // 首先遍历phi定义,反正本来就是定义在开头的
         for(auto& ins : nodeSet[index]->phiInstruSet) {
-            mayBeDefinition(currentDef, closestDef[index], ins->result, index, &nodeSet[index]->phiInstruSet[0] - &ins);
+            mayBeDefinition(currentDef, closestDef[index], ins->res->name, index, &nodeSet[index]->phiInstruSet[0] - &ins);
         }
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN && ins->result[0] != '_') {
-                mayBeDefinition(currentDef, closestDef[index], ins->result, index, &ins - &nodeSet[index]->instruSet[0]);
+            if(ins->op == OP_ASSIGN && ins->res->name[0] != '_') {
+                mayBeDefinition(currentDef, closestDef[index], ins->res->name, index, &ins - &nodeSet[index]->instruSet[0]);
             }
-            mayBeUsage(closestDef[index], ins->arg1, index, &ins - &nodeSet[index]->instruSet[0]);
-            mayBeUsage(closestDef[index], ins->arg2, index, &ins - &nodeSet[index]->instruSet[0]);
+            if(ins->arg1 != nullptr)
+                mayBeUsage(closestDef[index], ins->arg1->name, index, &ins - &nodeSet[index]->instruSet[0]);
+            if(ins->arg2 != nullptr)
+                mayBeUsage(closestDef[index], ins->arg2->name, index, &ins - &nodeSet[index]->instruSet[0]);
         }
     }
 
 
-    // 重新命名phi变量
+    // 重新命名phi变量的参数()
     for(const int& nodeIndex : phiBlock) {
         for(auto& ins : nodeSet[nodeIndex]->phiInstruSet) {
-            auto pos = ins->result.rfind('.');
-            std::string variableName = ins->result.substr(0, pos);
+            auto pos = ins->res->name.rfind('.');
+            std::string variableName = ins->res->name.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
 
                 auto it = closestDef[parent].find(variableName); // 寻找最近的变量定义
@@ -271,19 +255,6 @@ void SPL_SSA::renameVariable() {
 
 }
 
-
-void SPL_SSA::outputDUChain() {
-
-    std::cout << "------------------DU Chain-----------------\n";
-    for(auto& variable : duChain) {
-        std::cout << variable.first << ":\n";
-        for(auto& pair: variable.second) {
-            auto ins = pair.second > 0 ? nodeSet[pair.first]->instruSet[pair.second] : nodeSet[pair.first]->phiInstruSet[-pair.second];
-            ins->output(std::cout);
-        }
-        std::cout << "\n";
-    }
-}
 
 void SPL_SSA::computeTreeIdom() {
     for(auto index = 0; index < nodeSet.size() ; index++ ) {
@@ -325,5 +296,61 @@ void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
                 return;
             }
         }
+    }
+}
+
+// debug function
+
+void SPL_SSA::outputIdom() {
+    // 输出idom
+    for(auto& node: nodeSet) {
+        std::cout << &node - &nodeSet[0]  << ": " << node->idom << "\n";
+    }
+
+    std::cout << "-----------\n";
+    // 输出DF
+    for(auto& node: nodeSet){
+        std::cout << &node - &nodeSet[0] << ": ";
+        for(auto& df :node->DF){
+            std::cout << df << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
+
+void SPL_SSA::outputPhiInstruction() {
+    std::ofstream outfile;
+    outfile.open("out.optimized.bc", std::ios::out);
+    for(auto &node : nodeSet) {
+        // 输出标签
+        node->instruSet[0]->output(std::cout);
+        node->instruSet[0]->output(outfile);
+
+        for(auto& ins : node->phiInstruSet) {
+            ins->output(std::cout);
+            ins->output(outfile);
+        }
+
+        for(auto ins = node->instruSet.begin() + 1 ; ins != node->instruSet.end(); ins ++) {
+            (*ins)->output(std::cout);
+            (*ins)->output(outfile);
+        }
+
+    }
+    outfile.close();
+}
+
+
+void SPL_SSA::outputDUChain() {
+
+    std::cout << "------------------DU Chain-----------------\n";
+    for(auto& variable : duChain) {
+        std::cout << variable.first << ":\n";
+        for(auto& pair: variable.second) {
+            auto ins = pair.second > 0 ? nodeSet[pair.first]->instruSet[pair.second] : nodeSet[pair.first]->phiInstruSet[-pair.second];
+            ins->output(std::cout);
+        }
+        std::cout << "\n";
     }
 }

@@ -94,10 +94,10 @@ void SPL::SPL_Driver::emitIR() {
         unsigned int scopeIndex = astmng.scopes->at(index);
         // 设置作用域
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
-        ir.IR.emplace_back(symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, "", "", "");
+        ir.IR.push_back({symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
 
-        ir.IR.emplace_back( "", OP_RET, "", "", "");
+        ir.IR.push_back({"", OP_RET, nullptr, nullptr, nullptr});
     }
 }
 

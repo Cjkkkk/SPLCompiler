@@ -87,7 +87,7 @@ std::string typeToString(SPL_TYPE typeId)
             break;
 
         default:
-            return "ERROR";
+            return "";
             break;
     }
 }

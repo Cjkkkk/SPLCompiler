@@ -117,6 +117,7 @@ git commit -m"ADD new class"
 
 ## useful link
 ### IR optimization
+* [TAC](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/13/Slides13.pdf)
 * [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
 * [control flow graph](https://en.wikipedia.org/wiki/Control-flow_graph)
 * [SSA phi insertion](http://pages.cs.wisc.edu/~fischer/cs701.f08/lectures/Lecture23.4up.pdf)

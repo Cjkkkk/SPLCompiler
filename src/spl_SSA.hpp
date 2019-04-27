@@ -66,8 +66,6 @@ public:
     void genCFGNode(std::vector<Instruction>& ins);
 
 
-    void debug();
-
     // 生成CFG
     void generateCFG();
 
@@ -81,7 +79,6 @@ public:
     // 在必要的位置插入phi函数
     void insertPhiFunction();
     void insertPhi(int nodeIndex, const string& variableName);
-    void outputPhiInstruction();
 
     // 重命名变量
     void renameVariable();
@@ -97,7 +94,11 @@ public:
                          string& variableName,
                          int& nodeIndex,
                          int offset);
+    void removeUnusedVariable();
+
+    void outputPhiInstruction();
     void outputDUChain();
+    void outputIdom();
 };
 
 

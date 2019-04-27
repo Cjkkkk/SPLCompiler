@@ -669,7 +669,7 @@ assign_stmt:
 		}
 		AST_Sym* lhs = new AST_Sym($1, sym->scopeIndex);
 		$$ = new AST_Assign(lhs, $3);
-
+		lhs->valType = $3->valType;
         }
         | ID LB expression RB ASSIGN expression {
 //            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
