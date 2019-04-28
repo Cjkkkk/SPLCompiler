@@ -336,8 +336,9 @@ void SPL_SSA::outputPhiInstruction() {
     std::ofstream outfile;
     outfile.open("out.optimized.bc", std::ios::out);
     for(auto &node : nodeSet) {
+        outfile << *node->label << "\n";
+        std::cout << *node->label << "\n";
         for(auto ins = node->instruSet.begin(); ins != node->instruSet.end(); ins ++) {
-            if(*ins == nullptr) continue;
             (*ins)->output(std::cout);
             (*ins)->output(outfile);
         }
