@@ -101,6 +101,7 @@ public:
     void outputPhiInstruction();
     void outputDUChain();
     void outputIdom();
+    void outputSSAForm();
 };
 
 

@@ -40,7 +40,9 @@ public:
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
 
     virtual void addVariable(std::string name) {};
-
+    virtual std::vector<std::string>* getVariable() {
+        return nullptr;
+    }
     virtual void outputOperand(Operand* operand, ostream& s) {
         if(operand == nullptr) return;
         else if(operand->cl == LABEL) {
@@ -95,6 +97,7 @@ public:
     : Instruction("", OP_PHI, nullptr, nullptr, res) {}
     std::vector<std::string> variableCluster;
     void addVariable(std::string name) override {variableCluster.push_back(name);}
+    std::vector<std::string>* getVariable() override {return &variableCluster;}
     void output(ostream& s) override {
         s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
         s << "(";

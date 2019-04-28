@@ -3,7 +3,6 @@
 #include <set>
 #include <fstream>
 #include <queue>
-#include <assert.h>
 
 void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     genCFGNode(ins);
@@ -11,7 +10,7 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     // generate CFG
     generateCFG();
 
-    // compute idom
+    // compute Immediate dom
     computeTreeIdom();
 
     // compute DF
@@ -21,10 +20,13 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     insertPhiFunction();
 
     // rename variable
-     renameVariable();
+    renameVariable();
+
+
+    outputSSAForm();
 
     // output optimized IR
-    // removeUnusedVariable();
+    removeUnusedVariable();
 
     outputIdom();
 
@@ -41,12 +43,44 @@ void SPL_SSA::constantPropagation() {
 
 
 void SPL_SSA::removeUnusedVariable() {
-    for(auto& variable: duChain) {
-        if(variable.second.empty()) {
-            // 没有使用过
-            // 追踪到定义处
-            auto pos = definition.find(variable.first)->second;
+    set<std::string> usage;
+    auto node_it = nodeSet.end();
+    while (node_it != nodeSet.begin()) {
+        -- node_it;
+        auto node = *node_it;
+        auto ins_it = node->instruSet.end();
+        while(ins_it != node->instruSet.begin()) {
+            --ins_it;
+            // res 字段不为空说明产生了赋值的操作
+            if((*ins_it)->res && ((*ins_it)->res->cl == VAR || (*ins_it)->res->cl == TEMP)) {
 
+                // 查看变量是否使用过
+                auto whether_used = usage.find((*ins_it)->res->name);
+
+                if(whether_used == usage.end()) {
+                    // 没有使用过这个变量 删除
+                    ins_it = node->instruSet.erase(ins_it);
+                } else {
+                    // 添加赋值的参数数到使用的变量集合中
+                    if((*ins_it)->op == OP_PHI) {
+                        auto varList = (*ins_it)->getVariable();
+                        if(!varList) continue;
+                        for(auto& var : (*varList)) {
+                            usage.insert(var);
+                        }
+                    } else {
+                        if((*ins_it)->arg1) usage.insert((*ins_it)->arg1->name);
+                        if((*ins_it)->arg2) usage.insert((*ins_it)->arg2->name);
+                    }
+                }
+            }
+            else {
+                // 不是赋值的语句 添加参数到使用变量集合中
+
+                if((*ins_it)->arg1) usage.insert((*ins_it)->arg1->name);
+
+                if((*ins_it)->arg2) usage.insert((*ins_it)->arg2->name);
+            }
         }
     }
 }
@@ -58,7 +92,7 @@ void SPL_SSA::generateDF() {
             for(auto& parent : node->parentSet) {
                 int runner = node->parentSet[&parent - &node->parentSet[0]];
                 while (runner != node->idom) {
-                    nodeSet[runner]->DF.push_back(&node - &nodeSet[0]);
+                    nodeSet[runner]->DF.push_back(static_cast<int>(&node - &nodeSet[0]));
                     runner = nodeSet[runner]->idom;
                 }
             }
@@ -78,7 +112,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
             if(it == variableListBlock.end()) {
                 variableListBlock.insert({ins.res->name, {nodeSet.size() - 1}});
             } else{
-                it->second.push_back(nodeSet.size() - 1);
+                it->second.push_back(static_cast<int>(nodeSet.size() - 1));
             }
 
             current->instruSet.push_back(&ins);
@@ -101,7 +135,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
 
 
 void SPL_SSA::generateCFG() {
-    for(int index = 0 ; index < nodeSet.size() ; index ++) {
+    for(auto index = 0 ; index < nodeSet.size() ; index ++) {
         int currentNodeOffset = index;
         SSANode* node = nodeSet[index];
         for(auto label : node->LabelSet) {
@@ -172,8 +206,8 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
         if(it != def[index].end()) {
             addVersionToVariable(variableName, it->second);
             // 添加u-d链指针
-            auto it = duChain.find(variableName);
-            it->second.push_back(ins);
+            auto du_it = duChain.find(variableName);
+            du_it->second.push_back(ins);
             return;
         } else {
             // 向上寻找
@@ -338,9 +372,9 @@ void SPL_SSA::outputPhiInstruction() {
     for(auto &node : nodeSet) {
         outfile << *node->label << "\n";
         std::cout << *node->label << "\n";
-        for(auto ins = node->instruSet.begin(); ins != node->instruSet.end(); ins ++) {
-            (*ins)->output(std::cout);
-            (*ins)->output(outfile);
+        for(auto ins : node->instruSet) {
+            ins->output(std::cout);
+            ins->output(outfile);
         }
 
     }
@@ -358,4 +392,20 @@ void SPL_SSA::outputDUChain() {
         }
         std::cout << "\n";
     }
+}
+
+
+void SPL_SSA::outputSSAForm() {
+    std::ofstream outfile;
+    outfile.open("out.SSA.bc", std::ios::out);
+    for(auto &node : nodeSet) {
+        outfile << *node->label << "\n";
+        std::cout << *node->label << "\n";
+        for(auto ins :node->instruSet) {
+            ins->output(std::cout);
+            ins->output(outfile);
+        }
+
+    }
+    outfile.close();
 }
