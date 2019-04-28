@@ -6,15 +6,15 @@
 #define SPLCOMPILER_SPL_SSA_H
 
 #include <vector>
+#include <list>
 #include <set>
 #include "spl_IR.hpp"
 class SSANode {
 public:
     SSANode():idom (-1) {};
     // 每一个CFG node中对应的IR
-    std::vector<Instruction*> instruSet;
+    std::list<Instruction*> instruSet;
 
-    std::vector<PhiInstruction*> phiInstruSet;
     // 每一个CFG node dominate的节点列表
     std::vector<int> DSet;
 
@@ -55,10 +55,10 @@ public:
     std::set<int> phiBlock;
 
     // 每一个定义对应的所有使用的位置<nodeIndex, offset>
-    std::map<std::string, std::vector<std::pair<int, int>>> duChain;
+    std::map<std::string, std::vector<Instruction*>> duChain;
 
     // 每一个定义出现的位置<nodeIndex, offset>
-    std::map<std::string, std::pair<int, int>> definition;
+    std::map<std::string, Instruction*> definition;
 
     // 优化IR
     void OptimizeIR(std::vector<Instruction>& ins);
@@ -87,13 +87,13 @@ public:
     void updateUsage(std::vector<map<std::string, int>>& def,
                     string& variableName,
                     int& nodeIndex,
-                    int offset);
+                    Instruction* ins);
 
     void updateDefinition(map<std::string, int>& currentDef,
                          std::vector<map<std::string, int>>& def,
                          string& variableName,
                          int& nodeIndex,
-                         int offset);
+                         Instruction* ins);
 
     void removeUnusedVariable();
     void constantPropagation();

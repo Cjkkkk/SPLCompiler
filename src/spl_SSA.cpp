@@ -21,7 +21,7 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     insertPhiFunction();
 
     // rename variable
-    renameVariable();
+     renameVariable();
 
     // output optimized IR
     // removeUnusedVariable();
@@ -45,12 +45,8 @@ void SPL_SSA::removeUnusedVariable() {
         if(variable.second.empty()) {
             // 没有使用过
             // 追踪到定义处
-            pair<int, int> pos = definition.find(variable.first)->second;
-            if(pos.second <= 0) {
-               // nodeSet[pos.first]->phiInstruSet[pos.second] = nullptr;
-            } else {
-               // nodeSet[pos.first]->instruSet[pos.second] = nullptr;
-            }
+            auto pos = definition.find(variable.first)->second;
+
         }
     }
 }
@@ -84,6 +80,8 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
             } else{
                 it->second.push_back(nodeSet.size() - 1);
             }
+
+            current->instruSet.push_back(&ins);
         }
         // 开始新的node
         else if(!ins.label.empty()) {
@@ -96,9 +94,8 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
             // 添加子节点
             if ( current == nullptr) throw splException{0, 0, "no label at start of target."};
             current->LabelSet.push_back(&ins.res->name);
-
-        } else {}
-        current->instruSet.push_back(&ins);
+            current->instruSet.push_back(&ins);
+        } else {current->instruSet.push_back(&ins);}
     }
 }
 
@@ -118,7 +115,9 @@ void SPL_SSA::generateCFG() {
 
 // 插入phi 函数
 void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
-    nodeSet[nodeIndex]->phiInstruSet.push_back(new PhiInstruction{new Operand(UNKNOWN, variableName, VAR)});
+    auto it = nodeSet[nodeIndex]->instruSet.begin();
+    nodeSet[nodeIndex]->instruSet.insert(it
+            , new PhiInstruction{new Operand(UNKNOWN, variableName, VAR)});
 
     // 更新有定义phi函数的node的index
     phiBlock.insert(nodeIndex);
@@ -127,15 +126,14 @@ void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
 void SPL_SSA::insertPhiFunction() {
 
     for(auto &pair : variableListBlock) {
-        vector<int> copy(pair.second);
         vector<bool> PhiInserted(nodeSet.size(), false);
         vector<bool> added(nodeSet.size(), false);
         for(auto& nodeIndex : pair.second) {
             added[nodeIndex] = true;
         }
-        while (!copy.empty()) {
-            int b = copy.back();
-            copy.pop_back();
+        while (!pair.second.empty()) {
+            int b = pair.second.back();
+            pair.second.pop_back();
             // get DF(b)
             auto DFb = nodeSet[b]->DF;
             for(auto& nodeIndex : DFb) {
@@ -148,7 +146,6 @@ void SPL_SSA::insertPhiFunction() {
                     if(!added[nodeIndex]) {
 
                         added[nodeIndex] = true;
-                        copy.push_back(nodeIndex);
                         pair.second.push_back(nodeIndex);
 
                     }
@@ -167,7 +164,7 @@ void addVersionToVariable(std::string& variable, int version) {
 void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
         string& variableName,
         int& nodeIndex,
-        int offset) {
+        Instruction* ins) {
 
     int index = nodeIndex;
     do {
@@ -176,7 +173,7 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
             addVersionToVariable(variableName, it->second);
             // 添加u-d链指针
             auto it = duChain.find(variableName);
-            it->second.push_back({nodeIndex, offset});
+            it->second.push_back(ins);
             return;
         } else {
             // 向上寻找
@@ -189,7 +186,7 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
         std::vector<map<std::string, int>>& closestDef,
         string& variableName,
         int& nodeIndex,
-        int offset) {
+        Instruction* ins) {
 
     auto it = currentDef.find(variableName); // 更新定义
     auto it1 = closestDef[nodeIndex].find(variableName);
@@ -203,7 +200,7 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
 
     // 添加 d - u 链入口
     duChain.insert({variableName, {}});
-    definition.insert({variableName, {nodeIndex, offset}});
+    definition.insert({variableName, ins});
 }
 
 void SPL_SSA::renameVariable() {
@@ -229,32 +226,26 @@ void SPL_SSA::renameVariable() {
             walkDTree.push(childIndex);
         }
 
-        // 首先遍历phi定义,反正本来就是定义在开头的
-        for(auto& ins : nodeSet[index]->phiInstruSet) {
-            updateDefinition(currentDef, closestDef, ins->res->name, index, &nodeSet[index]->phiInstruSet[0] - &ins);
-        }
-
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if(ins->op == OP_ASSIGN && ins->res->cl == VAR) {
-                updateDefinition(currentDef, closestDef, ins->res->name, index, &ins - &nodeSet[index]->instruSet[0]);
+            if((ins->op == OP_ASSIGN || ins->op == OP_PHI ) && ins->res->cl == VAR) {
+                updateDefinition(currentDef, closestDef, ins->res->name, index, ins);
             }
             if(ins->arg1 != nullptr && ins->arg1->cl == VAR)
-                updateUsage(closestDef, ins->arg1->name, index, &ins - &nodeSet[index]->instruSet[0]);
+                updateUsage(closestDef, ins->arg1->name, index, ins);
             if(ins->arg2 != nullptr && ins->arg2->cl == VAR)
-                updateUsage(closestDef, ins->arg2->name, index, &ins - &nodeSet[index]->instruSet[0]);
+                updateUsage(closestDef, ins->arg2->name, index, ins);
         }
     }
 
 
     // 重新命名phi变量的参数()
     for(const int& nodeIndex : phiBlock) {
-        for(auto& ins : nodeSet[nodeIndex]->phiInstruSet) {
+        for(auto& ins : nodeSet[nodeIndex]->instruSet) {
+            if(ins->op != OP_PHI) break;
             auto pos = ins->res->name.rfind('.');
             std::string variableName = ins->res->name.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
-
-
                 // 寻找最近的变量定义
                 int index = parent;
                 do {
@@ -264,7 +255,7 @@ void SPL_SSA::renameVariable() {
                         ins->addVariable(temp);
                         // 添加u-d链指针
                         auto it1 = duChain.find(temp);
-                        it1->second.push_back({nodeIndex, &nodeSet[nodeIndex]->phiInstruSet[0] - &ins});
+                        it1->second.push_back(ins);
                         break;
                     } else {
                         // 向上寻找
@@ -345,16 +336,8 @@ void SPL_SSA::outputPhiInstruction() {
     std::ofstream outfile;
     outfile.open("out.optimized.bc", std::ios::out);
     for(auto &node : nodeSet) {
-        // 输出标签
-        node->instruSet[0]->output(std::cout);
-        node->instruSet[0]->output(outfile);
-
-        for(auto& ins : node->phiInstruSet) {
-            ins->output(std::cout);
-            ins->output(outfile);
-        }
-
-        for(auto ins = node->instruSet.begin() + 1 ; ins != node->instruSet.end(); ins ++) {
+        for(auto ins = node->instruSet.begin(); ins != node->instruSet.end(); ins ++) {
+            if(*ins == nullptr) continue;
             (*ins)->output(std::cout);
             (*ins)->output(outfile);
         }
@@ -369,8 +352,7 @@ void SPL_SSA::outputDUChain() {
     std::cout << "------------------DU Chain-----------------\n";
     for(auto& variable : duChain) {
         std::cout << variable.first << ":\n";
-        for(auto& pair: variable.second) {
-            auto ins = pair.second > 0 ? nodeSet[pair.first]->instruSet[pair.second] : nodeSet[pair.first]->phiInstruSet[-pair.second];
+        for(auto& ins: variable.second) {
             ins->output(std::cout);
         }
         std::cout << "\n";
