@@ -11,18 +11,21 @@
 #include "spl_symtab.hpp"
 
 
+union Value {
+    char    valChar;
+    bool    valBool;
+    int     valInt;
+    double  valDouble;
+    std::string* valString;
+};
+
 class Operand {
 public:
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
     SPL_TYPE type;
     SPL_CLASS cl;
     std::string name;
-
-    char    valChar;
-    bool    valBool;
-    int     valInt;
-    double  valDouble;
-    std::string* valString;
+    Value value;
 };
 
 class Instruction {
@@ -45,20 +48,20 @@ public:
         } else if(operand->cl == CONST) {
             switch (operand->type) {
                 case INT:
-                    s << "\t" << std::to_string(operand->valInt);
+                    s << "\t" << std::to_string(operand->value.valInt);
                     return;
                 case CHAR:
-                    s << "\t" << "'" + std::to_string(operand->valChar) + "'";
+                    s << "\t" << "'" + std::to_string(operand->value.valChar) + "'";
                     return;
                 case REAL:
-                    s << "\t" << std::to_string(operand->valDouble);
+                    s << "\t" << std::to_string(operand->value.valDouble);
                     return;
                 case BOOL:
-                    if(operand->valBool) s << "\t" << "true";
+                    if(operand->value.valBool) s << "\t" << "true";
                     else s << "\t" << "false";
                     return;
                 case STRING:
-                    s << "\t" << "\"" + *operand->valString + "\"";
+                    s << "\t" << "\"" + *operand->value.valString + "\"";
                     return;
                 default:
                     s << "\t" << "ERROR";

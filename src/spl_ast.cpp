@@ -147,11 +147,11 @@ void AST_Const::emit(SPL_IR* ir){
     auto literal = new Operand(valType, "", CONST);
 
     switch (valType) {
-        case INT: literal->valInt = getValue().valInt;
-        case BOOL: literal->valBool = getValue().valBool;
-        case REAL: literal->valDouble = getValue().valDouble;
-        case CHAR: literal->valChar = getValue().valChar;
-        case STRING: literal->valString = getValue().valString;
+        case INT: literal->value.valInt = getValue().valInt;
+        case BOOL: literal->value.valBool = getValue().valBool;
+        case REAL: literal->value.valDouble = getValue().valDouble;
+        case CHAR: literal->value.valChar = getValue().valChar;
+        case STRING: literal->value.valString = getValue().valString;
         default:
             break;
     }
@@ -442,7 +442,7 @@ void AST_For::emit(SPL_IR* ir) {
     stmt->emit(ir);
     // 更改初始值
     auto literal = new Operand(INT, "", CONST);
-    literal->valInt = 1;
+    literal->value.valInt = 1;
     ir->addInstruction({"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
     // 回到判断的位置
     ir->addInstruction({"", OP_GOTO, nullptr, nullptr , forLabel});
@@ -586,7 +586,7 @@ void AST_Func::emit(SPL_IR* ir) {
         }
     }
     auto literal = new Operand(INT, "", CONST);
-    literal->valInt = totalSize;
+    literal->value.valInt = totalSize;
     ir->addInstruction({"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
     ir->addInstruction({"", OP_POP, literal, nullptr, nullptr});
 }
