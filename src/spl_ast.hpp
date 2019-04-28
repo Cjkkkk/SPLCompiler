@@ -45,7 +45,7 @@ class AST_Exp : virtual public AST
     virtual ~AST_Exp() = 0;      //pure virtual function
     virtual void emit(SPL_IR* ir) = 0;
     SPL_TYPE valType;
-    std::string tempVariable;
+    Operand* tempVariable = nullptr;
 };
 
 // abstract class : ast trees that represent a statement without a value
@@ -110,7 +110,6 @@ class AST_Const : public AST_Exp
     /* valType: type of the constant, including:
      * integer, real, boolean, char, string
      */
-
   protected:
     valueUnion value;
 };

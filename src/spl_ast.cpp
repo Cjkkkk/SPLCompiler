@@ -72,21 +72,21 @@ int AST_Math::calculate()
 }
 
 void AST_Math::emit(SPL_IR* ir) {
-    if(left->tempVariable == "") {
+    if(left->tempVariable == nullptr) {
         left->emit(ir);
     }
-    if(right && right->tempVariable == "") {
+    if(right && right->tempVariable == nullptr) {
         right->emit(ir);
     }
 
     if(opType == MINUS__) {
         ir->decreaseTempCount(left->tempVariable);
-        tempVariable = ir->genTempVariable();
-        ir->addInstruction({"", MINUS__, left->tempVariable, "", tempVariable});
+        tempVariable = ir->genTempVariable(valType);
+        ir->addInstruction({"", MINUS__, left->tempVariable, nullptr, tempVariable});
     } else {
         ir->decreaseTempCount(left->tempVariable);
         ir->decreaseTempCount(right->tempVariable);
-        tempVariable = ir->genTempVariable();
+        tempVariable = ir->genTempVariable(valType);
         ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
     }
 }
@@ -143,29 +143,20 @@ AST_Const::~AST_Const()
 
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(SPL_IR* ir){
-    tempVariable = ir->genTempVariable();
-    std::string arg1;
-    switch(valType) {
-        case INT:
-            arg1 = std::to_string(getValue().valInt);
-            break;
-        case REAL:
-            arg1 = std::to_string(getValue().valDouble);
-            break;
-        case BOOL:
-            arg1 = getValue().valBool ? "true" : "false";
-            break;
-        case CHAR:
-            arg1 = "'" + string(1, getValue().valChar) + "'";
-            break;
-        case STRING:
-            arg1 = "\"" + *getValue().valString + "\"";
-            break;
-        default:
-            arg1 = "type is not supported!";
+    tempVariable = ir->genTempVariable(valType);
+    auto literal = new Operand(valType, "", CONST);
 
+    switch (valType) {
+        case INT: literal->value.valInt = getValue().valInt;
+        case BOOL: literal->value.valBool = getValue().valBool;
+        case REAL: literal->value.valDouble = getValue().valDouble;
+        case CHAR: literal->value.valChar = getValue().valChar;
+        case STRING: literal->value.valString = getValue().valString;
+        default:
+            break;
     }
-    ir->addInstruction({"", OP_ASSIGN, arg1, "", tempVariable});
+
+    ir->addInstruction({"", OP_ASSIGN, literal, nullptr, tempVariable});
 }
 AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {
@@ -190,7 +181,8 @@ void AST_Sym::checkSemantic()
     //scope->lookupVariable(id.c_str());
 }
 void AST_Sym::emit(SPL_IR* ir){
-    tempVariable = std::to_string(scopeIndex) + "." + id;
+
+    tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id, VAR);
     //tempVariable = ir->genTempVariable(id);
     //ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
 }
@@ -260,15 +252,15 @@ void AST_Assign::checkSemantic()
 }
 
 void AST_Assign::emit(SPL_IR* ir){
-    if(rhs->tempVariable == ""){
+    if(rhs->tempVariable == nullptr){
         rhs->emit(ir);
     }
-    if(lhs->tempVariable == ""){
+    if(lhs->tempVariable == nullptr){
         lhs->emit(ir);
     }
     ir->decreaseTempCount(rhs->tempVariable);
     tempVariable = lhs->tempVariable;
-    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, "", lhs->tempVariable});
+    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, nullptr, lhs->tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
@@ -314,17 +306,17 @@ void AST_If::emit(SPL_IR* ir){
     auto ifLabel = ir->genLabel();
     auto elseLabel = ir->genLabel();
 
-    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", elseLabel});
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, nullptr, elseLabel});
     // if 开始
-    ir->addInstruction({ifLabel, OP_NULL, "", "", ""});
+    ir->addInstruction({ifLabel->name, OP_NULL, nullptr, nullptr, nullptr});
 
     doIf->emit(ir);
 
-    ir->addInstruction({"", OP_GOTO, "", "", ""}); // if结束跳到exit
+    ir->addInstruction({"", OP_GOTO, nullptr, nullptr, nullptr}); // if结束跳到exit
 
     auto indexOfGoto = ir->IR.size() - 1;
 
-    ir->addInstruction({elseLabel , OP_NULL, "", "",""}); // else标签
+    ir->addInstruction({elseLabel->name , OP_NULL, nullptr, nullptr, nullptr}); // else标签
 
     if(doElse) {
         doElse->emit(ir);
@@ -332,9 +324,9 @@ void AST_If::emit(SPL_IR* ir){
 
     auto exitLabel = ir->genLabel();
 
-    ir->IR[indexOfGoto].result = exitLabel;
+    ir->IR[indexOfGoto].res = exitLabel;
 
-    ir->addInstruction({exitLabel, OP_NULL, "", "", ""}); // exit标签
+    ir->addInstruction({exitLabel->name, OP_NULL, nullptr, nullptr, nullptr}); // exit标签
 
 }
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) 
@@ -357,23 +349,23 @@ void AST_While::emit(SPL_IR* ir){
     auto whileLabel = ir->genLabel();
     auto stmtLabel = ir->genLabel();
 
-    ir->addInstruction({whileLabel, OP_NULL, "", "", ""}); // while判断条件
+    ir->addInstruction({whileLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
 
 
     cond->emit(ir);
 
 
-    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, "", ""});
+    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, nullptr , nullptr});
     auto indexOfGoto = ir->IR.size() - 1;
-    ir->addInstruction({stmtLabel, OP_NULL, "", "", ""}); // trival label
+    ir->addInstruction({stmtLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // trival label
 
     stmt->emit(ir);
 
     auto exitLabel = ir->genLabel();
-    ir->IR[indexOfGoto].result = exitLabel;
-    ir->addInstruction({"", OP_GOTO, "", "",whileLabel}); // if结束跳到exit
+    ir->IR[indexOfGoto].res = exitLabel;
+    ir->addInstruction({"", OP_GOTO, nullptr, nullptr,whileLabel}); // if结束跳到exit
 
-    ir->addInstruction({exitLabel , OP_NULL, "", "",""}); // exit标签
+    ir->addInstruction({exitLabel->name , OP_NULL, nullptr, nullptr , nullptr}); // exit标签
 }
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : 
     stmtList(stmtList_), exp(exp_) 
@@ -394,20 +386,20 @@ int AST_Repeat::calculate()
 void AST_Repeat::checkSemantic() {}
 void AST_Repeat::emit(SPL_IR* ir){
 
-    string repeatLabel = ir->genLabel();;
+    auto repeatLabel = ir->genLabel();;
 
-    ir->addInstruction({repeatLabel, OP_NULL, "", "", ""}); // while判断条件
+    ir->addInstruction({repeatLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
 
     for(const auto& stmt : *stmtList) {
         stmt->emit(ir);
     }
 
     exp->emit(ir);
-    ir->addInstruction({"", OP_IF, exp->tempVariable, "", repeatLabel});
+    ir->addInstruction({"", OP_IF, exp->tempVariable,nullptr, nullptr});
 
     // trival exit
     auto exitLabel = ir->genLabel();
-    ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
+    ir->addInstruction({exitLabel->name, OP_NULL,nullptr, nullptr , nullptr});
 }
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : 
@@ -434,28 +426,30 @@ void AST_For::emit(SPL_IR* ir) {
 
     auto forLabel = ir->genLabel();
     auto ifLabel = ir->genLabel(); // trival if label
-    auto temp = ir->genTempVariable();
+    auto temp = ir->genTempVariable(INT);
     auto op = dir ? LE_ : GE_;
     auto plusOrMinus = dir ? PLUS_ : MINUS_;
 
-    ir->addInstruction({forLabel, OP_NULL, "", "", ""}); // while判断条件
+    ir->addInstruction({forLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
     // 判断语句
     ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
     //判断失败则直接跳到exitLabel
-    ir->addInstruction({"", OP_IF_Z, temp, "", ""});
+    ir->addInstruction({"", OP_IF_Z, temp, nullptr, nullptr});
     auto indexOfGoto = ir->IR.size() - 1;
 
-    ir->addInstruction({ifLabel, OP_NULL, "", "", ""});// trival goto
+    ir->addInstruction({ifLabel->name, OP_NULL,nullptr, nullptr , nullptr});// trival goto
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
     // 更改初始值
-    ir->addInstruction({"", plusOrMinus, init->tempVariable , "1",  init->tempVariable });
+    auto literal = new Operand(INT, "", CONST);
+    literal->value.valInt = 1;
+    ir->addInstruction({"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
     // 回到判断的位置
-    ir->addInstruction({"", OP_GOTO, "", "", forLabel});
+    ir->addInstruction({"", OP_GOTO, nullptr, nullptr , forLabel});
     // 添加exitLabel
     auto exitLabel = ir ->genLabel();
-    ir->IR[indexOfGoto].result = exitLabel;
-    ir->addInstruction({exitLabel, OP_NULL, "", "", ""});
+    ir->IR[indexOfGoto].res = exitLabel;
+    ir->addInstruction({exitLabel->name, OP_NULL, nullptr, nullptr , nullptr});
 
 }
 AST_Goto::AST_Goto(int label_) : label(label_)
@@ -472,7 +466,7 @@ int AST_Goto::calculate()
 void AST_Goto::checkSemantic() {}
 void AST_Goto::emit(SPL_IR* ir) {
     // todo label 真的存在吗
-    ir->IR.emplace_back("", OP_GOTO, "", "", std::to_string(label));
+    ir->IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
 }
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {
@@ -564,13 +558,13 @@ int AST_Func::calculate()
 void AST_Func::checkSemantic() {}
 void AST_Func::emit(SPL_IR* ir) {
     for(const auto& arg : *argList) {
-        if(arg->tempVariable == ""){
+        if(arg->tempVariable == nullptr){
             arg->emit(ir);
         }
     }
     int totalSize = 0;
     for(const auto& arg : *argList) {
-        ir->addInstruction({"", OP_PARAM, arg->tempVariable, "", ""});
+        ir->addInstruction({"", OP_PARAM, arg->tempVariable, nullptr, nullptr});
         switch(arg->valType){
             case INT:
                 totalSize += 4;
@@ -591,8 +585,10 @@ void AST_Func::emit(SPL_IR* ir) {
                 totalSize += 100; //
         }
     }
-    ir->addInstruction({"", OP_CALL, std::to_string(scopeIndex) + "." + funcId, "", ""});
-    ir->addInstruction({"", OP_POP, std::to_string(totalSize), "", ""});
+    auto literal = new Operand(INT, "", CONST);
+    literal->value.valInt = totalSize;
+    ir->addInstruction({"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
+    ir->addInstruction({"", OP_POP, literal, nullptr, nullptr});
 }
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)

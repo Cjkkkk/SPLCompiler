@@ -6,12 +6,14 @@
 #define SPLCOMPILER_SPL_SSA_H
 
 #include <vector>
+#include <list>
+#include <set>
 #include "spl_IR.hpp"
 class SSANode {
 public:
     SSANode():idom (-1) {};
     // 每一个CFG node中对应的IR
-    std::vector<Instruction*> instruSet;
+    std::list<Instruction*> instruSet;
 
     // 每一个CFG node dominate的节点列表
     std::vector<int> DSet;
@@ -48,11 +50,21 @@ public:
     // 每个变量出现的block
     std::map<std::string, std::vector<int>> variableListBlock;
 
+    // 记录所有Phi出现的block
+
+    std::set<int> phiBlock;
+
+    // 每一个定义对应的所有使用的位置<nodeIndex, offset>
+    std::map<std::string, std::vector<Instruction*>> duChain;
+
+    // 每一个定义出现的位置<nodeIndex, offset>
+    std::map<std::string, Instruction*> definition;
+
     // 优化IR
     void OptimizeIR(std::vector<Instruction>& ins);
 
-    void genSSATree(std::vector<Instruction>& ins);
-    void debug();
+    void genCFGNode(std::vector<Instruction>& ins);
+
 
     // 生成CFG
     void generateCFG();
@@ -67,10 +79,29 @@ public:
     // 在必要的位置插入phi函数
     void insertPhiFunction();
     void insertPhi(int nodeIndex, const string& variableName);
-    void outputPhiInstruction();
 
     // 重命名变量
     void renameVariable();
+
+
+    void updateUsage(std::vector<map<std::string, int>>& def,
+                    string& variableName,
+                    int& nodeIndex,
+                    Instruction* ins);
+
+    void updateDefinition(map<std::string, int>& currentDef,
+                         std::vector<map<std::string, int>>& def,
+                         string& variableName,
+                         int& nodeIndex,
+                         Instruction* ins);
+
+    void removeUnusedVariable();
+    void constantPropagation();
+
+    void outputPhiInstruction();
+    void outputDUChain();
+    void outputIdom();
+    void outputSSAForm();
 };
 
 

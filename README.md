@@ -109,7 +109,10 @@ git commit -m"ADD new class"
 * reuse temp variable [done]
 * control flow graph [done]
 * SSA [done]
+
 * constant propagation
+* copy propagation
+* dead code elimination (copy propagation can help)
 * common subexpression
 
 ### code generation
@@ -117,9 +120,13 @@ git commit -m"ADD new class"
 
 ## useful link
 ### IR optimization
+* [TAC](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/13/Slides13.pdf)
 * [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
 * [control flow graph](https://en.wikipedia.org/wiki/Control-flow_graph)
 * [SSA phi insertion](http://pages.cs.wisc.edu/~fischer/cs701.f08/lectures/Lecture23.4up.pdf)
 * [rename variable](https://www.cs.cmu.edu/afs/cs/academic/class/15745-s16/www/lectures/L8-SSA.pdf)
 * [UD chain/DU chain](https://en.wikipedia.org/wiki/Use-define_chain)
 * [constant folding/constant propagation](https://www.zhihu.com/question/55976094/answer/147302764)
+* [constant propagation implementation](http://lampwww.epfl.ch/resources/lamp/teaching/advancedCompiler/2005/slides/05-UsingSSA_CP-1on1.pdf)
+
+* [cs143](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures)

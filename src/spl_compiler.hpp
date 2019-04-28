@@ -43,7 +43,6 @@ enum SPL_OP : unsigned int
     OP_PARAM,
     OP_CALL,
     OP_POP,
-    OP_REF,
     OP_RET,
     OP_GOTO,
     OP_NULL,
@@ -57,7 +56,8 @@ enum SPL_CLASS : unsigned char
     CONST, // constant
     TYPE,  // user-defined type
     FUNC,  // function/procedure
-    LABEL  // label
+    LABEL,  // label
+    TEMP
 };
 
 // type of a variable symbol
