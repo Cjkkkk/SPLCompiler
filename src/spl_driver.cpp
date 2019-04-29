@@ -101,15 +101,7 @@ void SPL::SPL_Driver::emitIR() {
     }
 }
 
-void SPL::SPL_Driver::printIR() {
-    std::ofstream outfile;
-    outfile.open("out.bc", std::ios::out);
-    for( auto & irs : ir.IR) {
-        irs.output(std::cout);
-        irs.output(outfile);
-    }
-    outfile.close();
-}
+
 void SPL::SPL_Driver::optimizeIR() {
     SPL_SSA s;
     s.OptimizeIR(ir.IR);
