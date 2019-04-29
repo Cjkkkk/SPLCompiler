@@ -20,7 +20,7 @@ DIR_SRC = src
 DIR_OBJ = build
 DIR_EXE = build
 
-CPPOBJ = main spl_compiler spl_driver spl_symtab spl_ast
+CPPOBJ = main spl_compiler spl_driver spl_symtab spl_ast spl_exception spl_IR spl_SSA
 
 FILES = $(addprefix $(DIR_SRC)\, $(addsuffix .cpp, $(CPPOBJ)))
 OBJS  = $(addprefix $(DIR_OBJ)\, $(addsuffix .o, $(CPPOBJ)))
@@ -56,6 +56,9 @@ objects: $(FILES)
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_driver.cpp -o $(DIR_OBJ)\spl_driver.o
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_symtab.cpp -o $(DIR_OBJ)\spl_symtab.o
 	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_ast.cpp -o $(DIR_OBJ)\spl_ast.o
+	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_exception.cpp -o $(DIR_OBJ)\spl_exception.o
+	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_IR.cpp -o $(DIR_OBJ)\spl_IR.o
+	$(CXX) $(CXXFLAGS) -c $(DIR_SRC)\spl_SSA.cpp -o $(DIR_OBJ)\spl_SSA.o
 	
 
 link: $(OBJS) $(DIR_OBJ)\parser.o $(DIR_OBJ)\lexer.o $(DIR_OBJ)\spl_ast.o
