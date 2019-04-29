@@ -112,10 +112,10 @@ public:
 
 class SPL_IR {
 public:
-    explicit SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
-
+    SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
+    SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
     void addInstruction(Instruction ins) {
-        if(!ins.label.empty() && getLastInstruction()->op != OP_GOTO) {
+        if(!ins.label.empty() && IR.size() > 0 && getLastInstruction()->op != OP_GOTO) {
             // need a trivial goto
             IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins.label, LABEL)});
         }
@@ -131,7 +131,7 @@ public:
     }
 
     Instruction* getLastInstruction() {
-        return &IR[IR.size() - 1];
+        return &IR.back();
     }
 
     Operand* genLabel(){
