@@ -54,10 +54,10 @@ public:
 
     std::set<int> phiBlock;
 
-    // 每一个定义对应的所有使用的位置<nodeIndex, offset>
+    // 每一个定义对应的所有使用的位置ins*
     std::map<std::string, std::vector<Instruction*>> duChain;
 
-    // 每一个定义出现的位置<nodeIndex, offset>
+    // 每一个定义出现的位置ins*
     std::map<std::string, Instruction*> definition;
 
     // 优化IR
@@ -96,12 +96,12 @@ public:
                          Instruction* ins);
 
     void removeUnusedVariable();
+    void copyPropagation();
     void constantPropagation();
 
-    void outputPhiInstruction();
+    void outputPhiInstruction(std::string filename);
     void outputDUChain();
     void outputIdom();
-    void outputSSAForm();
 };
 
 
