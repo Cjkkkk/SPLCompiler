@@ -23,19 +23,23 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     renameVariable();
 
 
-    outputSSAForm();
+    outputPhiInstruction("out.bc");
 
     // --------------------------------------------
     // output optimized IR
+
+    copyPropagation();
+
+    outputPhiInstruction("out.copy_propagation.bc");
+
     removeUnusedVariable();
 
+    outputPhiInstruction("out.remove_var.bc");
     //
     // constantPropagation();
 
     // ---------------------------------------------
     outputIdom();
-
-    outputPhiInstruction();
 
     outputDUChain();
 }
@@ -44,6 +48,23 @@ void SPL_SSA::constantPropagation() {
 
 }
 
+void SPL_SSA::copyPropagation() {
+    map<std::string, std::string> copyMap;
+    for(auto& node : nodeSet) {
+        for(auto& ins : node->instruSet) {
+            if(ins->op == OP_ASSIGN) {
+                // n1 = n2 ; 如果n2在copyMap中
+                auto arg1_it = copyMap.find(ins->arg1->name);
+                if(arg1_it != copyMap.end()) {
+                    ins->arg1->name = arg1_it->second;
+                } else {
+                    // v1 = v2; 插入 {v1, v2}
+                    copyMap.insert({ins->res->name, ins->arg1->name});
+                }
+            }
+        }
+    }
+}
 
 void SPL_SSA::removeUnusedVariable() {
     set<std::string> usage; // 有使用的变量
@@ -231,6 +252,7 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
     } while (index > 0);
 }
 
+
 void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
         std::vector<map<std::string, int>>& closestDef,
         string& variableName,
@@ -251,6 +273,7 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
     duChain.insert({variableName, {}});
     definition.insert({variableName, ins});
 }
+
 
 void SPL_SSA::renameVariable() {
     std::queue<int> walkDTree;
@@ -381,9 +404,9 @@ void SPL_SSA::outputIdom() {
 }
 
 
-void SPL_SSA::outputPhiInstruction() {
+void SPL_SSA::outputPhiInstruction(std::string filename) {
     std::ofstream outfile;
-    outfile.open("out.optimized.bc", std::ios::out);
+    outfile.open(filename, std::ios::out);
     for(auto &node : nodeSet) {
         outfile << *node->label << "\n";
         std::cout << *node->label << "\n";
@@ -407,20 +430,4 @@ void SPL_SSA::outputDUChain() {
         }
         std::cout << "\n";
     }
-}
-
-
-void SPL_SSA::outputSSAForm() {
-    std::ofstream outfile;
-    outfile.open("out.SSA.bc", std::ios::out);
-    for(auto &node : nodeSet) {
-        outfile << *node->label << "\n";
-        std::cout << *node->label << "\n";
-        for(auto ins :node->instruSet) {
-            ins->output(std::cout);
-            ins->output(outfile);
-        }
-
-    }
-    outfile.close();
 }
