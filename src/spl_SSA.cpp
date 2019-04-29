@@ -25,16 +25,19 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 
     outputSSAForm();
 
+    // --------------------------------------------
     // output optimized IR
     removeUnusedVariable();
 
+    //
+    // constantPropagation();
+
+    // ---------------------------------------------
     outputIdom();
 
     outputPhiInstruction();
 
     outputDUChain();
-
-    // constantPropagation();
 }
 
 void SPL_SSA::constantPropagation() {
@@ -43,14 +46,15 @@ void SPL_SSA::constantPropagation() {
 
 
 void SPL_SSA::removeUnusedVariable() {
-    set<std::string> usage;
+    set<std::string> usage; // 有使用的变量
+    set<std::string> deleted; // 删除的变量
     auto node_it = nodeSet.end();
     while (node_it != nodeSet.begin()) {
         -- node_it;
         auto node = *node_it;
         auto ins_it = node->instruSet.end();
         while(ins_it != node->instruSet.begin()) {
-            --ins_it;
+            -- ins_it;
             // res 字段不为空说明产生了赋值的操作
             if((*ins_it)->res && ((*ins_it)->res->cl == VAR || (*ins_it)->res->cl == TEMP)) {
 
@@ -59,14 +63,20 @@ void SPL_SSA::removeUnusedVariable() {
 
                 if(whether_used == usage.end()) {
                     // 没有使用过这个变量 删除
+                    deleted.insert((*ins_it)->res->name);
                     ins_it = node->instruSet.erase(ins_it);
+
                 } else {
                     // 添加赋值的参数数到使用的变量集合中
                     if((*ins_it)->op == OP_PHI) {
                         auto varList = (*ins_it)->getVariable();
                         if(!varList) continue;
-                        for(auto& var : (*varList)) {
-                            usage.insert(var);
+                        for(auto var_it = varList->begin() ; var_it != varList->end() ; var_it ++) {
+                            if(deleted.find(*var_it) != deleted.end()) {
+                                varList->erase(var_it--);
+                            } else {
+                                usage.insert(*var_it);
+                            }
                         }
                     } else {
                         if((*ins_it)->arg1) usage.insert((*ins_it)->arg1->name);
@@ -160,12 +170,17 @@ void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
 void SPL_SSA::insertPhiFunction() {
 
     for(auto &pair : variableListBlock) {
+
         vector<bool> PhiInserted(nodeSet.size(), false);
         vector<bool> added(nodeSet.size(), false);
+
         for(auto& nodeIndex : pair.second) {
             added[nodeIndex] = true;
         }
+
+
         while (!pair.second.empty()) {
+
             int b = pair.second.back();
             pair.second.pop_back();
             // get DF(b)
