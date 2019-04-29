@@ -45,25 +45,25 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 }
 
 void SPL_SSA::constantPropagation() {
+    map<std::string, Operand*> constMap;
 
 }
 
 void SPL_SSA::copyPropagation() {
-    map<std::string, std::string> copyMap;
-    for(auto& node : nodeSet) {
-        for(auto& ins : node->instruSet) {
-            if(ins->op == OP_ASSIGN) {
-                // n1 = n2 ; 如果n2在copyMap中
-                auto arg1_it = copyMap.find(ins->arg1->name);
-                if(arg1_it != copyMap.end()) {
-                    ins->arg1->name = arg1_it->second;
-                } else {
-                    // v1 = v2; 插入 {v1, v2}
-                    copyMap.insert({ins->res->name, ins->arg1->name});
-                }
+    for(auto& var : definition ) {
+        auto ins = var.second;
+        if(ins->op != OP_ASSIGN) continue;
+        auto usage = duChain.find(ins->res->name)->second;
+        for(auto& use : usage) {
+            if(use->arg1 && use->arg1->name == ins->res->name) {
+                use->arg1->name = ins->arg1->name;
+            }
+            if(use->arg2 && use->arg2->name == ins->res->name) {
+                use->arg2->name = ins->arg2->name;
             }
         }
     }
+
 }
 
 void SPL_SSA::removeUnusedVariable() {
@@ -271,7 +271,7 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
 
     // 添加 d - u 链入口
     duChain.insert({variableName, {}});
-    definition.insert({variableName, ins});
+    definition.push_back({variableName, ins});
 }
 
 

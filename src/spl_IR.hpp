@@ -30,9 +30,8 @@ public:
 
 class Instruction {
 public:
-    Instruction() = default;
-    Instruction(
-            std::string label_,
+    Instruction() {};
+    Instruction(std::string label_,
             SPL_OP op_,
             Operand* arg1_ = nullptr,
             Operand* arg2_ = nullptr,
@@ -46,37 +45,100 @@ public:
     virtual void outputOperand(Operand* operand, ostream& s) {
         if(operand == nullptr) return;
         else if(operand->cl == LABEL) {
-            s << "\t" << operand->name;
+            s << operand->name;
         } else if(operand->cl == CONST) {
             switch (operand->type) {
                 case INT:
-                    s << "\t" << std::to_string(operand->value.valInt);
+                    s << std::to_string(operand->value.valInt);
                     return;
                 case CHAR:
-                    s << "\t" << "'" + std::to_string(operand->value.valChar) + "'";
+                    s << "'" + std::to_string(operand->value.valChar) + "'";
                     return;
                 case REAL:
-                    s << "\t" << std::to_string(operand->value.valDouble);
+                    s << std::to_string(operand->value.valDouble);
                     return;
                 case BOOL:
-                    if(operand->value.valBool) s << "\t" << "true";
-                    else s << "\t" << "false";
+                    if(operand->value.valBool) s << "true";
+                    else s << "false";
                     return;
                 case STRING:
-                    s << "\t" << "\"" + *operand->value.valString + "\"";
+                    s << "\"" + *operand->value.valString + "\"";
                     return;
                 default:
-                    s << "\t" << "ERROR";
+                    s << "ERROR";
             }
         }else {
-            s << "\t" << operand->name << "[" << typeToString(operand->type) << "]";
+//            s << operand->name << "[" << typeToString(operand->type) << "]";
+              s << operand->name;
         }
     }
     virtual void output(ostream& s) {
-        s << label << "\t" << SPL_OPToString(op);
-        outputOperand(arg1, s);
-        outputOperand(arg2, s);
-        outputOperand(res, s);
+        switch(op) {
+            case PLUS_:
+            case MINUS_:
+            case MUL_:
+            case DIV_:
+            case MOD_:
+            case EQUAL_:
+            case UNEQUAL_:
+            case GE_:
+            case GT_:
+            case LE_:
+            case LT_:
+            case AND_:
+            case OR_:
+                s << label << "\t";
+                outputOperand(res, s);
+                s << " = ";
+                outputOperand(arg1, s);
+                s << " " << SPL_OPToString(op) << " ";
+                outputOperand(arg2, s);
+                break;
+
+                // 2 operand
+            case OP_ASSIGN:
+                s << label << "\t";
+                outputOperand(res, s);
+                s << " = ";
+                outputOperand(arg1, s);
+                break;
+            case OP_IF:
+            case OP_IF_Z:
+                s << label << "\t";
+                s << SPL_OPToString(op) << " ";
+                outputOperand(arg1, s);
+                s << " goto ";
+                outputOperand(res, s);
+                break;
+            case NOT_:
+            case MINUS__:
+                s << label << "\t";
+                outputOperand(res, s);
+                s << " = " << SPL_OPToString(op) << " ";
+                outputOperand(arg1, s);
+                break;
+            // 1 operand
+            case OP_GOTO:
+                s << label << "\t";
+                s << SPL_OPToString(op) << " ";
+                outputOperand(res, s);
+                break;
+            case OP_PARAM:
+            case OP_POP:
+            case OP_CALL:
+                s << label << "\t";
+                s << SPL_OPToString(op) << " ";
+                outputOperand(arg1, s);
+                break;
+            // 0 operand
+            default:
+                s << label << "\t";
+                s << SPL_OPToString(op) << " ";
+        }
+//        s << label << "\t" << SPL_OPToString(op);
+//        outputOperand(arg1, s);
+//        outputOperand(arg2, s);
+//        outputOperand(res, s);
         s << "\n";
     }
 
@@ -92,7 +154,9 @@ public:
 
 
 class PhiInstruction : public Instruction {
+
 public:
+
     explicit PhiInstruction(Operand* res)
     : Instruction("", OP_PHI, nullptr, nullptr, res) {}
     std::vector<std::string> variableCluster;

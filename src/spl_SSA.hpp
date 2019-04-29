@@ -58,7 +58,7 @@ public:
     std::map<std::string, std::vector<Instruction*>> duChain;
 
     // 每一个定义出现的位置ins*
-    std::map<std::string, Instruction*> definition;
+    std::vector<pair<std::string, Instruction*>> definition;
 
     // 优化IR
     void OptimizeIR(std::vector<Instruction>& ins);

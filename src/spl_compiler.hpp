@@ -18,6 +18,12 @@
 
 #define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
 
+enum SPL_OP_NUM {
+    ZERO,
+    ONE,
+    TWO,
+    THREE
+};
 enum SPL_OP : unsigned int
 {
     PLUS_ = 1,
@@ -33,6 +39,8 @@ enum SPL_OP : unsigned int
     GT_,
     LE_,
     LT_,
+
+
     NOT_,
     MINUS__,
 
@@ -100,9 +108,9 @@ enum SPL_PARA : bool
 };
 
 void DoAssert(const char *errorMsg);
-
 std::string SPL_OPToString(SPL_OP op);
 std::string classToString(SPL_CLASS classId);
 std::string typeToString(SPL_TYPE typeId);
+SPL_OP_NUM getOperandNum(SPL_OP op);
 
 #endif //_SPL_COMPILER_H_
