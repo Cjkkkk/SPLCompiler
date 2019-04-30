@@ -54,6 +54,12 @@ void propagateAlongDuchain(std::vector<Instruction*> usage, Operand* res, const 
                     *var = *res;
                 }
             }
+
+//            if(use->getVariable()->size() == 1 && use->getVariable()->at(0)->cl == CONST){
+//                auto t = use->res->name;
+//                *use->res = *res;
+//                propagateAlongDuchain(usage, use->res, t);
+//            }
         }
         if(use->arg1 && use->arg1->name == target) {
             *use->arg1 = *res;
