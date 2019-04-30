@@ -80,14 +80,14 @@ void AST_Math::emit(SPL_IR* ir) {
     }
 
     if(opType == MINUS__) {
-        ir->decreaseTempCount(left->tempVariable);
+//        ir->decreaseTempCount(left->tempVariable);
         tempVariable = ir->genTempVariable(valType);
-        ir->addInstruction({"", MINUS__, left->tempVariable, nullptr, tempVariable});
+        ir->addInstruction({"", MINUS__, left->getTempVariable(), nullptr, tempVariable});
     } else {
-        ir->decreaseTempCount(left->tempVariable);
-        ir->decreaseTempCount(right->tempVariable);
+//        ir->decreaseTempCount(left->tempVariable);
+//        ir->decreaseTempCount(right->tempVariable);
         tempVariable = ir->genTempVariable(valType);
-        ir->addInstruction({"", opType , left->tempVariable, right->tempVariable, tempVariable});
+        ir->addInstruction({"", opType , left->getTempVariable(), right->getTempVariable(), tempVariable});
     }
 }
 // ast node for constant expression
@@ -188,7 +188,7 @@ void AST_Sym::emit(SPL_IR* ir){
 }
 
 // AST_Array
-AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_) 
+AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_)
 {
     this->nodeType = AST_ARRAY;
 }
@@ -258,7 +258,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == nullptr){
         lhs->emit(ir);
     }
-    ir->decreaseTempCount(rhs->tempVariable);
+//    ir->decreaseTempCount(rhs->tempVariable);
     tempVariable = lhs->tempVariable;
     ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, nullptr, lhs->tempVariable});
 }
@@ -329,7 +329,7 @@ void AST_If::emit(SPL_IR* ir){
     ir->addInstruction({exitLabel->name, OP_NULL, nullptr, nullptr, nullptr}); // exit标签
 
 }
-AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_) 
+AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_)
 {
     this->nodeType = AST_WHILE;
 }
@@ -367,8 +367,8 @@ void AST_While::emit(SPL_IR* ir){
 
     ir->addInstruction({exitLabel->name , OP_NULL, nullptr, nullptr , nullptr}); // exit标签
 }
-AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) : 
-    stmtList(stmtList_), exp(exp_) 
+AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) :
+    stmtList(stmtList_), exp(exp_)
 {
     this->nodeType = AST_REPEAT;
 }
@@ -402,7 +402,7 @@ void AST_Repeat::emit(SPL_IR* ir){
     ir->addInstruction({exitLabel->name, OP_NULL,nullptr, nullptr , nullptr});
 }
 
-AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) : 
+AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) :
     init(init_), dir(dir_), fin(fin_), stmt(stmt_)
 {
     this->nodeType = AST_FOR;

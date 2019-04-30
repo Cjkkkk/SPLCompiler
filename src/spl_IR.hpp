@@ -21,6 +21,12 @@ union Value {
 class Operand {
 public:
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
+    Operand(const Operand& op) {
+        this->type = op.type;
+        this->name = op.name;
+        this->cl = op.cl;
+        this->value = op.value;
+    }
     SPL_TYPE type;
     std::string name;
     SPL_CLASS cl;
@@ -50,8 +56,8 @@ public:
             Operand* res_ = nullptr)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
 
-    virtual std::vector<std::string>* getVariable();
-    virtual void addVariable(std::string name);
+    virtual std::vector<Operand*>* getVariable();
+    virtual void addVariable(Operand* name);
     virtual void outputOperand(Operand* operand, ostream& s);
     virtual void output(ostream& s);
 
@@ -72,11 +78,11 @@ public:
 
     explicit PhiInstruction(Operand* res) : Instruction("", OP_PHI, nullptr, nullptr, res) {}
 
-    std::vector<std::string>* getVariable() override;
-    void addVariable(std::string name) override;
+    std::vector<Operand*>* getVariable() override;
+    void addVariable(Operand* name) override;
     void output(ostream& s) override;
 
-    std::vector<std::string> variableCluster;
+    std::vector<Operand*> variableCluster;
 
 };
 

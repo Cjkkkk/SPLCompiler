@@ -46,17 +46,34 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     outputDUChain();
 }
 
-
+void propagateAlongDuchain(std::vector<Instruction*> usage, Operand* res, const string& target) {
+    for(auto& use : usage) {
+        if(use->op == OP_PHI) {
+            for(auto& var : *use->getVariable()) {
+                if(var->name == target) {
+                    *var = *res;
+                }
+            }
+        }
+        if(use->arg1 && use->arg1->name == target) {
+            *use->arg1 = *res;
+        }
+        if(use->arg2 && use->arg2->name == target) {
+            *use->arg2 = *res;
+        }
+    }
+}
 void SPL_SSA::constantPropagation() {
     map<std::string, Operand*> constMap;
     for(auto& node: nodeSet) {
         for(auto ins_it = node->instruSet.begin() ; ins_it != node->instruSet.end(); ins_it ++) {
             if(isCalculateOp((*ins_it)->op)) {
-                if(checkOperandClass((*ins_it)->res,TEMP)
-                   && checkOperandClass((*ins_it)->arg1,CONST)
+                if(checkOperandClass((*ins_it)->arg1,CONST)
                    && checkOperandClass((*ins_it)->arg2,CONST)) {
                     SPL_OP op = (*ins_it)->op;
+                    auto it = duChain.find((*ins_it)->res->name);
                     (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
                     ins_it = node->instruSet.erase(ins_it);
                     --ins_it;
                 }
@@ -64,10 +81,11 @@ void SPL_SSA::constantPropagation() {
             }
             switch((*ins_it)->op) {
                 case OP_ASSIGN:
-                    if(checkOperandClass((*ins_it)->res, TEMP)
-                       && checkOperandClass((*ins_it)->arg1, CONST)
+                    if(checkOperandClass((*ins_it)->arg1, CONST)
                        && checkOperandType((*ins_it)->arg1, INT)) {
+                        auto it = duChain.find((*ins_it)->res->name);
                         *((*ins_it)->res) = *((*ins_it)->arg1);
+                        propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
                         ins_it = node->instruSet.erase(ins_it);
                         --ins_it;
                     }
@@ -126,10 +144,10 @@ void SPL_SSA::removeUnusedVariable() {
                         auto varList = (*ins_it)->getVariable();
                         if(!varList) continue;
                         for(auto var_it = varList->begin() ; var_it != varList->end() ; var_it ++) {
-                            if(deleted.find(*var_it) != deleted.end()) {
+                            if(deleted.find((*var_it)->name) != deleted.end()) {
                                 varList->erase(var_it--);
                             } else {
-                                usage.insert(*var_it);
+                                usage.insert((*var_it)->name);
                             }
                         }
                     } else {
@@ -366,7 +384,7 @@ void SPL_SSA::renameVariable() {
                 // 寻找最近的变量定义
                 ins->res->name = ins->res->name.substr(0, ins->res->name.rfind('.'));
                 updateUsage(closestDef, ins->res, parent, ins);
-                ins->addVariable(ins->res->name);
+                ins->addVariable(new Operand(*ins->res));
             }
             ins->res->name = temp;
         }

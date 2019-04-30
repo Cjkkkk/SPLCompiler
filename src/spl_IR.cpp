@@ -85,8 +85,8 @@ void Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
             break;
     }
 }
-void Instruction::addVariable(std::string name) {};
-std::vector<std::string>* Instruction::getVariable() {
+void Instruction::addVariable(Operand* name) {};
+std::vector<Operand*>* Instruction::getVariable() {
     return nullptr;
 }
 void Instruction::outputOperand(Operand* operand, ostream& s) {
@@ -190,17 +190,18 @@ void Instruction::output(ostream& s) {
 
 
 
-void PhiInstruction::addVariable(std::string name) {variableCluster.push_back(name);}
+void PhiInstruction::addVariable(Operand* name) {variableCluster.push_back(name);}
 void PhiInstruction::output(ostream& s) {
     s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
     s << "(";
     for(auto& variable : variableCluster) {
-    (&variable - &variableCluster[0]) == 0 ? s << variable : s << " ," << variable;
+        if(&variable - &variableCluster[0] > 0) s << ", ";
+        outputOperand(variable, s);
     }
     s << ")\n";
 }
 
-std::vector<std::string>* PhiInstruction::getVariable() {return &variableCluster;}
+std::vector<Operand*>* PhiInstruction::getVariable() {return &variableCluster;}
 
 
 void SPL_IR::addInstruction(Instruction ins) {
