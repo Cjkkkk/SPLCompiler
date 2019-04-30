@@ -86,10 +86,10 @@ void SPL_SSA::copyPropagation() {
         auto usage = duChain.find(ins->res->name)->second;
         for(auto& use : usage) {
             if(use->arg1 && use->arg1->name == ins->res->name) {
-                use->arg1->name = ins->arg1->name;
+                use->arg1 = ins->arg1;
             }
             if(use->arg2 && use->arg2->name == ins->res->name) {
-                use->arg2->name = ins->arg2->name;
+                use->arg2 = ins->arg2;
             }
         }
     }
@@ -261,18 +261,18 @@ void addVersionToVariable(std::string& variable, int version) {
 }
 
 
-void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
-                          string& variableName,
+void SPL_SSA::updateUsage(std::vector<map<std::string, Operand*>>& def,
+                          Operand* variable,
                           int& nodeIndex,
                           Instruction* ins) {
 
     int index = nodeIndex;
     do {
-        auto it = def[index].find(variableName);
+        auto it = def[index].find(variable->name);
         if(it != def[index].end()) {
-            addVersionToVariable(variableName, it->second);
             // 添加u-d链指针
-            auto du_it = duChain.find(variableName);
+            variable = it->second;
+            auto du_it = duChain.find(variable->name);
             du_it->second.push_back(ins);
             return;
         } else {
@@ -283,40 +283,49 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
 }
 
 
-void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
-                               std::vector<map<std::string, int>>& closestDef,
-                               string& variableName,
+void SPL_SSA::updateDefinition(map<std::string, Operand*>& currentDef,
+                               std::vector<map<std::string, Operand*>>& closestDef,
+                               Operand* variable,
                                int& nodeIndex,
                                Instruction* ins) {
 
-    auto it = currentDef.find(variableName); // 更新定义
-    auto it1 = closestDef[nodeIndex].find(variableName);
+    auto it = currentDef.find(variable->name); // 更新定义
+    auto it1 = closestDef[nodeIndex].find(variable->name);
+    if(it->second == nullptr) {
+        addVersionToVariable(variable->name, 0);
+        it->second = variable;
+    } else {
+        *variable = *(it->second);
+        variable->name = variable->name.substr(0, variable->name.rfind('.'));
+        addVersionToVariable(variable->name, 1);
+        it->second = variable;
+    }
+
 
     if(it1 == closestDef[nodeIndex].end()) {
-        closestDef[nodeIndex].insert({variableName, it->second});
+        closestDef[nodeIndex].insert({variable->name, it->second});
     } else {
         it1->second = it->second;
     }
-    addVersionToVariable(variableName, it->second ++ );
 
     // 添加 d - u 链入口
-    duChain.insert({variableName, {}});
-    definition.push_back({variableName, ins});
+    duChain.insert({variable->name, {}});
+    definition.push_back({variable->name, ins});
 }
 
 
 void SPL_SSA::renameVariable() {
     std::queue<int> walkDTree;
     walkDTree.push(0);
-    std::map<std::string, int> currentDef;
+    std::map<std::string, Operand*> currentDef;
 
 
     for(auto& pair : variableListBlock) {
-        currentDef.insert({pair.first, 0});
+        currentDef.insert({pair.first, nullptr});
     }
 
     // 定义最近的def的位置
-    std::vector<map<std::string, int>> closestDef(nodeSet.size(), map<std::string, int>{});
+    std::vector<map<std::string, Operand*>> closestDef(nodeSet.size(), map<std::string, Operand*>{});
     closestDef[0] = currentDef;
     // 遍历D tree
     while(!walkDTree.empty()) {
@@ -331,12 +340,12 @@ void SPL_SSA::renameVariable() {
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
             if((ins->op == OP_ASSIGN || ins->op == OP_PHI ) && ins->res->cl == VAR) {
-                updateDefinition(currentDef, closestDef, ins->res->name, index, ins);
+                updateDefinition(currentDef, closestDef, ins->res, index, ins);
             }
             if(ins->arg1 != nullptr && ins->arg1->cl == VAR)
-                updateUsage(closestDef, ins->arg1->name, index, ins);
+                updateUsage(closestDef, ins->arg1, index, ins);
             if(ins->arg2 != nullptr && ins->arg2->cl == VAR)
-                updateUsage(closestDef, ins->arg2->name, index, ins);
+                updateUsage(closestDef, ins->arg2, index, ins);
         }
     }
 
@@ -349,9 +358,9 @@ void SPL_SSA::renameVariable() {
             std::string variableName = ins->res->name.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
                 // 寻找最近的变量定义
-                auto temp = variableName;
-                updateUsage(closestDef, temp, parent, ins);
-                ins->addVariable(temp);
+//                auto temp = variableName;
+//                updateUsage(closestDef, temp, parent, ins);
+//                ins->addVariable(temp);
             }
         }
     }

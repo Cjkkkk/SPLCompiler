@@ -84,16 +84,16 @@ public:
     void renameVariable();
 
 
-    void updateUsage(std::vector<map<std::string, int>>& def,
-                    string& variableName,
-                    int& nodeIndex,
-                    Instruction* ins);
+    void updateUsage(std::vector<map<std::string, Operand*>>& def,
+                     Operand* variable,
+                     int& nodeIndex,
+                     Instruction* ins);
 
-    void updateDefinition(map<std::string, int>& currentDef,
-                         std::vector<map<std::string, int>>& def,
-                         string& variableName,
-                         int& nodeIndex,
-                         Instruction* ins);
+    void updateDefinition(map<std::string, Operand*>& currentDef,
+                          std::vector<map<std::string, Operand*>>& def,
+                          Operand* variable,
+                          int& nodeIndex,
+                          Instruction* ins);
 
     void removeUnusedVariable();
     void copyPropagation();
