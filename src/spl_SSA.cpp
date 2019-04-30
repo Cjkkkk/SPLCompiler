@@ -95,6 +95,8 @@ void SPL_SSA::constantPropagation() {
                         ins_it = node->instruSet.erase(ins_it);
                         --ins_it;
                     }
+                default:
+                    continue;
             }
         }
     }
@@ -198,7 +200,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
 
             // 记录每一个变量出现的node列表
             if(it == variableListBlock.end()) {
-                variableListBlock.insert({ins.res->name, {nodeSet.size() - 1}});
+                variableListBlock.insert({ins.res->name, {static_cast<int>(nodeSet.size() - 1)}});
             } else{
                 it->second.push_back(static_cast<int>(nodeSet.size() - 1));
             }
@@ -223,13 +225,12 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
 
 
 void SPL_SSA::generateCFG() {
-    for(auto index = 0 ; index < nodeSet.size() ; index ++) {
-        int currentNodeOffset = index;
-        SSANode* node = nodeSet[index];
-        for(auto label : node->LabelSet) {
+    for(auto& node : nodeSet) {
+        auto currentNodeOffset = &node - &nodeSet[0];
+        for(auto& label : node->LabelSet) {
             int offset = labelIndexMap.find(*label)->second; // 找到子女的label对应的offset
 //            node->childSet.push_back(offset); // child set
-            nodeSet[offset]->parentSet.push_back(currentNodeOffset); // parent set
+            nodeSet[offset]->parentSet.push_back(static_cast<int>(currentNodeOffset)); // parent set
         }
     }
 }
@@ -400,8 +401,8 @@ void SPL_SSA::renameVariable() {
 
 
 void SPL_SSA::computeTreeIdom() {
-    for(auto index = 0; index < nodeSet.size() ; index++ ) {
-        computeIdom(index, nodeSet);
+    for(auto& node: nodeSet ) {
+        computeIdom(static_cast<int>(&node - &nodeSet[0]), nodeSet);
     }
 }
 
