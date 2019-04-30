@@ -96,90 +96,205 @@ std::string SPL_OPToString(SPL_OP op){
     switch (op)
     {
         case PLUS_:
-            return "PLUS";
+            return "+";
             break;
 
         case MINUS_:
-            return "MINUS";
+            return "-";
             break;
 
         case MUL_:
-            return "MUL";
+            return "*";
             break;
 
         case DIV_:
-            return "DIV";
+            return "/";
             break;
 
         case AND_:
-            return "AND";
+            return "&&";
             break;
 
         case OR_:
-            return "OR";
+            return "||";
             break;
 
         case NOT_:
-            return "NOT";
+            return "!";
             break;
 
         case MINUS__:
-            return "MINUS_";
+            return "-";
             break;
 
         case MOD_:
-            return "MOD";
+            return "%";
             break;
         case EQUAL_:
-            return "EQUAL";
+            return "==";
             break;
         case UNEQUAL_:
-            return "UNEQUAL";
+            return "!=";
             break;
         case GE_:
-            return "GE";
+            return ">=";
             break;
         case GT_:
-            return "GT";
+            return ">";
             break;
         case LE_:
-            return "LE";
+            return "<=";
             break;
         case LT_:
-            return "LT";
+            return "<";
             break;
         case OP_ASSIGN:
-            return "ASSIGN";
+            return "=";
             break;
         case OP_GOTO:
-            return "GOTO";
+            return "goto";
             break;
         case OP_IF_Z:
-            return "IF_Z";
+            return "ifFalse";
             break;
         case OP_IF:
-            return "IF";
+            return "if";
             break;
         case OP_CALL:
-            return "CALL";
+            return "call";
             break;
         case OP_PARAM:
-            return "PARAM";
+            return "param";
             break;
         case OP_POP:
-            return "POP";
+            return "pop";
             break;
         case OP_NULL:
             return "";
             break;
         case OP_RET:
-            return "RETURN";
+            return "return";
             break;
         case OP_PHI:
-            return "PHI";
+            return "phi";
             break;
         default:
-            return "ERROR";
+            return "error";
             break;
+    }
+}
+
+SPL_OP_NUM getOperandNum(SPL_OP op) {
+    switch (op)
+    {
+        case PLUS_:
+            return THREE;
+            break;
+
+        case MINUS_:
+            return THREE;
+            break;
+
+        case MUL_:
+            return THREE;
+            break;
+
+        case DIV_:
+            return THREE;
+            break;
+
+        case AND_:
+            return THREE;
+            break;
+
+        case OR_:
+            return THREE;
+            break;
+
+        case NOT_:
+            return TWO;
+            break;
+
+        case MINUS__:
+            return TWO;
+            break;
+
+        case MOD_:
+            return THREE;
+            break;
+        case EQUAL_:
+            return THREE;
+            break;
+        case UNEQUAL_:
+            return THREE;
+            break;
+        case GE_:
+            return THREE;
+            break;
+        case GT_:
+            return THREE;
+            break;
+        case LE_:
+            return THREE;
+            break;
+        case LT_:
+            return THREE;
+            break;
+        case OP_ASSIGN:
+            return TWO;
+            break;
+        case OP_GOTO:
+            return ONE;
+            break;
+        case OP_IF_Z:
+            return TWO;
+            break;
+        case OP_IF:
+            return TWO;
+            break;
+        case OP_CALL:
+            return ONE;
+            break;
+        case OP_PARAM:
+            return ONE;
+            break;
+        case OP_POP:
+            return ONE;
+            break;
+        case OP_NULL:
+            return ZERO;
+            break;
+        case OP_RET:
+            return ZERO;
+            break;
+        case OP_PHI:
+            return ZERO;
+            break;
+        default:
+            return ZERO;
+            break;
+    }
+}
+
+bool isCalculateOp(SPL_OP op) {
+    switch(op) {
+        case PLUS_:
+        case MINUS_:
+        case MUL_:
+        case DIV_:
+        case AND_:
+        case OR_:
+        case NOT_:
+        case MINUS__:
+        case MOD_:
+        case EQUAL_:
+        case UNEQUAL_:
+        case GE_:
+        case GT_:
+        case LE_:
+        case LT_:
+            return true;
+        default:
+            return false;
     }
 }

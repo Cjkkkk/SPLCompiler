@@ -46,6 +46,9 @@ class AST_Exp : virtual public AST
     virtual void emit(SPL_IR* ir) = 0;
     SPL_TYPE valType;
     Operand* tempVariable = nullptr;
+    Operand* getTempVariable() {
+        return new Operand(*tempVariable);
+    }
 };
 
 // abstract class : ast trees that represent a statement without a value

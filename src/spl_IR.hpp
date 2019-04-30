@@ -10,7 +10,6 @@
 #include "spl_compiler.hpp"
 #include "spl_symtab.hpp"
 
-
 union Value {
     char    valChar;
     bool    valBool;
@@ -22,66 +21,48 @@ union Value {
 class Operand {
 public:
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
+    Operand(const Operand& op) {
+        this->type = op.type;
+        this->name = op.name;
+        this->cl = op.cl;
+        this->value = op.value;
+    }
     SPL_TYPE type;
-    SPL_CLASS cl;
     std::string name;
+    SPL_CLASS cl;
     Value value;
+
+    void evalute(SPL_OP op, Operand* left, Operand* right);
 };
+
+
+inline bool checkOperandClass(Operand* operand, SPL_CLASS cl) {
+    return operand->cl == cl;
+}
+
+inline bool checkOperandType(Operand* operand, SPL_TYPE type) {
+    return operand->type == type;
+}
+
+
 
 class Instruction {
 public:
-    Instruction() = default;
-    Instruction(
-            std::string label_,
+    Instruction() {};
+    Instruction(std::string label_,
             SPL_OP op_,
             Operand* arg1_ = nullptr,
             Operand* arg2_ = nullptr,
             Operand* res_ = nullptr)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
 
-    virtual void addVariable(std::string name) {};
-    virtual std::vector<std::string>* getVariable() {
-        return nullptr;
-    }
-    virtual void outputOperand(Operand* operand, ostream& s) {
-        if(operand == nullptr) return;
-        else if(operand->cl == LABEL) {
-            s << "\t" << operand->name;
-        } else if(operand->cl == CONST) {
-            switch (operand->type) {
-                case INT:
-                    s << "\t" << std::to_string(operand->value.valInt);
-                    return;
-                case CHAR:
-                    s << "\t" << "'" + std::to_string(operand->value.valChar) + "'";
-                    return;
-                case REAL:
-                    s << "\t" << std::to_string(operand->value.valDouble);
-                    return;
-                case BOOL:
-                    if(operand->value.valBool) s << "\t" << "true";
-                    else s << "\t" << "false";
-                    return;
-                case STRING:
-                    s << "\t" << "\"" + *operand->value.valString + "\"";
-                    return;
-                default:
-                    s << "\t" << "ERROR";
-            }
-        }else {
-            s << "\t" << operand->name << "[" << typeToString(operand->type) << "]";
-        }
-    }
-    virtual void output(ostream& s) {
-        s << label << "\t" << SPL_OPToString(op);
-        outputOperand(arg1, s);
-        outputOperand(arg2, s);
-        outputOperand(res, s);
-        s << "\n";
-    }
+    virtual std::vector<Operand*>* getVariable();
+    virtual void addVariable(Operand* name);
+    virtual void outputOperand(Operand* operand, ostream& s);
+    virtual void output(ostream& s);
 
-    SPL_OP op;
     std::string label;
+    SPL_OP op;
     Operand* arg1;
     Operand* arg2;
     Operand* res;
@@ -92,20 +73,16 @@ public:
 
 
 class PhiInstruction : public Instruction {
+
 public:
-    explicit PhiInstruction(Operand* res)
-    : Instruction("", OP_PHI, nullptr, nullptr, res) {}
-    std::vector<std::string> variableCluster;
-    void addVariable(std::string name) override {variableCluster.push_back(name);}
-    std::vector<std::string>* getVariable() override {return &variableCluster;}
-    void output(ostream& s) override {
-        s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
-        s << "(";
-        for(auto& variable : variableCluster) {
-            (&variable - &variableCluster[0]) == 0 ? s << variable : s << " ," << variable;
-        }
-        s << ")\n";
-    }
+
+    explicit PhiInstruction(Operand* res) : Instruction("", OP_PHI, nullptr, nullptr, res) {}
+
+    std::vector<Operand*>* getVariable() override;
+    void addVariable(Operand* name) override;
+    void output(ostream& s) override;
+
+    std::vector<Operand*> variableCluster;
 
 };
 
@@ -114,29 +91,16 @@ class SPL_IR {
 public:
     SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
     SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
-    void addInstruction(Instruction ins) {
-        if(!ins.label.empty() && IR.size() > 0 && getLastInstruction()->op != OP_GOTO) {
-            // need a trivial goto
-            IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins.label, LABEL)});
-        }
-        IR.push_back(ins);
-    }
 
-    Operand* genTempVariable(SPL_TYPE type) {
-        return new Operand(type, "_t" + std::to_string(tempCount ++), TEMP);
-    }
+    void addInstruction(Instruction ins);
 
-    void decreaseTempCount(Operand* name) {
-        //if(name[0] == '_') tempCount -= 1;
-    }
+    Operand* genTempVariable(SPL_TYPE type) ;
 
-    Instruction* getLastInstruction() {
-        return &IR.back();
-    }
+    void decreaseTempCount(Operand* name);
 
-    Operand* genLabel(){
-        return new Operand(UNKNOWN, "L" + std::to_string(labelCount ++), LABEL);
-    }
+    Instruction* getLastInstruction() ;
+
+    Operand* genLabel();
 
     std::vector<Instruction> IR;
     SymbolTable* symbolTable;

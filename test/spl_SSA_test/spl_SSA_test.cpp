@@ -15,15 +15,29 @@ namespace {
             ir.addInstruction({"", MUL_, new Operand(INT,"_t1", TEMP), new Operand(INT, "_t2", TEMP) ,new Operand(INT, "_t3", TEMP)});
             ir.addInstruction({"", PLUS_, new Operand(INT,"_t0", TEMP), new Operand(INT, "_t3", TEMP) ,new Operand(INT, "_t4", TEMP)});
             ir.addInstruction({"", OP_ASSIGN, new Operand(INT,"_t4", TEMP), nullptr ,new Operand(INT, "0.ans.0", VAR)});
+
+            s.genCFGNode(ir.IR);
+            s.generateCFG();
+            s.computeTreeIdom();
+            // compute DF
+            s.generateDF();
         }
 
         void TearDown() override {};
         SPL_IR ir;
+        SPL_SSA s;
         // Declares the variables your tests want to use.
     };
 
     TEST_F(SPLSSATest, DefaultConstructor) {
         // You can access data in the test fixture here.
         EXPECT_EQ(7, ir.IR.size());
+    }
+
+    TEST_F(SPLSSATest, RemoveUnused) {
+        // You can access data in the test fixture here.
+        s.removeUnusedVariable();
+
+        EXPECT_EQ(0, s.nodeSet[0]->instruSet.size());
     }
 }  // namespace

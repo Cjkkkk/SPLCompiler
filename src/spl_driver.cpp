@@ -96,20 +96,11 @@ void SPL::SPL_Driver::emitIR() {
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
         ir.addInstruction({symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
-
         ir.addInstruction({"", OP_RET, nullptr, nullptr, nullptr});
     }
 }
 
-void SPL::SPL_Driver::printIR() {
-    std::ofstream outfile;
-    outfile.open("out.bc", std::ios::out);
-    for( auto & irs : ir.IR) {
-        irs.output(std::cout);
-        irs.output(outfile);
-    }
-    outfile.close();
-}
+
 void SPL::SPL_Driver::optimizeIR() {
     SPL_SSA s;
     s.OptimizeIR(ir.IR);

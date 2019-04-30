@@ -27,16 +27,18 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 
     // --------------------------------------------
     // output optimized IR
-
     copyPropagation();
 
     outputPhiInstruction("out.copy_propagation.bc");
+
+    constantPropagation();
+
+    outputPhiInstruction("out.const_propagation.bc");
 
     removeUnusedVariable();
 
     outputPhiInstruction("out.remove_var.bc");
     //
-    // constantPropagation();
 
     // ---------------------------------------------
     outputIdom();
@@ -44,31 +46,86 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     outputDUChain();
 }
 
-void SPL_SSA::constantPropagation() {
-
-}
-
-void SPL_SSA::copyPropagation() {
-    map<std::string, std::string> copyMap;
-    for(auto& node : nodeSet) {
-        for(auto& ins : node->instruSet) {
-            if(ins->op == OP_ASSIGN) {
-                // n1 = n2 ; 如果n2在copyMap中
-                auto arg1_it = copyMap.find(ins->arg1->name);
-                if(arg1_it != copyMap.end()) {
-                    ins->arg1->name = arg1_it->second;
-                } else {
-                    // v1 = v2; 插入 {v1, v2}
-                    copyMap.insert({ins->res->name, ins->arg1->name});
+void propagateAlongDuchain(std::vector<Instruction*> usage, Operand* res, const string& target) {
+    for(auto& use : usage) {
+        if(use->op == OP_PHI) {
+            for(auto& var : *use->getVariable()) {
+                if(var->name == target) {
+                    *var = *res;
                 }
+            }
+
+//            if(use->getVariable()->size() == 1 && use->getVariable()->at(0)->cl == CONST){
+//                auto t = use->res->name;
+//                *use->res = *res;
+//                propagateAlongDuchain(usage, use->res, t);
+//            }
+        }
+        if(use->arg1 && use->arg1->name == target) {
+            *use->arg1 = *res;
+        }
+        if(use->arg2 && use->arg2->name == target) {
+            *use->arg2 = *res;
+        }
+    }
+}
+void SPL_SSA::constantPropagation() {
+    map<std::string, Operand*> constMap;
+    for(auto& node: nodeSet) {
+        for(auto ins_it = node->instruSet.begin() ; ins_it != node->instruSet.end(); ins_it ++) {
+            if(isCalculateOp((*ins_it)->op)) {
+                if(checkOperandClass((*ins_it)->arg1,CONST)
+                   && checkOperandClass((*ins_it)->arg2,CONST)) {
+                    SPL_OP op = (*ins_it)->op;
+                    auto it = duChain.find((*ins_it)->res->name);
+                    (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+                    ins_it = node->instruSet.erase(ins_it);
+                    --ins_it;
+                }
+                continue;
+            }
+            switch((*ins_it)->op) {
+                case OP_ASSIGN:
+                    if(checkOperandClass((*ins_it)->arg1, CONST)
+                       && checkOperandType((*ins_it)->arg1, INT)) {
+                        auto it = duChain.find((*ins_it)->res->name);
+                        *((*ins_it)->res) = *((*ins_it)->arg1);
+                        propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+                        ins_it = node->instruSet.erase(ins_it);
+                        --ins_it;
+                    }
             }
         }
     }
 }
 
+
+// algorithm: copy propagation
+// loop through all definition from top to bottom
+void SPL_SSA::copyPropagation() {
+    for(auto& var : definition ) {
+        auto ins = var.second;
+        if(ins->op != OP_ASSIGN || ins->res->cl != VAR ) continue;
+
+        auto usage = duChain.find(ins->res->name)->second;
+
+        for(auto& use : usage) {
+            if(use->arg1 && use->arg1->name == ins->res->name) {
+                use->arg1 = ins->arg1;
+            }
+            if(use->arg2 && use->arg2->name == ins->res->name) {
+                use->arg2 = ins->arg2;
+            }
+        }
+    }
+
+}
+
 void SPL_SSA::removeUnusedVariable() {
     set<std::string> usage; // 有使用的变量
     set<std::string> deleted; // 删除的变量
+
     auto node_it = nodeSet.end();
     while (node_it != nodeSet.begin()) {
         -- node_it;
@@ -93,10 +150,10 @@ void SPL_SSA::removeUnusedVariable() {
                         auto varList = (*ins_it)->getVariable();
                         if(!varList) continue;
                         for(auto var_it = varList->begin() ; var_it != varList->end() ; var_it ++) {
-                            if(deleted.find(*var_it) != deleted.end()) {
+                            if(deleted.find((*var_it)->name) != deleted.end()) {
                                 varList->erase(var_it--);
                             } else {
-                                usage.insert(*var_it);
+                                usage.insert((*var_it)->name);
                             }
                         }
                     } else {
@@ -148,7 +205,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
 
             current->instruSet.push_back(&ins);
         }
-        // 开始新的node
+            // 开始新的node
         else if(!ins.label.empty()) {
             auto newNode = new SSANode();
             current = newNode;
@@ -232,46 +289,59 @@ void addVersionToVariable(std::string& variable, int version) {
 
 
 void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
-        string& variableName,
-        int& nodeIndex,
-        Instruction* ins) {
-
-    int index = nodeIndex;
-    do {
-        auto it = def[index].find(variableName);
-        if(it != def[index].end()) {
-            addVersionToVariable(variableName, it->second);
-            // 添加u-d链指针
-            auto du_it = duChain.find(variableName);
-            du_it->second.push_back(ins);
+                          Operand* operand,
+                          int& nodeIndex,
+                          Instruction* ins) {
+    if(operand->cl == TEMP) {
+        auto it = duChain.find(operand->name);
+        if(it == duChain.end())
             return;
-        } else {
-            // 向上寻找
-            index = nodeSet[index]->idom;
+        else {
+            it->second.push_back(ins);
         }
-    } while (index > 0);
+    } else if(operand->cl == VAR) {
+        int index = nodeIndex;
+        do {
+            auto it = def[index].find(operand->name);
+            if(it != def[index].end()) {
+                addVersionToVariable(operand->name, it->second);
+                // 添加u-d链指针
+                duChain.find(operand->name)->second.push_back(ins);
+                return;
+            } else {
+                // 向上寻找
+                index = nodeSet[index]->idom;
+            }
+        } while (index > 0);
+    }
 }
 
 
 void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
-        std::vector<map<std::string, int>>& closestDef,
-        string& variableName,
-        int& nodeIndex,
-        Instruction* ins) {
+                               std::vector<map<std::string, int>>& closestDef,
+                               Operand* operand,
+                               int& nodeIndex,
+                               Instruction* ins) {
+    if(operand->cl == TEMP) {
 
-    auto it = currentDef.find(variableName); // 更新定义
-    auto it1 = closestDef[nodeIndex].find(variableName);
+        duChain.insert({operand->name, {}});
+        definition.push_back({operand->name, ins});
 
-    if(it1 == closestDef[nodeIndex].end()) {
-        closestDef[nodeIndex].insert({variableName, it->second});
-    } else {
-        it1->second = it->second;
+    } else if(operand->cl == VAR) {
+        auto it = currentDef.find(operand->name); // 更新定义
+        auto it1 = closestDef[nodeIndex].find(operand->name);
+
+        if(it1 == closestDef[nodeIndex].end()) {
+            closestDef[nodeIndex].insert({operand->name, it->second});
+        } else {
+            it1->second = it->second;
+        }
+        addVersionToVariable(operand->name, it->second ++ );
+
+        // 添加 d - u 链入口
+        duChain.insert({operand->name, {}});
+        definition.push_back({operand->name, ins});
     }
-    addVersionToVariable(variableName, it->second ++ );
-
-    // 添加 d - u 链入口
-    duChain.insert({variableName, {}});
-    definition.insert({variableName, ins});
 }
 
 
@@ -300,13 +370,13 @@ void SPL_SSA::renameVariable() {
 
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
-            if((ins->op == OP_ASSIGN || ins->op == OP_PHI ) && ins->res->cl == VAR) {
-                updateDefinition(currentDef, closestDef, ins->res->name, index, ins);
+            if(ins->res != nullptr) {
+                updateDefinition(currentDef, closestDef, ins->res, index, ins);
             }
-            if(ins->arg1 != nullptr && ins->arg1->cl == VAR)
-                updateUsage(closestDef, ins->arg1->name, index, ins);
-            if(ins->arg2 != nullptr && ins->arg2->cl == VAR)
-                updateUsage(closestDef, ins->arg2->name, index, ins);
+            if(ins->arg1 != nullptr)
+                updateUsage(closestDef, ins->arg1, index, ins);
+            if(ins->arg2 != nullptr)
+                updateUsage(closestDef, ins->arg2, index, ins);
         }
     }
 
@@ -315,26 +385,14 @@ void SPL_SSA::renameVariable() {
     for(const int& nodeIndex : phiBlock) {
         for(auto& ins : nodeSet[nodeIndex]->instruSet) {
             if(ins->op != OP_PHI) break;
-            auto pos = ins->res->name.rfind('.');
-            std::string variableName = ins->res->name.substr(0, pos);
+            auto temp = ins->res->name;
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
                 // 寻找最近的变量定义
-                int index = parent;
-                do {
-                    auto it = closestDef[index].find(variableName);
-                    if(it != closestDef[index].end()) {
-                        auto temp = variableName + "." + std::to_string(it->second);
-                        ins->addVariable(temp);
-                        // 添加u-d链指针
-                        auto it1 = duChain.find(temp);
-                        it1->second.push_back(ins);
-                        break;
-                    } else {
-                        // 向上寻找
-                        index = nodeSet[index]->idom;
-                    }
-                } while (index > 0);
+                ins->res->name = ins->res->name.substr(0, ins->res->name.rfind('.'));
+                updateUsage(closestDef, ins->res, parent, ins);
+                ins->addVariable(new Operand(*ins->res));
             }
+            ins->res->name = temp;
         }
     }
 
@@ -423,9 +481,10 @@ void SPL_SSA::outputPhiInstruction(std::string filename) {
 void SPL_SSA::outputDUChain() {
 
     std::cout << "------------------DU Chain-----------------\n";
-    for(auto& variable : duChain) {
-        std::cout << variable.first << ":\n";
-        for(auto& ins: variable.second) {
+    for(auto& def : definition) {
+        auto variable = duChain.find(def.first)->second;
+        std::cout << def.first << ":\n";
+        for(auto& ins: variable) {
             ins->output(std::cout);
         }
         std::cout << "\n";
