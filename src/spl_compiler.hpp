@@ -112,5 +112,5 @@ std::string SPL_OPToString(SPL_OP op);
 std::string classToString(SPL_CLASS classId);
 std::string typeToString(SPL_TYPE typeId);
 SPL_OP_NUM getOperandNum(SPL_OP op);
-
+bool isCalculateOp(SPL_OP op);
 #endif //_SPL_COMPILER_H_

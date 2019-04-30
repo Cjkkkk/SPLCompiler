@@ -4,7 +4,87 @@
 
 #include "spl_IR.hpp"
 
-
+void Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
+    name.clear();
+    cl = CONST;
+    switch(op) {
+        case PLUS_:
+            value.valInt = left->value.valInt + right->value.valInt;
+            type = INT;
+            
+            break;
+        case MINUS_:
+            value.valInt = left->value.valInt - right->value.valInt;
+            type = INT;
+            
+            break;
+        case MUL_:
+            value.valInt = left->value.valInt * right->value.valInt;
+            type = INT;
+            
+            break;
+        case DIV_:
+            value.valInt = left->value.valInt / right->value.valInt;
+            break;
+        case MOD_:
+            value.valInt = left->value.valInt % right->value.valInt;
+            type = INT;
+            
+            break;
+        case MINUS__:
+            value.valInt = - left->value.valInt;
+            type = INT;
+            
+            break;
+        case AND_:
+            value.valBool = left->value.valBool && right->value.valBool;
+            type = BOOL;
+            
+            break;
+        case OR_:
+            value.valBool = left->value.valBool || right->value.valBool;
+            type = BOOL;
+            
+            break;
+        case NOT_:
+            value.valBool = !left->value.valBool;
+            type = BOOL;
+            
+            break;
+        case EQUAL_:
+            value.valBool = left->value.valInt == right->value.valInt;
+            type = BOOL;
+            
+            break;
+        case UNEQUAL_:
+            value.valBool = left->value.valInt != right->value.valInt;
+            type = BOOL;
+            
+            break;
+        case GT_:
+            value.valBool = left->value.valInt > right->value.valInt;
+            type = BOOL;
+            
+            break;
+        case GE_:
+            value.valBool = left->value.valInt >= right->value.valInt;
+            type = BOOL;
+            
+            break;
+        case LT_:
+            value.valBool = left->value.valInt < right->value.valInt;
+            type = BOOL;
+            
+            break;
+        case LE_:
+            value.valBool = left->value.valInt <= right->value.valInt;
+            type = BOOL;
+            
+            break;
+        default:
+            break;
+    }
+}
 void Instruction::addVariable(std::string name) {};
 std::vector<std::string>* Instruction::getVariable() {
     return nullptr;
@@ -124,7 +204,7 @@ std::vector<std::string>* PhiInstruction::getVariable() {return &variableCluster
 
 
 void SPL_IR::addInstruction(Instruction ins) {
-    if(!ins.label.empty() && IR.size() > 0 && getLastInstruction()->op != OP_GOTO) {
+    if(!ins.label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
         // need a trivial goto
         IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins.label, LABEL)});
     }

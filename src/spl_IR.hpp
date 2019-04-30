@@ -10,7 +10,6 @@
 #include "spl_compiler.hpp"
 #include "spl_symtab.hpp"
 
-
 union Value {
     char    valChar;
     bool    valBool;
@@ -23,10 +22,23 @@ class Operand {
 public:
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
     SPL_TYPE type;
-    SPL_CLASS cl;
     std::string name;
+    SPL_CLASS cl;
     Value value;
+
+    void evalute(SPL_OP op, Operand* left, Operand* right);
 };
+
+
+inline bool checkOperandClass(Operand* operand, SPL_CLASS cl) {
+    return operand->cl == cl;
+}
+
+inline bool checkOperandType(Operand* operand, SPL_TYPE type) {
+    return operand->type == type;
+}
+
+
 
 class Instruction {
 public:
@@ -43,8 +55,8 @@ public:
     virtual void outputOperand(Operand* operand, ostream& s);
     virtual void output(ostream& s);
 
-    SPL_OP op;
     std::string label;
+    SPL_OP op;
     Operand* arg1;
     Operand* arg2;
     Operand* res;

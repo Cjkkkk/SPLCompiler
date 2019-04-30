@@ -96,7 +96,6 @@ void SPL::SPL_Driver::emitIR() {
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
         ir.addInstruction({symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
-
         ir.addInstruction({"", OP_RET, nullptr, nullptr, nullptr});
     }
 }

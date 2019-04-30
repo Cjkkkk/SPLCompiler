@@ -27,16 +27,18 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 
     // --------------------------------------------
     // output optimized IR
-
     copyPropagation();
 
     outputPhiInstruction("out.copy_propagation.bc");
+
+    constantPropagation();
+
+    outputPhiInstruction("out.const_propagation.bc");
 
     removeUnusedVariable();
 
     outputPhiInstruction("out.remove_var.bc");
     //
-    // constantPropagation();
 
     // ---------------------------------------------
     outputIdom();
@@ -44,11 +46,39 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     outputDUChain();
 }
 
+
 void SPL_SSA::constantPropagation() {
     map<std::string, Operand*> constMap;
-
+    for(auto& node: nodeSet) {
+        for(auto ins_it = node->instruSet.begin() ; ins_it != node->instruSet.end(); ins_it ++) {
+            if(isCalculateOp((*ins_it)->op)) {
+                if(checkOperandClass((*ins_it)->res,TEMP)
+                   && checkOperandClass((*ins_it)->arg1,CONST)
+                   && checkOperandClass((*ins_it)->arg2,CONST)) {
+                    SPL_OP op = (*ins_it)->op;
+                    (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    ins_it = node->instruSet.erase(ins_it);
+                    --ins_it;
+                }
+                continue;
+            }
+            switch((*ins_it)->op) {
+                case OP_ASSIGN:
+                    if(checkOperandClass((*ins_it)->res, TEMP)
+                       && checkOperandClass((*ins_it)->arg1, CONST)
+                       && checkOperandType((*ins_it)->arg1, INT)) {
+                        *((*ins_it)->res) = *((*ins_it)->arg1);
+                        ins_it = node->instruSet.erase(ins_it);
+                        --ins_it;
+                    }
+            }
+        }
+    }
 }
 
+
+// algorithm: copy propagation
+// loop through all definition from top to bottom
 void SPL_SSA::copyPropagation() {
     for(auto& var : definition ) {
         auto ins = var.second;
@@ -148,7 +178,7 @@ void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
 
             current->instruSet.push_back(&ins);
         }
-        // 开始新的node
+            // 开始新的node
         else if(!ins.label.empty()) {
             auto newNode = new SSANode();
             current = newNode;
@@ -232,9 +262,9 @@ void addVersionToVariable(std::string& variable, int version) {
 
 
 void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
-        string& variableName,
-        int& nodeIndex,
-        Instruction* ins) {
+                          string& variableName,
+                          int& nodeIndex,
+                          Instruction* ins) {
 
     int index = nodeIndex;
     do {
@@ -254,10 +284,10 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
 
 
 void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
-        std::vector<map<std::string, int>>& closestDef,
-        string& variableName,
-        int& nodeIndex,
-        Instruction* ins) {
+                               std::vector<map<std::string, int>>& closestDef,
+                               string& variableName,
+                               int& nodeIndex,
+                               Instruction* ins) {
 
     auto it = currentDef.find(variableName); // 更新定义
     auto it1 = closestDef[nodeIndex].find(variableName);
@@ -319,21 +349,9 @@ void SPL_SSA::renameVariable() {
             std::string variableName = ins->res->name.substr(0, pos);
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
                 // 寻找最近的变量定义
-                int index = parent;
-                do {
-                    auto it = closestDef[index].find(variableName);
-                    if(it != closestDef[index].end()) {
-                        auto temp = variableName + "." + std::to_string(it->second);
-                        ins->addVariable(temp);
-                        // 添加u-d链指针
-                        auto it1 = duChain.find(temp);
-                        it1->second.push_back(ins);
-                        break;
-                    } else {
-                        // 向上寻找
-                        index = nodeSet[index]->idom;
-                    }
-                } while (index > 0);
+                auto temp = variableName;
+                updateUsage(closestDef, temp, parent, ins);
+                ins->addVariable(temp);
             }
         }
     }

@@ -1,19 +1,19 @@
 program test;
 var
-	ans : integer;
-    t1: integer;
-    t2: integer;
+	x : integer;
+    y : integer;
+    z : integer;
 begin
-    ans := 4 + 5 * 6;
-    t1 := ans;
-    t2 := t1;
+    x := 4 + 5 * 6;
+    y := x;
+    z := y;
 
-	while ans > 0 do begin
-	    if ans < 1 then
-            ans := 4
+	while x > 0 do begin
+	    if x < 1 then
+            x := 4
         else
-            ans := 3;
+            x := 3;
 	end;
-    ans := 5;
+    x := 5;
 end
 .

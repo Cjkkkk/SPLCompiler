@@ -275,3 +275,26 @@ SPL_OP_NUM getOperandNum(SPL_OP op) {
             break;
     }
 }
+
+bool isCalculateOp(SPL_OP op) {
+    switch(op) {
+        case PLUS_:
+        case MINUS_:
+        case MUL_:
+        case DIV_:
+        case AND_:
+        case OR_:
+        case NOT_:
+        case MINUS__:
+        case MOD_:
+        case EQUAL_:
+        case UNEQUAL_:
+        case GE_:
+        case GT_:
+        case LE_:
+        case LT_:
+            return true;
+        default:
+            return false;
+    }
+}
