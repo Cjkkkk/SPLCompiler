@@ -85,13 +85,13 @@ public:
 
 
     void updateUsage(std::vector<map<std::string, int>>& def,
-                    string& variableName,
+                    Operand* operand,
                     int& nodeIndex,
                     Instruction* ins);
 
     void updateDefinition(map<std::string, int>& currentDef,
                          std::vector<map<std::string, int>>& def,
-                         string& variableName,
+                         Operand* operand,
                          int& nodeIndex,
                          Instruction* ins);
 
