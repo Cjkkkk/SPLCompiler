@@ -23,52 +23,84 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     renameVariable();
 
 
-    outputPhiInstruction("out.bc");
+    outputPhiInstruction("origin.bc");
 
     // --------------------------------------------
     // output optimized IR
     copyPropagation();
 
-    outputPhiInstruction("out.copy_propagation.bc");
+//    outputDUChain();
+
+
+    outputPhiInstruction("copy_propagation.bc");
 
     constantPropagation();
 
-    outputPhiInstruction("out.const_propagation.bc");
+    outputPhiInstruction("const_propagation.bc");
 
     removeUnusedVariable();
 
-    outputPhiInstruction("out.remove_var.bc");
+    outputPhiInstruction("remove_var.bc");
     //
 
     // ---------------------------------------------
-    outputIdom();
-
-    outputDUChain();
+//    outputIdom();
+//
+//    outputDUChain();
 }
 
-void propagateAlongDuchain(std::vector<Instruction*> usage, Operand* res, const string& target) {
+inline void copyByValue(Operand* res, Operand* source) {
+    *res = *source;
+}
+
+
+// 沿着DU链如果有指令使用了目标变量就替换成指定对应变量
+// copy propagation中 v1 = v2
+// 则沿着DU链，如果有变量使用v1 则替换成v2
+// const propagation v1 = v2(const) 或者 v1 = v2(const op const)
+// 则沿着DU链，如果有变量使用了v1 则替换成v2
+
+// 同时根据v2是否为const决定是否v2的duchain
+// 虽然v1被替换，但是不需要删除v1中的对应使用记录，vector删除操作耗时
+
+
+// propagateAlongDuchain
+// @param usage : 需要遍历的变量的所有usage
+// @param res : v2
+// @param target : v1的名字
+// @param copy_usage : 如果有需要则更新v2的usage
+// @return
+
+void propagateAlongDuchain(std::vector<Instruction*>& usage,
+        Operand* res, const string& target,
+        std::vector<Instruction*>* copy_usage = nullptr) {
+
     for(auto& use : usage) {
+        bool use_or_not = false;
         if(use->op == OP_PHI) {
             for(auto& var : *use->getVariable()) {
                 if(var->name == target) {
-                    *var = *res;
+                    copyByValue(var, res);
+                    use_or_not = true;
                 }
             }
-
-//            if(use->getVariable()->size() == 1 && use->getVariable()->at(0)->cl == CONST){
-//                auto t = use->res->name;
-//                *use->res = *res;
-//                propagateAlongDuchain(usage, use->res, t);
-//            }
         }
         if(use->arg1 && use->arg1->name == target) {
-            *use->arg1 = *res;
+            copyByValue(use->arg1, res);
+            use_or_not = true;
         }
         if(use->arg2 && use->arg2->name == target) {
-            *use->arg2 = *res;
+            copyByValue(use->arg2, res);
+            use_or_not = true;
+        }
+
+        if(use_or_not && res->cl != CONST) {
+            copy_usage->push_back(use);
         }
     }
 }
+
+
 void SPL_SSA::constantPropagation() {
     map<std::string, Operand*> constMap;
     for(auto& node: nodeSet) {
@@ -77,10 +109,15 @@ void SPL_SSA::constantPropagation() {
                 if(checkOperandClass((*ins_it)->arg1,CONST)
                    && checkOperandClass((*ins_it)->arg2,CONST)) {
                     SPL_OP op = (*ins_it)->op;
+
                     auto it = duChain.find((*ins_it)->res->name);
+
                     (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+
                     propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+
                     ins_it = node->instruSet.erase(ins_it);
+
                     --ins_it;
                 }
                 continue;
@@ -90,9 +127,13 @@ void SPL_SSA::constantPropagation() {
                     if(checkOperandClass((*ins_it)->arg1, CONST)
                        && checkOperandType((*ins_it)->arg1, INT)) {
                         auto it = duChain.find((*ins_it)->res->name);
-                        *((*ins_it)->res) = *((*ins_it)->arg1);
+
+                        copyByValue((*ins_it)->res, (*ins_it)->arg1);
+
                         propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+
                         ins_it = node->instruSet.erase(ins_it);
+
                         --ins_it;
                     }
                 default:
@@ -103,26 +144,24 @@ void SPL_SSA::constantPropagation() {
 }
 
 
-// algorithm: copy propagation
+// copy propagation
 // loop through all definition from top to bottom
+// propagate var1 = var2 到所有使用var1的ins中
+
 void SPL_SSA::copyPropagation() {
     for(auto& var : definition ) {
         auto ins = var.second;
-        if(ins->op != OP_ASSIGN || ins->res->cl != VAR ) continue;
 
-        auto usage = duChain.find(ins->res->name)->second;
+        if(ins->op != OP_ASSIGN) continue;
 
-        for(auto& use : usage) {
-            if(use->arg1 && use->arg1->name == ins->res->name) {
-                use->arg1 = ins->arg1;
-            }
-            if(use->arg2 && use->arg2->name == ins->res->name) {
-                use->arg2 = ins->arg2;
-            }
-        }
+        auto& usage = duChain.find(ins->res->name)->second;
+
+        auto& copy_usage = duChain.find(ins->arg1->name)->second;
+
+        propagateAlongDuchain(usage, ins->arg1, ins->res->name, &copy_usage);
     }
-
 }
+
 
 void SPL_SSA::removeUnusedVariable() {
     set<std::string> usage; // 有使用的变量
@@ -468,9 +507,9 @@ void SPL_SSA::outputPhiInstruction(std::string filename) {
     outfile.open(filename, std::ios::out);
     for(auto &node : nodeSet) {
         outfile << *node->label << "\n";
-        std::cout << *node->label << "\n";
+//        std::cout << *node->label << "\n";
         for(auto ins : node->instruSet) {
-            ins->output(std::cout);
+            //ins->output(std::cout);
             ins->output(outfile);
         }
 
