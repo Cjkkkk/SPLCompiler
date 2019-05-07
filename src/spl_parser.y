@@ -48,6 +48,8 @@
 #  endif
 # endif
 
+#define checkTypeEqual(left_type, right_type) (left_type == right_type)
+#define checkTypeUnequal(left_type, right_type) (left_type != right_type)
 }
 
 %parse-param { SPL_Scanner &scanner }
@@ -664,7 +666,7 @@ assign_stmt:
 		if(!sym) {
 			throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
 		}
-		if(sym->symbolType != $3->valType) {
+		if(checkTypeUnequal(sym->symbolType,$3->valType)) {
 			throw splException{@1.begin.line, @1.begin.column, "invaild conversion from '" + typeToString($3->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
 		}
 		AST_Sym* lhs = new AST_Sym($1, sym->scopeIndex);
@@ -781,12 +783,12 @@ goto_stmt:
 expression:
         expression  GE  expr {
         $$ = new AST_Math(GE_, $1, $3);
-        if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
+        if(checkTypeUnequal($1->valType,SPL_TYPE::INT) && checkTypeUnequal($1->valType,SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 			"operator '>=' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
-	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
+	if(checkTypeUnequal($3->valType ,SPL_TYPE::INT) && checkTypeUnequal($3->valType,SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 			"operator '>=' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
@@ -796,12 +798,12 @@ expression:
         }
         |  expression  GT  expr {
         $$ = new AST_Math(GT_, $1, $3);
-        if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
+        if(checkTypeUnequal($1->valType, SPL_TYPE::INT) && checkTypeUnequal($1->valType ,SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 			"operator '>' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
-	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
+	if(checkTypeUnequal($3->valType,SPL_TYPE::INT) && checkTypeUnequal($3->valType ,SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 			"operator '>' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
@@ -811,12 +813,12 @@ expression:
         }
         |  expression  LE  expr {
         $$ = new AST_Math(LE_, $1, $3);
-        if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
+        if(checkTypeUnequal($1->valType ,SPL_TYPE::INT) && checkTypeUnequal($1->valType, SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 			"operator '<=' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
-	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
+	if(checkTypeUnequal($3->valType, SPL_TYPE::INT) && checkTypeUnequal($3->valType, SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 			"operator '<=' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
@@ -826,12 +828,12 @@ expression:
         }
         |  expression  LT  expr {
         $$ = new AST_Math(LT_, $1, $3);
-        if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
+        if(checkTypeUnequal($1->valType,SPL_TYPE::INT) && checkTypeUnequal($1->valType, SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
                 	"operator '<' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
-	if($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL){
+	if(checkTypeUnequal($3->valType,SPL_TYPE::INT) && checkTypeUnequal($3->valType, SPL_TYPE::REAL)){
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 			"operator '<' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
@@ -842,7 +844,7 @@ expression:
         }
         |  expression  EQUAL  expr {
         $$ = new AST_Math(EQUAL_, $1, $3);
-        if($1->valType != $3->valType){
+        if(checkTypeUnequal($1->valType, $3->valType)){
 		// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator '==' expect two operands with same type .\n"};
@@ -851,7 +853,7 @@ expression:
         }
         |  expression  UNEQUAL  expr {
         $$ = new AST_Math(UNEQUAL_, $1, $3);
-        if($1->valType != $3->valType){
+        if(checkTypeUnequal($1->valType, $3->valType)){
 
 		throw splException{@3.begin.line, @3.begin.column ,
                 "operator '!=' expect two operands with same type .\n"};
@@ -866,21 +868,21 @@ expression:
 expr:
         expr  PLUS  term {
         $$ = new AST_Math(PLUS_, $1, $3);
-        if($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL){
+        if(checkTypeUnequal($1->valType, SPL_TYPE::INT) && checkTypeUnequal($1->valType ,SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator '+' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
-	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
+	if(checkTypeUnequal($3->valType,SPL_TYPE::INT) && checkTypeUnequal($3->valType,SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column,
 		"operator '+' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
 
-	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
+	if(checkTypeEqual($1->valType, SPL_TYPE::REAL) || checkTypeEqual($3->valType, SPL_TYPE::REAL)) {
 		$$->valType = SPL_TYPE::REAL;
 	}else{
 		$$->valType = SPL_TYPE::INT;
@@ -888,20 +890,20 @@ expr:
         }
         |  expr  MINUS  term {
         $$ = new AST_Math(MINUS_, $1, $3);
-        if(($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL)){
+        if(checkTypeUnequal($1->valType ,SPL_TYPE::INT) && checkTypeUnequal($1->valType, SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column,
 		"operator '-' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
-	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
+	if(checkTypeUnequal($3->valType ,SPL_TYPE::INT) && checkTypeUnequal($3->valType, SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column,
 		"operator '-' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
-	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
+	if(checkTypeEqual($1->valType, SPL_TYPE::REAL) || checkTypeEqual($3->valType, SPL_TYPE::REAL)) {
 		$$->valType = SPL_TYPE::REAL;
 	}else{
 		$$->valType = SPL_TYPE::INT;
@@ -909,14 +911,14 @@ expr:
         }
         |  expr  OR  term {
         $$ = new AST_Math(OR_, $1, $3);
-        if($1->valType != SPL_TYPE::BOOL){
+        if(checkTypeUnequal($1->valType, SPL_TYPE::BOOL)){
 
 	// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator 'OR' expect type 'BOOL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
-	if($3->valType != SPL_TYPE::BOOL){
+	if(checkTypeUnequal($3->valType, SPL_TYPE::BOOL)){
 
 	// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
@@ -930,19 +932,19 @@ expr:
 term:
         term  MUL  factor {
         $$ = new AST_Math(MUL_, $1, $3);
-        if(($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL)){
+        if(checkTypeUnequal($1->valType, SPL_TYPE::INT) && checkTypeUnequal($1->valType,SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator '*' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
-	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
+	if(checkTypeUnequal($3->valType, SPL_TYPE::INT) && checkTypeUnequal($3->valType, SPL_TYPE::REAL)){
 
 	// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 		"operator '*' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
-	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
+	if(checkTypeEqual($1->valType, SPL_TYPE::REAL) || checkTypeEqual($3->valType, SPL_TYPE::REAL)) {
 		$$->valType = SPL_TYPE::REAL;
 	}else{
 		$$->valType = SPL_TYPE::INT;
@@ -950,18 +952,18 @@ term:
         }
         |  term  DIV  factor {
         $$ = new AST_Math(DIV_, $1, $3);
-        if(($1->valType != SPL_TYPE::INT && $1->valType != SPL_TYPE::REAL)){
+        if(checkTypeUnequal($1->valType ,SPL_TYPE::INT) && checkTypeUnequal($1->valType, SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{@1.begin.line, @1.begin.column ,
 		"operator '/' expect type 'INT' or 'REAL', got '" + typeToString($1->valType) + "'.\n"};
 	}
 
-	if(($3->valType != SPL_TYPE::INT && $3->valType != SPL_TYPE::REAL)){
+	if(checkTypeUnequal($3->valType, SPL_TYPE::INT) && checkTypeUnequal($3->valType, SPL_TYPE::REAL)){
 	// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
 		"operator '/' expect type 'INT' or 'REAL', got '" + typeToString($3->valType) + "'.\n"};
 	}
-	if($1->valType == SPL_TYPE::REAL || $3->valType == SPL_TYPE::REAL) {
+	if(checkTypeEqual($1->valType, SPL_TYPE::REAL) || checkTypeEqual($3->valType,SPL_TYPE::REAL)) {
 		$$->valType = SPL_TYPE::REAL;
 	}else{
 		$$->valType = SPL_TYPE::INT;
@@ -969,13 +971,13 @@ term:
 	}
         |  term  MOD  factor {
         $$ = new AST_Math(MOD_, $1, $3);
-        if($1->valType != SPL_TYPE::INT ){
+        if(checkTypeUnequal($1->valType,SPL_TYPE::INT )){
 
          	// 类型不匹配
          	throw splException{@1.begin.line, @1.begin.column ,
 			"operator 'MOD' expect type 'INT', got '" + typeToString($1->valType) + "'.\n"};
 		}
-        if($3->valType != SPL_TYPE::INT ){
+        if(checkTypeUnequal($3->valType, SPL_TYPE::INT )){
 
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
@@ -985,12 +987,12 @@ term:
         }
         |  term  AND  factor {
         $$ = new AST_Math(AND_, $1, $3);
-        if($1->valType != SPL_TYPE::BOOL){
+        if(checkTypeUnequal($1->valType, SPL_TYPE::BOOL)){
          	// 类型不匹配
          	throw splException{@1.begin.line, @1.begin.column ,
                 		"operator 'AND' expect type 'BOOL', got '" + typeToString($1->valType) + "'.\n"};
          	}
-        if($3->valType != SPL_TYPE::BOOL){
+        if(checkTypeUnequal($3->valType ,SPL_TYPE::BOOL)){
 
 		// 类型不匹配
 		throw splException{@3.begin.line, @3.begin.column ,
@@ -1046,7 +1048,7 @@ factor:
 	int size = $3->size();
 	for(auto i = 0 ; i < size ; i ++ ){
 		// 检查数据类型是否一致
-		if($3->at(i)->valType != args_list->at(i)->symbolType){
+		if(checkTypeUnequal($3->at(i)->valType, args_list->at(i)->symbolType)){
 			throw splException{@3.begin.line, @3.begin.column ,
                         "function or procedure '" + $1 + "' expect type '" + typeToString(args_list->at(i)->symbolType) + "', got type '"+ typeToString($3->at(i)->valType) +"'.\n"};
 		}

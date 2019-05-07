@@ -130,3 +130,6 @@ git commit -m"ADD new class"
 * [constant propagation implementation](http://lampwww.epfl.ch/resources/lamp/teaching/advancedCompiler/2005/slides/05-UsingSSA_CP-1on1.pdf)
 
 * [cs143](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures)
+
+### register allocation
+* [register allocation algorithm](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/17/Slides17.pdf)

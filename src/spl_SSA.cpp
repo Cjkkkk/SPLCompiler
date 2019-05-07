@@ -175,7 +175,8 @@ void SPL_SSA::removeUnusedVariable() {
         while(ins_it != node->instruSet.begin()) {
             -- ins_it;
             // res 字段不为空说明产生了赋值的操作
-            if((*ins_it)->res && ((*ins_it)->res->cl == VAR || (*ins_it)->res->cl == TEMP)) {
+            if((*ins_it)->res
+            && (checkOperandClass((*ins_it)->res, VAR) || checkOperandClass((*ins_it)->res,TEMP))) {
 
                 // 查看变量是否使用过
                 auto whether_used = usage.find((*ins_it)->res->name);
