@@ -177,64 +177,64 @@
 
 
 %%
-program: 
-        program_head  routine  DOT 
+program:
+        program_head  routine  DOT
         {
 
         }
         ;
 
-program_head: 
-        PROGRAM  ID  SEMI 
+program_head:
+        PROGRAM  ID  SEMI
         {
             $$ = new std::string($2); // program head can be just a string
             driver.symtab.pushScope($2); // push a symbol
         }
         ;
-routine: 
-        routine_head  routine_body 
+routine:
+        routine_head  routine_body
         {
            driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex());
         }
         ;
 
-sub_routine: 
-        routine_head  routine_body 
+sub_routine:
+        routine_head  routine_body
         {
             driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex());
         }
         ;
 
-routine_head: 
-        label_part  const_part  type_part  var_part  routine_part 
+routine_head:
+        label_part  const_part  type_part  var_part  routine_part
         {
         	// do nothing
         }
         ;
 
-label_part: 
+label_part:
         {
         }
         ;
 
-const_part: 
-        CONST  const_expr_list  
+const_part:
+        CONST  const_expr_list
         {
 
         }
-        |  
+        |
         {
         }
         ;
 
-const_expr_list: 
-        const_expr_list  ID  EQUAL  const_value  SEMI 
+const_expr_list:
+        const_expr_list  ID  EQUAL  const_value  SEMI
         {
             Symbol* symbol = new Symbol($2, CONST, $4->valType, driver.symtab.getCurrentScopeIndex());
             symbol->relevantASTNode = $4;
             driver.symtab.addVariable(symbol);
         }
-        |  ID  EQUAL  const_value  SEMI 
+        |  ID  EQUAL  const_value  SEMI
         {
              // 检查变量是否已经被定义过， 没定义过则添加到符号表
             Symbol* symbol =  new Symbol($1, CONST, $3->valType, driver.symtab.getCurrentScopeIndex());
@@ -243,89 +243,89 @@ const_expr_list:
         }
         ;
 
-const_value: 
-        INTEGER  
-        { 
+const_value:
+        INTEGER
+        {
             $$ = new AST_Const($1);
             $$->valType = INT;
         }
-        |  REAL  
-        { 
+        |  REAL
+        {
             $$ = new AST_Const($1);
             $$->valType = REAL;
         }
-        |  CHAR 
-        { 
+        |  CHAR
+        {
             $$ = new AST_Const($1);
             $$->valType = CHAR;
         }
-        |  STRING  
-        { 
+        |  STRING
+        {
             $$ = new AST_Const($1);
             $$->valType = STRING;
         }
-        |  BOOL 
+        |  BOOL
         {
             $$ = new AST_Const($1);
             $$->valType = BOOL;
         }
-        |  SYS_CON 
+        |  SYS_CON
         {
-            $$ = new AST_Const($1); 
+            $$ = new AST_Const($1);
         }
         ;
 
-type_part: 
-        TYPE type_decl_list  
-        { 
-            
+type_part:
+        TYPE type_decl_list
+        {
+
         }
-        |  
+        |
         {
 
         }
         ;
 
-type_decl_list: 
-        type_decl_list  type_definition  
+type_decl_list:
+        type_decl_list  type_definition
         {
-        
+
         }
-        |  type_definition 
+        |  type_definition
         {
-        
+
         }
         ;
-        
-type_definition: 
-        ID  EQUAL  type_decl  SEMI 
+
+type_definition:
+        ID  EQUAL  type_decl  SEMI
         {
             $3->name = $1;
             driver.symtab.addType($3);
         }
         ;
 
-type_decl: 
-        simple_type_decl  
+type_decl:
+        simple_type_decl
         {
             $$ = $1;
         }
-        |  array_type_decl  
+        |  array_type_decl
         {
             $$ = $1;
         }
-        |  record_type_decl 
+        |  record_type_decl
         {
             $$ = $1;
         }
         ;
 
-simple_type_decl: 
-        SYS_TYPE  
+simple_type_decl:
+        SYS_TYPE
         {
             $$ = new Symbol("", TYPE, (SPL_TYPE)$1, driver.symtab.getCurrentScopeIndex());
         }
-        |  ID  
+        |  ID
         {
             Symbol* symbol = driver.symtab.lookupType($1.c_str());
             std::string errorMsg = "spl.exe: error: undefined symbol \"" + $1 + "\"";
@@ -333,30 +333,30 @@ simple_type_decl:
             $$ = new Symbol(*symbol);
             $$->name = "";
         }
-        |  LP  name_list  RP  
+        |  LP  name_list  RP
         {
             // TODO: enumeration type
         }
-        |  const_value  DOTDOT  const_value  
+        |  const_value  DOTDOT  const_value
         {
             // TODO: subrange type
         }
-        |  MINUS  const_value  DOTDOT  const_value 
+        |  MINUS  const_value  DOTDOT  const_value
         {
 
         }
-        |  MINUS  const_value  DOTDOT  MINUS  const_value 
+        |  MINUS  const_value  DOTDOT  MINUS  const_value
         {
 
         }
-        |  ID  DOTDOT  ID 
+        |  ID  DOTDOT  ID
         {
 
         }
         ;
 
-array_type_decl: 
-        ARRAY  LB  INTEGER  RB  OF  type_decl 
+array_type_decl:
+        ARRAY  LB  INTEGER  RB  OF  type_decl
         {
             Assert($3 >= 1, "spl.exe: error: illegal array index");
             SPL_TYPE elementType = $6->symbolType;
@@ -371,15 +371,15 @@ array_type_decl:
         }
         ;
 
-record_type_decl: 
-        RECORD  field_decl_list  _END 
+record_type_decl:
+        RECORD  field_decl_list  _END
         {
             Symbol* symbol = new Symbol("", TYPE, RECORD, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $2->size(); i++)
             {
                 std::string name = (*$2)[i]->name;
-                std::string errorMsg = 
+                std::string errorMsg =
                 "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
                 Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
                 (*subSymbolMap)[name] = (*$2)[i];
@@ -390,21 +390,21 @@ record_type_decl:
         }
         ;
 
-field_decl_list: 
-        field_decl_list  field_decl 
+field_decl_list:
+        field_decl_list  field_decl
         {
             $1->insert($1->end(), $2->begin(), $2->end());
             delete $2;
             $$ = $1;
         }
-        |  field_decl 
+        |  field_decl
         {
             $$ = $1;
         }
         ;
 
-field_decl: 
-        name_list  COLON  type_decl  SEMI 
+field_decl:
+        name_list  COLON  type_decl  SEMI
         {
             SymbolListType* subSymbolList = new SymbolListType;
             for(size_t i = 0; i < $1->size(); i++)
@@ -419,13 +419,13 @@ field_decl:
         }
         ;
 
-name_list: 
-        name_list  COMMA  ID 
+name_list:
+        name_list  COMMA  ID
         {
             $1->push_back($3);
             $$ = $1;
         }
-        |  ID 
+        |  ID
         {
             std::vector<std::string>* newlist = new std::vector<std::string>();
             newlist->push_back($1);
@@ -433,29 +433,29 @@ name_list:
         }
         ;
 
-var_part: 
-        VAR  var_decl_list 
+var_part:
+        VAR  var_decl_list
         {
-            
+
         }
         |
         {
         }
         ;
 
-var_decl_list:  
-        var_decl_list  var_decl 
+var_decl_list:
+        var_decl_list  var_decl
         {
 
         }
-        |  var_decl 
+        |  var_decl
         {
 
         }
         ;
 
-var_decl:  
-        name_list  COLON  type_decl  SEMI 
+var_decl:
+        name_list  COLON  type_decl  SEMI
         {
             for(size_t i = 0; i < $1->size(); i++)
             {
@@ -469,44 +469,44 @@ var_decl:
         }
         ;
 
-routine_part:  
-        routine_part  function_decl 
+routine_part:
+        routine_part  function_decl
         {
             driver.symtab.popScope();
         }
-        |  routine_part  procedure_decl 
+        |  routine_part  procedure_decl
         {
             driver.symtab.popScope();
         }
-        |  function_decl 
+        |  function_decl
         {
             driver.symtab.popScope();
         }
-        |  procedure_decl 
+        |  procedure_decl
         {
             driver.symtab.popScope();
         }
-        | 
+        |
         {
 
         }
         ;
 
-function_decl: 
+function_decl:
         function_head  SEMI  sub_routine  SEMI {
         	// 检查是否有返回值节点 很麻烦...
         }
         ;
 
-function_head:  
-        FUNCTION  ID  parameters  COLON  simple_type_decl 
+function_head:
+        FUNCTION  ID  parameters  COLON  simple_type_decl
         {
             Symbol* symbol = new Symbol($2, FUNC, $5->symbolType, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
                 std::string name = (*$3)[i]->name;
-                std::string errorMsg = 
+                std::string errorMsg =
                 "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
                 Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
                 (*subSymbolMap)[name] = (*$3)[i];
@@ -532,19 +532,19 @@ function_head:
         }
         ;
 
-procedure_decl:  
+procedure_decl:
         procedure_head  SEMI  sub_routine  SEMI {}
         ;
 
-procedure_head:  
-        PROCEDURE ID parameters 
+procedure_head:
+        PROCEDURE ID parameters
         {
             Symbol* symbol = new Symbol($2, FUNC, UNKNOWN, driver.symtab.getCurrentScopeIndex());
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
                 std::string name = (*$3)[i]->name;
-                std::string errorMsg = 
+                std::string errorMsg =
                 "spl.exe: error: ignoring redeclaration of symbol \"" + name + "\".";
                 Assert(subSymbolMap->find(name) == subSymbolMap->end(), errorMsg.c_str());
                 (*subSymbolMap)[name] = (*$3)[i];
@@ -561,32 +561,32 @@ procedure_head:
         }
         ;
 
-parameters: 
-        LP  para_decl_list  RP 
+parameters:
+        LP  para_decl_list  RP
         {
             $$ = $2;
         }
-        |  
+        |
         {
             $$ = new SymbolListType;
         }
         ;
 
-para_decl_list: 
-        para_decl_list  SEMI  para_type_list 
+para_decl_list:
+        para_decl_list  SEMI  para_type_list
         {
             $1->insert($1->end(), $3->begin(), $3->end());
             delete $3;
             $$ = $1;
         }
-        | para_type_list 
+        | para_type_list
         {
             $$ = $1;
         }
         ;
 
-para_type_list: 
-        var_para_list COLON  simple_type_decl 
+para_type_list:
+        var_para_list COLON  simple_type_decl
         {
             std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
             for(size_t i = 0; i < $1->size(); i++)
@@ -600,7 +600,7 @@ para_type_list:
             delete $3;
             $$ = newlist;
         }
-        |  val_para_list  COLON  simple_type_decl 
+        |  val_para_list  COLON  simple_type_decl
         {
             std::vector<Symbol*>* newlist = new std::vector<Symbol*>();
             for(size_t i = 0; i < $1->size(); i++)
@@ -615,29 +615,29 @@ para_type_list:
         }
         ;
 
-var_para_list: 
-        VAR  name_list 
+var_para_list:
+        VAR  name_list
         {
             $$ = $2;
         }
         ;
 
-val_para_list: 
-        name_list 
+val_para_list:
+        name_list
         {
             $$ = $1;
         }
         ;
 
-routine_body: 
+routine_body:
         compound_stmt { $$ = $1; }
         ;
 
-compound_stmt: 
+compound_stmt:
         _BEGIN  stmt_list  _END {$$ = new AST_Compound($2);}
         ;
 
-stmt_list: 
+stmt_list:
         stmt_list  stmt  SEMI {$1->push_back($2); $$ = $1;}
         |  {$$ = new std::vector<AST_Stmt*>();}
         ;
@@ -647,7 +647,7 @@ stmt:
         |  non_label_stmt {$$ = $1;}
         ;
 
-non_label_stmt: 
+non_label_stmt:
         assign_stmt {$$ = $1; $$->checkSemantic();}
         | proc_stmt {$$ = $1;}
         | compound_stmt {$$ = $1;}
@@ -660,7 +660,7 @@ non_label_stmt:
         ;
 
 // todo: add symbol share between nodes
-assign_stmt: 
+assign_stmt:
         ID  ASSIGN  expression {
 		auto sym = driver.symtab.lookupVariable($1.c_str());
 		if(!sym) {

@@ -23,7 +23,7 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     renameVariable();
 
 
-    outputPhiInstruction("origin.bc");
+    outputPhiInstruction("byte_code/origin.bc");
 
     // --------------------------------------------
     // output optimized IR
@@ -31,22 +31,53 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
 
 //    outputDUChain();
 
-
-    outputPhiInstruction("copy_propagation.bc");
+    outputPhiInstruction("byte_code/copy_propagation.bc");
 
     constantPropagation();
 
-    outputPhiInstruction("const_propagation.bc");
+    outputPhiInstruction("byte_code/const_propagation.bc");
 
     removeUnusedVariable();
 
-    outputPhiInstruction("remove_var.bc");
+    outputPhiInstruction("byte_code/remove_var.bc");
     //
+
+    backToTAC(ins);
+    std::ofstream outfile;
+    outfile.open("byte_code/opt.bc", std::ios::out);
+    for(auto& instr:ins) {
+        instr.output(outfile);
+    }
+    outfile.close();
 
     // ---------------------------------------------
 //    outputIdom();
 //
 //    outputDUChain();
+}
+
+void removeSubScript(Operand* var) {
+    if(var && checkOperandClass(var, VAR)) {
+        auto pos = var->name.rfind('.');
+        var->name = var->name.substr(0, pos);
+    }
+}
+void SPL_SSA::backToTAC(std::vector<Instruction>& ins){
+    unsigned int index = 0;
+    for(auto it = nodeSet.begin(); it != nodeSet.end() ; it++) {
+        ins[index++] = {(*(*it)->label), OP_NULL, nullptr, nullptr, nullptr};
+        for(auto& instruction: (*it)->instruSet) {
+            if(instruction->op == OP_PHI) continue;
+            if(instruction->op == OP_GOTO) {
+                if(it + 1 != nodeSet.end() && *((*(it + 1))->label) == instruction->res->name) continue;
+            }
+            removeSubScript(instruction->arg1);
+            removeSubScript(instruction->arg2);
+            removeSubScript(instruction->res);
+            ins[index++] = *instruction;
+        }
+    }
+    ins.resize(index);
 }
 
 inline void copyByValue(Operand* res, Operand* source) {
