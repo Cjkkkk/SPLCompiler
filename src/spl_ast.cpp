@@ -183,8 +183,7 @@ void AST_Sym::checkSemantic()
 void AST_Sym::emit(SPL_IR* ir){
 
     tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id, VAR);
-    //tempVariable = ir->genTempVariable(id);
-    //ir->addInstruction({"", OP_ASSIGN, std::to_string(scopeIndex) + "." + id, "", tempVariable});
+
 }
 
 // AST_Array
@@ -259,8 +258,8 @@ void AST_Assign::emit(SPL_IR* ir){
         lhs->emit(ir);
     }
 //    ir->decreaseTempCount(rhs->tempVariable);
-    tempVariable = lhs->tempVariable;
-    ir->addInstruction({"", OP_ASSIGN, rhs->tempVariable, nullptr, lhs->tempVariable});
+    tempVariable = lhs->getTempVariable();
+    ir->addInstruction({"", OP_ASSIGN, rhs->getTempVariable(), nullptr, tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)

@@ -102,6 +102,7 @@ public:
     void outputPhiInstruction(std::string filename);
     void outputDUChain();
     void outputIdom();
+    void backToTAC(std::vector<Instruction>& ins);
 };
 
 
