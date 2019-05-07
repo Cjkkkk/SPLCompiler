@@ -92,7 +92,7 @@ public:
     SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
     SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
 
-    void addInstruction(Instruction ins);
+    void addInstruction(Instruction* ins);
 
     Operand* genTempVariable(SPL_TYPE type) ;
 
@@ -102,7 +102,7 @@ public:
 
     Operand* genLabel();
 
-    std::vector<Instruction> IR;
+    std::vector<Instruction*> IR;
     SymbolTable* symbolTable;
     unsigned int tempCount;
     unsigned int labelCount;

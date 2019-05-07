@@ -61,9 +61,9 @@ public:
     std::vector<pair<std::string, Instruction*>> definition;
 
     // 优化IR
-    void OptimizeIR(std::vector<Instruction>& ins);
+    void OptimizeIR(std::vector<Instruction*>& ins);
 
-    void genCFGNode(std::vector<Instruction>& ins);
+    void genCFGNode(std::vector<Instruction*>& ins);
 
 
     // 生成CFG
@@ -102,7 +102,7 @@ public:
     void outputPhiInstruction(std::string filename);
     void outputDUChain();
     void outputIdom();
-    void backToTAC(std::vector<Instruction>& ins);
+    void backToTAC(std::vector<Instruction*>& ins);
 };
 
 

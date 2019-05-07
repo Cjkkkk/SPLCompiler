@@ -4,7 +4,7 @@
 #include <fstream>
 #include <queue>
 
-void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
+void SPL_SSA::OptimizeIR(std::vector<Instruction*>& ins) {
     genCFGNode(ins);
 
     // generate CFG
@@ -46,7 +46,7 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction>& ins) {
     std::ofstream outfile;
     outfile.open("byte_code/opt.bc", std::ios::out);
     for(auto& instr:ins) {
-        instr.output(outfile);
+        instr->output(outfile);
     }
     outfile.close();
 
@@ -62,10 +62,10 @@ void removeSubScript(Operand* var) {
         var->name = var->name.substr(0, pos);
     }
 }
-void SPL_SSA::backToTAC(std::vector<Instruction>& ins){
+void SPL_SSA::backToTAC(std::vector<Instruction*>& ins){
     unsigned int index = 0;
     for(auto it = nodeSet.begin(); it != nodeSet.end() ; it++) {
-        ins[index++] = {(*(*it)->label), OP_NULL, nullptr, nullptr, nullptr};
+        ins[index++] = new Instruction{(*(*it)->label), OP_NULL, nullptr, nullptr, nullptr};
         for(auto& instruction: (*it)->instruSet) {
             if(instruction->op == OP_PHI) continue;
             if(instruction->op == OP_GOTO) {
@@ -74,7 +74,7 @@ void SPL_SSA::backToTAC(std::vector<Instruction>& ins){
             removeSubScript(instruction->arg1);
             removeSubScript(instruction->arg2);
             removeSubScript(instruction->res);
-            ins[index++] = *instruction;
+            ins[index++] = instruction;
         }
     }
     ins.resize(index);
@@ -263,34 +263,34 @@ void SPL_SSA::generateDF() {
 
 
 
-void SPL_SSA::genCFGNode(std::vector<Instruction> &insSet) {
+void SPL_SSA::genCFGNode(std::vector<Instruction*> &insSet) {
     SSANode* current = nullptr;
-    for(Instruction& ins : insSet){
-        if(ins.op == OP_ASSIGN && ins.res->cl == VAR){
-            auto it = variableListBlock.find(ins.res->name);
+    for(Instruction* ins : insSet){
+        if(ins->op == OP_ASSIGN && ins->res->cl == VAR){
+            auto it = variableListBlock.find(ins->res->name);
 
             // 记录每一个变量出现的node列表
             if(it == variableListBlock.end()) {
-                variableListBlock.insert({ins.res->name, {static_cast<int>(nodeSet.size() - 1)}});
+                variableListBlock.insert({ins->res->name, {static_cast<int>(nodeSet.size() - 1)}});
             } else{
                 it->second.push_back(static_cast<int>(nodeSet.size() - 1));
             }
 
-            current->instruSet.push_back(&ins);
+            current->instruSet.push_back(ins);
         }
             // 开始新的node
-        else if(!ins.label.empty()) {
+        else if(!ins->label.empty()) {
             auto newNode = new SSANode();
             current = newNode;
             nodeSet.push_back(newNode);
-            current->label = &ins.label;
+            current->label = &ins->label;
             labelIndexMap.insert({*current->label, nodeSet.size() - 1});
-        } else if (ins.op == OP_IF || ins.op == OP_IF_Z || ins.op == OP_GOTO) {
+        } else if (ins->op == OP_IF || ins->op == OP_IF_Z || ins->op == OP_GOTO) {
             // 添加子节点
             if ( current == nullptr) throw splException{0, 0, "no label at start of target."};
-            current->LabelSet.push_back(&ins.res->name);
-            current->instruSet.push_back(&ins);
-        } else {current->instruSet.push_back(&ins);}
+            current->LabelSet.push_back(&ins->res->name);
+            current->instruSet.push_back(ins);
+        } else {current->instruSet.push_back(ins);}
     }
 }
 

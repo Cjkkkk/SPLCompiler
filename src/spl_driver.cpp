@@ -94,9 +94,9 @@ void SPL::SPL_Driver::emitIR() {
         unsigned int scopeIndex = astmng.scopes->at(index);
         // 设置作用域
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
-        ir.addInstruction({symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
+        ir.addInstruction(new Instruction{symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
-        ir.addInstruction({"", OP_RET, nullptr, nullptr, nullptr});
+        ir.addInstruction(new Instruction{"", OP_RET, nullptr, nullptr, nullptr});
     }
 }
 

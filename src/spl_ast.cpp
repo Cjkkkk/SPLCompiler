@@ -82,12 +82,12 @@ void AST_Math::emit(SPL_IR* ir) {
     if(opType == MINUS__) {
 //        ir->decreaseTempCount(left->tempVariable);
         tempVariable = ir->genTempVariable(valType);
-        ir->addInstruction({"", MINUS__, left->getTempVariable(), nullptr, tempVariable});
+        ir->addInstruction(new Instruction{"", MINUS__, left->getTempVariable(), nullptr, tempVariable});
     } else {
 //        ir->decreaseTempCount(left->tempVariable);
 //        ir->decreaseTempCount(right->tempVariable);
         tempVariable = ir->genTempVariable(valType);
-        ir->addInstruction({"", opType , left->getTempVariable(), right->getTempVariable(), tempVariable});
+        ir->addInstruction(new Instruction{"", opType , left->getTempVariable(), right->getTempVariable(), tempVariable});
     }
 }
 // ast node for constant expression
@@ -156,7 +156,7 @@ void AST_Const::emit(SPL_IR* ir){
             break;
     }
 
-    ir->addInstruction({"", OP_ASSIGN, literal, nullptr, tempVariable});
+    ir->addInstruction(new Instruction{"", OP_ASSIGN, literal, nullptr, tempVariable});
 }
 AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {
@@ -259,7 +259,7 @@ void AST_Assign::emit(SPL_IR* ir){
     }
 //    ir->decreaseTempCount(rhs->tempVariable);
     tempVariable = lhs->getTempVariable();
-    ir->addInstruction({"", OP_ASSIGN, rhs->getTempVariable(), nullptr, tempVariable});
+    ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, tempVariable});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
@@ -305,17 +305,17 @@ void AST_If::emit(SPL_IR* ir){
     auto ifLabel = ir->genLabel();
     auto elseLabel = ir->genLabel();
 
-    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, nullptr, elseLabel});
+    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->tempVariable, nullptr, elseLabel});
     // if 开始
-    ir->addInstruction({ifLabel->name, OP_NULL, nullptr, nullptr, nullptr});
+    ir->addInstruction(new Instruction{ifLabel->name, OP_NULL, nullptr, nullptr, nullptr});
 
     doIf->emit(ir);
 
-    ir->addInstruction({"", OP_GOTO, nullptr, nullptr, nullptr}); // if结束跳到exit
+    ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr, nullptr}); // if结束跳到exit
 
     auto indexOfGoto = ir->IR.size() - 1;
 
-    ir->addInstruction({elseLabel->name , OP_NULL, nullptr, nullptr, nullptr}); // else标签
+    ir->addInstruction(new Instruction{elseLabel->name , OP_NULL, nullptr, nullptr, nullptr}); // else标签
 
     if(doElse) {
         doElse->emit(ir);
@@ -323,9 +323,9 @@ void AST_If::emit(SPL_IR* ir){
 
     auto exitLabel = ir->genLabel();
 
-    ir->IR[indexOfGoto].res = exitLabel;
+    ir->IR[indexOfGoto]->res = exitLabel;
 
-    ir->addInstruction({exitLabel->name, OP_NULL, nullptr, nullptr, nullptr}); // exit标签
+    ir->addInstruction(new Instruction{exitLabel->name, OP_NULL, nullptr, nullptr, nullptr}); // exit标签
 
 }
 AST_While::AST_While(AST_Exp *cond_, AST_Stmt *stmt_) : cond(cond_), stmt(stmt_)
@@ -348,23 +348,23 @@ void AST_While::emit(SPL_IR* ir){
     auto whileLabel = ir->genLabel();
     auto stmtLabel = ir->genLabel();
 
-    ir->addInstruction({whileLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
+    ir->addInstruction(new Instruction{whileLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
 
 
     cond->emit(ir);
 
 
-    ir->addInstruction({"", OP_IF_Z, cond->tempVariable, nullptr , nullptr});
+    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->tempVariable, nullptr , nullptr});
     auto indexOfGoto = ir->IR.size() - 1;
-    ir->addInstruction({stmtLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // trival label
+    ir->addInstruction(new Instruction{stmtLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // trival label
 
     stmt->emit(ir);
 
     auto exitLabel = ir->genLabel();
-    ir->IR[indexOfGoto].res = exitLabel;
-    ir->addInstruction({"", OP_GOTO, nullptr, nullptr,whileLabel}); // if结束跳到exit
+    ir->IR[indexOfGoto]->res = exitLabel;
+    ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr,whileLabel}); // if结束跳到exit
 
-    ir->addInstruction({exitLabel->name , OP_NULL, nullptr, nullptr , nullptr}); // exit标签
+    ir->addInstruction(new Instruction{exitLabel->name , OP_NULL, nullptr, nullptr , nullptr}); // exit标签
 }
 AST_Repeat::AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_) :
     stmtList(stmtList_), exp(exp_)
@@ -387,18 +387,18 @@ void AST_Repeat::emit(SPL_IR* ir){
 
     auto repeatLabel = ir->genLabel();;
 
-    ir->addInstruction({repeatLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
+    ir->addInstruction(new Instruction{repeatLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
 
     for(const auto& stmt : *stmtList) {
         stmt->emit(ir);
     }
 
     exp->emit(ir);
-    ir->addInstruction({"", OP_IF, exp->tempVariable,nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_IF, exp->tempVariable,nullptr, nullptr});
 
     // trival exit
     auto exitLabel = ir->genLabel();
-    ir->addInstruction({exitLabel->name, OP_NULL,nullptr, nullptr , nullptr});
+    ir->addInstruction(new Instruction{exitLabel->name, OP_NULL,nullptr, nullptr , nullptr});
 }
 
 AST_For::AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_) :
@@ -429,26 +429,26 @@ void AST_For::emit(SPL_IR* ir) {
     auto op = dir ? LE_ : GE_;
     auto plusOrMinus = dir ? PLUS_ : MINUS_;
 
-    ir->addInstruction({forLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
+    ir->addInstruction(new Instruction{forLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // while判断条件
     // 判断语句
-    ir->addInstruction({"", op, init->tempVariable, fin->tempVariable, temp});
+    ir->addInstruction(new Instruction{"", op, init->tempVariable, fin->tempVariable, temp});
     //判断失败则直接跳到exitLabel
-    ir->addInstruction({"", OP_IF_Z, temp, nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_IF_Z, temp, nullptr, nullptr});
     auto indexOfGoto = ir->IR.size() - 1;
 
-    ir->addInstruction({ifLabel->name, OP_NULL,nullptr, nullptr , nullptr});// trival goto
+    ir->addInstruction(new Instruction{ifLabel->name, OP_NULL,nullptr, nullptr , nullptr});// trival goto
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
     // 更改初始值
     auto literal = new Operand(INT, "", CONST);
     literal->value.valInt = 1;
-    ir->addInstruction({"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
+    ir->addInstruction(new Instruction{"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
     // 回到判断的位置
-    ir->addInstruction({"", OP_GOTO, nullptr, nullptr , forLabel});
+    ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr , forLabel});
     // 添加exitLabel
     auto exitLabel = ir ->genLabel();
-    ir->IR[indexOfGoto].res = exitLabel;
-    ir->addInstruction({exitLabel->name, OP_NULL, nullptr, nullptr , nullptr});
+    ir->IR[indexOfGoto]->res = exitLabel;
+    ir->addInstruction(new Instruction{exitLabel->name, OP_NULL, nullptr, nullptr , nullptr});
 
 }
 AST_Goto::AST_Goto(int label_) : label(label_)
@@ -465,7 +465,7 @@ int AST_Goto::calculate()
 void AST_Goto::checkSemantic() {}
 void AST_Goto::emit(SPL_IR* ir) {
     // todo label 真的存在吗
-    ir->IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
+    ir->IR.push_back(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
 }
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {
@@ -563,7 +563,7 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     int totalSize = 0;
     for(const auto& arg : *argList) {
-        ir->addInstruction({"", OP_PARAM, arg->tempVariable, nullptr, nullptr});
+        ir->addInstruction(new Instruction{"", OP_PARAM, arg->tempVariable, nullptr, nullptr});
         switch(arg->valType){
             case INT:
                 totalSize += 4;
@@ -586,8 +586,8 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     auto literal = new Operand(INT, "", CONST);
     literal->value.valInt = totalSize;
-    ir->addInstruction({"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
-    ir->addInstruction({"", OP_POP, literal, nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_POP, literal, nullptr, nullptr});
 }
 
 // AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)

@@ -204,10 +204,10 @@ void PhiInstruction::output(ostream& s) {
 std::vector<Operand*>* PhiInstruction::getVariable() {return &variableCluster;}
 
 
-void SPL_IR::addInstruction(Instruction ins) {
-    if(!ins.label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
+void SPL_IR::addInstruction(Instruction* ins) {
+    if(!ins->label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
         // need a trivial goto
-        IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins.label, LABEL)});
+        IR.push_back(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins->label, LABEL)});
     }
     IR.push_back(ins);
 }
@@ -229,5 +229,5 @@ void SPL_IR::decreaseTempCount(Operand* name) {
 }
 
 Instruction* SPL_IR::getLastInstruction() {
-    return &IR.back();
+    return IR.back();
 }
