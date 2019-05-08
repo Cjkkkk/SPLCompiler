@@ -227,10 +227,10 @@ void SPL_SSA::removeUnusedVariable() {
                         auto varList = (*ins_it)->getVariable();
                         if(!varList) continue;
                         for(auto var_it = varList->begin() ; var_it != varList->end() ; var_it ++) {
-                            if(deleted.find((*var_it)->name) != deleted.end()) {
+                            if(deleted.find((*var_it).first->name) != deleted.end()) {
                                 varList->erase(var_it--);
                             } else {
-                                usage.insert((*var_it)->name);
+                                usage.insert((*var_it).first->name);
                             }
                         }
                     } else {
@@ -466,7 +466,7 @@ void SPL_SSA::renameVariable() {
                 // 寻找最近的变量定义
                 ins->res->name = ins->res->name.substr(0, ins->res->name.rfind('.'));
                 updateUsage(closestDef, ins->res, parent, ins);
-                ins->addVariable(new Operand(*ins->res));
+                ins->addVariable(new Operand(*ins->res), parent);
             }
             ins->res->name = temp;
         }

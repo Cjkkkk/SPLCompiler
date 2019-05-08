@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include "spl_compiler.hpp"
 #include "spl_symtab.hpp"
 
@@ -57,8 +58,8 @@ public:
             Operand* res_ = nullptr)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
 
-    virtual std::vector<Operand*>* getVariable();
-    virtual void addVariable(Operand* name);
+    virtual std::list<pair<Operand*, int>>* getVariable();
+    virtual void addVariable(Operand* name, int index);
     virtual void outputOperand(Operand* operand, ostream& s);
     virtual void output(ostream& s);
 
@@ -79,11 +80,11 @@ public:
 
     explicit PhiInstruction(Operand* res) : Instruction("", OP_PHI, nullptr, nullptr, res) {}
 
-    std::vector<Operand*>* getVariable() override;
-    void addVariable(Operand* name) override;
+    std::list<pair<Operand*, int>>* getVariable() override;
+    void addVariable(Operand* name, int index) override;
     void output(ostream& s) override;
 
-    std::vector<Operand*> variableCluster;
+    std::list<pair<Operand*, int>> variableCluster;
 
 };
 
