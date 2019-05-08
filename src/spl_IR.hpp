@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include "spl_compiler.hpp"
 #include "spl_symtab.hpp"
 
@@ -20,6 +21,7 @@ union Value {
 
 class Operand {
 public:
+    Operand(){};
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
     Operand(const Operand& op) {
         this->type = op.type;
@@ -32,7 +34,7 @@ public:
     SPL_CLASS cl;
     Value value;
 
-    void evalute(SPL_OP op, Operand* left, Operand* right);
+    Operand* evalute(SPL_OP op, Operand* left, Operand* right);
 };
 
 
@@ -56,8 +58,8 @@ public:
             Operand* res_ = nullptr)
     :label(label_), op(op_), arg1(arg1_), arg2(arg2_), res(res_) {}
 
-    virtual std::vector<Operand*>* getVariable();
-    virtual void addVariable(Operand* name);
+    virtual std::list<pair<Operand*, int>>* getVariable();
+    virtual void addVariable(Operand* name, int index);
     virtual void outputOperand(Operand* operand, ostream& s);
     virtual void output(ostream& s);
 
@@ -78,11 +80,11 @@ public:
 
     explicit PhiInstruction(Operand* res) : Instruction("", OP_PHI, nullptr, nullptr, res) {}
 
-    std::vector<Operand*>* getVariable() override;
-    void addVariable(Operand* name) override;
+    std::list<pair<Operand*, int>>* getVariable() override;
+    void addVariable(Operand* name, int index) override;
     void output(ostream& s) override;
 
-    std::vector<Operand*> variableCluster;
+    std::list<pair<Operand*, int>> variableCluster;
 
 };
 
@@ -92,7 +94,7 @@ public:
     SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0){}
     SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
 
-    void addInstruction(Instruction ins);
+    void addInstruction(Instruction* ins);
 
     Operand* genTempVariable(SPL_TYPE type) ;
 
@@ -102,7 +104,7 @@ public:
 
     Operand* genLabel();
 
-    std::vector<Instruction> IR;
+    std::vector<Instruction*> IR;
     SymbolTable* symbolTable;
     unsigned int tempCount;
     unsigned int labelCount;

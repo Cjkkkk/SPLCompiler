@@ -4,89 +4,91 @@
 
 #include "spl_IR.hpp"
 
-void Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
-    name.clear();
-    cl = CONST;
+Operand* Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
+//    name.clear();
+    auto new_operand = new Operand();
+    new_operand->cl = CONST;
+    new_operand->name = "";
     switch(op) {
         case PLUS_:
-            value.valInt = left->value.valInt + right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt + right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MINUS_:
-            value.valInt = left->value.valInt - right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt - right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MUL_:
-            value.valInt = left->value.valInt * right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt * right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case DIV_:
-            value.valInt = left->value.valInt / right->value.valInt;
+            new_operand->value.valInt = left->value.valInt / right->value.valInt;
+            new_operand->type = INT;
             break;
         case MOD_:
-            value.valInt = left->value.valInt % right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt % right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MINUS__:
-            value.valInt = - left->value.valInt;
-            type = INT;
+            new_operand->value.valInt = - left->value.valInt;
+            new_operand->type = INT;
             
             break;
         case AND_:
-            value.valBool = left->value.valBool && right->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valBool && right->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case OR_:
-            value.valBool = left->value.valBool || right->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valBool || right->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case NOT_:
-            value.valBool = !left->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = !left->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case EQUAL_:
-            value.valBool = left->value.valInt == right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt == right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case UNEQUAL_:
-            value.valBool = left->value.valInt != right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt != right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case GT_:
-            value.valBool = left->value.valInt > right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt > right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case GE_:
-            value.valBool = left->value.valInt >= right->value.valInt;
-            type = BOOL;
-            
+            new_operand->value.valBool = left->value.valInt >= right->value.valInt;
+            new_operand->type = BOOL;
             break;
         case LT_:
-            value.valBool = left->value.valInt < right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt < right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case LE_:
-            value.valBool = left->value.valInt <= right->value.valInt;
-            type = BOOL;
-            
+            new_operand->value.valBool = left->value.valInt <= right->value.valInt;
+            new_operand->type = BOOL;
             break;
         default:
             break;
     }
+    return new_operand;
 }
-void Instruction::addVariable(Operand* name) {};
-std::vector<Operand*>* Instruction::getVariable() {
+void Instruction::addVariable(Operand* name, int index) {};
+std::list<pair<Operand*, int>>* Instruction::getVariable() {
     return nullptr;
 }
 void Instruction::outputOperand(Operand* operand, ostream& s) {
@@ -190,24 +192,24 @@ void Instruction::output(ostream& s) {
 
 
 
-void PhiInstruction::addVariable(Operand* name) {variableCluster.push_back(name);}
+void PhiInstruction::addVariable(Operand* name, int index) {variableCluster.push_back({name, index});}
 void PhiInstruction::output(ostream& s) {
     s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
     s << "(";
-    for(auto& variable : variableCluster) {
-        if(&variable - &variableCluster[0] > 0) s << ", ";
-        outputOperand(variable, s);
+    for(auto it = variableCluster.begin() ; it != variableCluster.end() ; it++) {
+        if(std::distance(variableCluster.begin(), it) > 0) s << ", ";
+        outputOperand((*it).first, s);
     }
     s << ")\n";
 }
 
-std::vector<Operand*>* PhiInstruction::getVariable() {return &variableCluster;}
+std::list<pair<Operand*, int>>* PhiInstruction::getVariable() {return &variableCluster;}
 
 
-void SPL_IR::addInstruction(Instruction ins) {
-    if(!ins.label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
+void SPL_IR::addInstruction(Instruction* ins) {
+    if(!ins->label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
         // need a trivial goto
-        IR.push_back({"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins.label, LABEL)});
+        IR.push_back(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins->label, LABEL)});
     }
     IR.push_back(ins);
 }
@@ -229,5 +231,5 @@ void SPL_IR::decreaseTempCount(Operand* name) {
 }
 
 Instruction* SPL_IR::getLastInstruction() {
-    return &IR.back();
+    return IR.back();
 }

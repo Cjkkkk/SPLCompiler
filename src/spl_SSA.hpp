@@ -55,15 +55,15 @@ public:
     std::set<int> phiBlock;
 
     // 每一个定义对应的所有使用的位置ins*
-    std::map<std::string, std::vector<Instruction*>> duChain;
+    std::map<std::string, std::list<Instruction*>> duChain;
 
     // 每一个定义出现的位置ins*
     std::vector<pair<std::string, Instruction*>> definition;
 
     // 优化IR
-    void OptimizeIR(std::vector<Instruction>& ins);
+    void OptimizeIR(std::vector<Instruction*>& ins);
 
-    void genCFGNode(std::vector<Instruction>& ins);
+    void genCFGNode(std::vector<Instruction*>& ins);
 
 
     // 生成CFG
@@ -102,7 +102,7 @@ public:
     void outputPhiInstruction(std::string filename);
     void outputDUChain();
     void outputIdom();
-    void backToTAC(std::vector<Instruction>& ins);
+    void backToTAC(std::vector<Instruction*>& ins);
 };
 
 
