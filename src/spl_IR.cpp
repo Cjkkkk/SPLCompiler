@@ -4,86 +4,88 @@
 
 #include "spl_IR.hpp"
 
-void Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
-    name.clear();
-    cl = CONST;
+Operand* Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
+//    name.clear();
+    auto new_operand = new Operand();
+    new_operand->cl = CONST;
+    new_operand->name = "";
     switch(op) {
         case PLUS_:
-            value.valInt = left->value.valInt + right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt + right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MINUS_:
-            value.valInt = left->value.valInt - right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt - right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MUL_:
-            value.valInt = left->value.valInt * right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt * right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case DIV_:
-            value.valInt = left->value.valInt / right->value.valInt;
+            new_operand->value.valInt = left->value.valInt / right->value.valInt;
+            new_operand->type = INT;
             break;
         case MOD_:
-            value.valInt = left->value.valInt % right->value.valInt;
-            type = INT;
+            new_operand->value.valInt = left->value.valInt % right->value.valInt;
+            new_operand->type = INT;
             
             break;
         case MINUS__:
-            value.valInt = - left->value.valInt;
-            type = INT;
+            new_operand->value.valInt = - left->value.valInt;
+            new_operand->type = INT;
             
             break;
         case AND_:
-            value.valBool = left->value.valBool && right->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valBool && right->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case OR_:
-            value.valBool = left->value.valBool || right->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valBool || right->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case NOT_:
-            value.valBool = !left->value.valBool;
-            type = BOOL;
+            new_operand->value.valBool = !left->value.valBool;
+            new_operand->type = BOOL;
             
             break;
         case EQUAL_:
-            value.valBool = left->value.valInt == right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt == right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case UNEQUAL_:
-            value.valBool = left->value.valInt != right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt != right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case GT_:
-            value.valBool = left->value.valInt > right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt > right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case GE_:
-            value.valBool = left->value.valInt >= right->value.valInt;
-            type = BOOL;
-            
+            new_operand->value.valBool = left->value.valInt >= right->value.valInt;
+            new_operand->type = BOOL;
             break;
         case LT_:
-            value.valBool = left->value.valInt < right->value.valInt;
-            type = BOOL;
+            new_operand->value.valBool = left->value.valInt < right->value.valInt;
+            new_operand->type = BOOL;
             
             break;
         case LE_:
-            value.valBool = left->value.valInt <= right->value.valInt;
-            type = BOOL;
-            
+            new_operand->value.valBool = left->value.valInt <= right->value.valInt;
+            new_operand->type = BOOL;
             break;
         default:
             break;
     }
+    return new_operand;
 }
 void Instruction::addVariable(Operand* name) {};
 std::vector<Operand*>* Instruction::getVariable() {

@@ -143,7 +143,7 @@ AST_Const::~AST_Const()
 
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(SPL_IR* ir){
-    tempVariable = ir->genTempVariable(valType);
+    // tempVariable = ir->genTempVariable(valType);
     auto literal = new Operand(valType, "", CONST);
 
     switch (valType) {
@@ -155,8 +155,8 @@ void AST_Const::emit(SPL_IR* ir){
         default:
             break;
     }
-
-    ir->addInstruction(new Instruction{"", OP_ASSIGN, literal, nullptr, tempVariable});
+    tempVariable = literal;
+    // ir->addInstruction(new Instruction{"", OP_ASSIGN, literal, nullptr, tempVariable});
 }
 AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
 {

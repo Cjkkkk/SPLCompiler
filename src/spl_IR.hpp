@@ -20,6 +20,7 @@ union Value {
 
 class Operand {
 public:
+    Operand(){};
     Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
     Operand(const Operand& op) {
         this->type = op.type;
@@ -32,7 +33,7 @@ public:
     SPL_CLASS cl;
     Value value;
 
-    void evalute(SPL_OP op, Operand* left, Operand* right);
+    Operand* evalute(SPL_OP op, Operand* left, Operand* right);
 };
 
 

@@ -102,31 +102,34 @@ inline void copyByValue(Operand* res, Operand* source) {
 // @param copy_usage : 如果有需要则更新v2的usage
 // @return
 
-void propagateAlongDuchain(std::vector<Instruction*>& usage,
+void propagateAlongDuchain(std::list<Instruction*>& usage,
         Operand* res, const string& target,
-        std::vector<Instruction*>* copy_usage = nullptr) {
+        std::list<Instruction*>* copy_usage = nullptr) {
 
-    for(auto& use : usage) {
+    for(auto use = usage.begin() ; use != usage.end() ; use ++) {
         bool use_or_not = false;
-        if(use->op == OP_PHI) {
-            for(auto& var : *use->getVariable()) {
-                if(var->name == target) {
-                    copyByValue(var, res);
-                    use_or_not = true;
-                }
-            }
-        }
-        if(use->arg1 && use->arg1->name == target) {
-            copyByValue(use->arg1, res);
+//        if(use->op == OP_PHI) {
+//            for(auto& var : *use->getVariable()) {
+//                if(var->name == target) {
+//                    copyByValue(var, res);
+//                    use_or_not = true;
+//                }
+//            }
+//        }
+        if((*use)->arg1 && (*use)->arg1->name == target) {
+            copyByValue((*use)->arg1, res);
             use_or_not = true;
         }
-        if(use->arg2 && use->arg2->name == target) {
-            copyByValue(use->arg2, res);
+        if((*use)->arg2 && (*use)->arg2->name == target) {
+            copyByValue((*use)->arg2, res);
             use_or_not = true;
         }
 
         if(use_or_not && res->cl != CONST) {
-            copy_usage->push_back(use);
+            copy_usage->push_back(*use);
+            // 从DUchain中删除使用记录
+            use = usage.erase(use);
+            -- use;
         }
     }
 }
@@ -143,13 +146,14 @@ void SPL_SSA::constantPropagation() {
 
                     auto it = duChain.find((*ins_it)->res->name);
 
-                    (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    auto o= (*ins_it)->res->evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
 
-                    propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+                    propagateAlongDuchain(it->second, o, it->first);
 
-                    ins_it = node->instruSet.erase(ins_it);
-
-                    --ins_it;
+                    delete(o);
+//                    ins_it = node->instruSet.erase(ins_it);
+//
+//                    --ins_it;
                 }
                 continue;
             }
@@ -159,13 +163,13 @@ void SPL_SSA::constantPropagation() {
                        && checkOperandType((*ins_it)->arg1, INT)) {
                         auto it = duChain.find((*ins_it)->res->name);
 
-                        copyByValue((*ins_it)->res, (*ins_it)->arg1);
+                        // copyByValue((*ins_it)->res, (*ins_it)->arg1);
 
-                        propagateAlongDuchain(it->second, (*ins_it)->res, it->first);
+                        propagateAlongDuchain(it->second, (*ins_it)->arg1, it->first);
 
-                        ins_it = node->instruSet.erase(ins_it);
-
-                        --ins_it;
+//                        ins_it = node->instruSet.erase(ins_it);
+//
+//                        --ins_it;
                     }
                 default:
                     continue;
@@ -210,9 +214,9 @@ void SPL_SSA::removeUnusedVariable() {
             && (checkOperandClass((*ins_it)->res, VAR) || checkOperandClass((*ins_it)->res,TEMP))) {
 
                 // 查看变量是否使用过
-                auto whether_used = usage.find((*ins_it)->res->name);
+                auto whether_used = (duChain.find((*ins_it)->res->name)->second.size() > 0);
 
-                if(whether_used == usage.end()) {
+                if(!whether_used) {
                     // 没有使用过这个变量 删除
                     deleted.insert((*ins_it)->res->name);
                     ins_it = node->instruSet.erase(ins_it);
