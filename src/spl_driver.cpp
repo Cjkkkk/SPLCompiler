@@ -102,6 +102,5 @@ void SPL::SPL_Driver::emitIR() {
 
 
 void SPL::SPL_Driver::optimizeIR() {
-    SPL_SSA s;
-    s.OptimizeIR(ir.IR);
+    ssaIr.OptimizeIR(ir.IR);
 }

@@ -24,7 +24,7 @@ namespace SPL
 class SPL_Driver
 {
   public:
-    SPL_Driver() : ir(&symtab){};
+    SPL_Driver() : ir(&symtab), ssaIr(&ir){};
 
     virtual ~SPL_Driver();
 

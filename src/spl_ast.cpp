@@ -465,7 +465,7 @@ int AST_Goto::calculate()
 void AST_Goto::checkSemantic() {}
 void AST_Goto::emit(SPL_IR* ir) {
     // todo label 真的存在吗
-    ir->IR.push_back(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
+    ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(STRING, std::to_string(label), LABEL)});
 }
 AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtList_)
 {

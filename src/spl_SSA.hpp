@@ -35,12 +35,14 @@ public:
 };
 class SPL_SSA {
 public:
-    SPL_SSA() = default;
+    SPL_SSA(SPL_IR* ir_): ir(ir_) {};
     ~SPL_SSA() {
         for(auto& node: nodeSet) {
             delete(node);
         }
     }
+
+    SPL_IR* ir;
     // CFG中所有的node集合
     std::vector<SSANode*> nodeSet;
 
@@ -55,10 +57,10 @@ public:
     std::set<int> phiBlock;
 
     // 每一个定义对应的所有使用的位置ins*
-    std::map<std::string, std::list<Instruction*>> duChain;
+    std::map<std::string, std::list<Instruction*>> nameUsageMap;
 
     // 每一个定义出现的位置ins*
-    std::vector<pair<std::string, Instruction*>> definition;
+    std::list<pair<std::string, Instruction*>> nameDefinitionMap;
 
     // 优化IR
     void OptimizeIR(std::vector<Instruction*>& ins);
@@ -99,7 +101,7 @@ public:
     void copyPropagation();
     void constantPropagation();
 
-    void outputPhiInstruction(std::string filename);
+    void outputInstruction(std::string filename);
     void outputDUChain();
     void outputIdom();
     void backToTAC(std::vector<Instruction*>& ins);
