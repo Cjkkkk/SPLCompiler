@@ -4,7 +4,27 @@
 
 #include "spl_IR.hpp"
 
-Operand* Operand::evalute(SPL_OP op, Operand* left, Operand* right) {
+bool compareValue(Operand* l, Operand* r) {
+    if(checkOperandType(l, INT)) {
+        return l->value.valInt == r->value.valInt;
+    }
+    if(checkOperandType(l, REAL)) {
+        return l->value.valDouble == r->value.valDouble;
+    }
+    if(checkOperandType(l, CHAR)) {
+        return l->value.valChar == r->value.valChar;
+    }
+    if(checkOperandType(l, BOOL)) {
+        return l->value.valBool == r->value.valBool;
+    }
+    if(checkOperandType(l, STRING)) {
+        return *l->value.valString == *r->value.valString;
+    }
+    return false;
+}
+
+
+Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
 //    name.clear();
     auto new_operand = new Operand();
     new_operand->cl = CONST;
@@ -194,6 +214,10 @@ void Instruction::output(ostream& s) {
 
 void PhiInstruction::addVariable(Operand* name, int index) {variableCluster.push_back({name, index});}
 void PhiInstruction::output(ostream& s) {
+    if(op == OP_ASSIGN) {
+        Instruction::output(s);
+        return;
+    }
     s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
     s << "(";
     for(auto it = variableCluster.begin() ; it != variableCluster.end() ; it++) {
@@ -209,8 +233,11 @@ std::list<pair<Operand*, int>>* PhiInstruction::getVariable() {return &variableC
 void SPL_IR::addInstruction(Instruction* ins) {
     if(!ins->label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
         // need a trivial goto
-        IR.push_back(new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins->label, LABEL)});
+        auto go = new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins->label, LABEL)};
+        go->unique_id = idCount++;
+        IR.push_back(go);
     }
+    ins->unique_id = idCount++;
     IR.push_back(ins);
 }
 
