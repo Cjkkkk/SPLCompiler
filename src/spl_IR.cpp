@@ -143,6 +143,7 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
 }
 
 
+
 void Instruction::output(ostream& s) {
     switch(op) {
         case PLUS_:
@@ -231,14 +232,15 @@ std::list<pair<Operand*, int>>* PhiInstruction::getVariable() {return &variableC
 
 
 void SPL_IR::addInstruction(Instruction* ins) {
-    if(!ins->label.empty() && !IR.empty() && getLastInstruction()->op != OP_GOTO) {
+    if(!ins->label.empty() && !getCurrentIR().empty()
+    && getLastInstruction()->op != OP_GOTO && getLastInstruction()->op != OP_RET) {
         // need a trivial goto
         auto go = new Instruction{"", OP_GOTO, nullptr, nullptr, new Operand(UNKNOWN, ins->label, LABEL)};
         go->unique_id = idCount++;
-        IR.push_back(go);
+        getCurrentIR().push_back(go);
     }
     ins->unique_id = idCount++;
-    IR.push_back(ins);
+    getCurrentIR().push_back(ins);
 }
 
 
@@ -252,11 +254,34 @@ Operand* SPL_IR::genLabel(){
     return new Operand(UNKNOWN, "L" + std::to_string(labelCount ++), LABEL);
 }
 
+unsigned int SPL_IR::getIdCount() {
+    return idCount ++ ;
+}
 
 void SPL_IR::decreaseTempCount(Operand* name) {
     //if(name[0] == '_') tempCount -= 1;
 }
 
 Instruction* SPL_IR::getLastInstruction() {
-    return IR.back();
+    return getCurrentIR().back();
+}
+
+vector<Instruction*>& SPL_IR::getCurrentIR() {
+    return IR[current];
+}
+
+vector<vector<Instruction*>>& SPL_IR::getIRSet() {
+    return IR;
+}
+
+void SPL_IR::backFill(Operand* operand, int index) {
+    IR[current][index]->res = operand;
+}
+
+void SPL_IR::setCurrent(int index) {
+    current = index;
+}
+
+int SPL_IR::getIRSize() {
+    return IR.size();
 }

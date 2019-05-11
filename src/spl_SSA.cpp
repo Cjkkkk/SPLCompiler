@@ -2,6 +2,7 @@
 #include "spl_exception.hpp"
 #include <set>
 #include <fstream>
+#include <algorithm>
 #include <queue>
 #include <stack>
 
@@ -23,8 +24,8 @@ void SPL_SSA::OptimizeIR() {
     // rename variable
     renameVariable();
 
-
-    outputInstruction("byte_code/origin.bc");
+    auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
+    outputInstruction(prefix +"origin.bc");
 
     // --------------------------------------------
     // output optimized IR
@@ -32,25 +33,25 @@ void SPL_SSA::OptimizeIR() {
 
 //    outputDUChain();
 
-    outputInstruction("byte_code/copy_propagation.bc");
+    outputInstruction(prefix + "copy_propagation.bc");
 
     constantPropagation();
 
-    outputInstruction("byte_code/const_propagation.bc");
+    outputInstruction(prefix + "const_propagation.bc");
 
     removeUnusedVariable();
 
-    outputInstruction("byte_code/remove_var.bc");
+    outputInstruction(prefix + "remove_var.bc");
 
-    backToTAC(ir->IR);
+    backToTAC(inss);
 
 
-    std::ofstream outfile;
-    outfile.open("byte_code/opt.bc", std::ios::out);
-    for(auto& instr:ir->IR) {
-        instr->output(outfile);
-    }
-    outfile.close();
+//    std::ofstream outfile;
+//    outfile.open("byte_code/opt.bc", std::ios::out);
+//    for(auto& instr:ir->IR) {
+//        instr->output(outfile);
+//    }
+//    outfile.close();
 
     // ---------------------------------------------
 //    outputIdom();
@@ -95,10 +96,9 @@ void SPL_SSA::backToTAC(std::vector<Instruction*>& ins){
         }
     }
 
-
-    unsigned int index = 0;
+    std::vector<Instruction*> temp;
     for(auto it = nodeSet.begin(); it != nodeSet.end() ; it++) {
-        ins[index++] = new Instruction{(*(*it)->label), OP_NULL, nullptr, nullptr, nullptr};
+        temp.push_back(new Instruction{(*(*it)->label), OP_NULL, nullptr, nullptr, nullptr});
         for(auto& instruction: (*it)->instruSet) {
             if(instruction->op == OP_GOTO) {
                 if(it + 1 != nodeSet.end() && *((*(it + 1))->label) == instruction->res->name) continue;
@@ -107,10 +107,12 @@ void SPL_SSA::backToTAC(std::vector<Instruction*>& ins){
             removeSubScript(instruction->arg1);
             removeSubScript(instruction->arg2);
             removeSubScript(instruction->res);
-            ins[index++] = instruction;
+            temp.push_back(instruction);
+//            ins[index++] = instruction;
         }
     }
-    ins.resize(index);
+    std::copy(temp.begin(), temp.end(), ins.begin());
+    ins.resize(temp.size());
 }
 
 
@@ -132,7 +134,7 @@ void SPL_SSA::generateDF() {
 
 void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
-    for(Instruction* ins : ir->IR){
+    for(Instruction* ins : inss){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
             auto it = variableListBlock.find(ins->res->name);
 
@@ -179,7 +181,7 @@ void SPL_SSA::generateCFG() {
 void SPL_SSA::insertPhi(int nodeIndex, const string& variableName) {
     auto it = nodeSet[nodeIndex]->instruSet.begin();
     auto phi = new PhiInstruction{new Operand(UNKNOWN, variableName, VAR)};
-    phi->unique_id = ir->idCount ++;
+    phi->unique_id = ir->getIdCount();
     nodeSet[nodeIndex]->instruSet.insert(it, phi);
 
     // 更新有定义phi函数的node的index
@@ -251,9 +253,14 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
                 return;
             } else {
                 // 向上寻找
+                auto pre = index;
                 index = nodeSet[index]->idom;
+                if(pre == index) {
+                    //root
+                    return;
+                }
             }
-        } while (index > 0);
+        } while (index >= 0);
     }
 }
 
@@ -351,7 +358,7 @@ void SPL_SSA::computeIdom(int index, std::vector<SSANode*>& nodeSet){
     auto current = nodeSet[index];
     if(current->idom != -1) return; // 已经算出来了
     if(current->parentSet.empty()) {
-        current->idom = index;
+        current->idom = 0;
         return; // 根节点没有idom
     }
     if(current->parentSet.size() == 1) {

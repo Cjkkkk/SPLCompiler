@@ -50,7 +50,9 @@ void propagateAlongDuchain(std::list<Instruction*>& usage,
         }
 
         if(use_or_not) {
-            if( ! checkOperandClass(res, CONST) ) copy_usage->push_back(*use);
+            if( ! checkOperandClass(res, CONST) ) {
+                copy_usage->push_back(*use);
+            }
             // 从DU hain中删除使用记录
             use = usage.erase(use);
             -- use;
@@ -69,7 +71,7 @@ void eraseAlongDuChain(
     for(auto it = use_list.begin() ; it != use_list.end(); it ++) {
         if((*it)->unique_id == id) {
             // 删除
-            use_list.erase(it);
+            it = use_list.erase(it);
             break;
         }
     }
@@ -209,6 +211,7 @@ void SPL_SSA::removeUnusedVariable() {
 
         if(checkInstructionOp(def, OP_PHI)) {
             for(auto& var: *(def->getVariable())) {
+                if(checkOperandClass(var.first, CONST)) continue;
                 eraseAlongDuChain(nameUsageMap, unusable, var.first->name, def->unique_id);
             }
             continue;

@@ -93,24 +93,32 @@ public:
 
 class SPL_IR {
 public:
-    SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0), idCount(0){}
+    SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0), idCount(0), current(0){}
     SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
 
+
+    void setCurrent(int index);
     void addInstruction(Instruction* ins);
-
-    Operand* genTempVariable(SPL_TYPE type) ;
-
-    void decreaseTempCount(Operand* name);
-
+    void backFill(Operand* operand, int index);
+    vector<Instruction*>& getCurrentIR();
+    vector<vector<Instruction*>>& getIRSet();
     Instruction* getLastInstruction() ;
 
+    Operand* genTempVariable(SPL_TYPE type);
     Operand* genLabel();
+    unsigned int getIdCount();
 
-    std::vector<Instruction*> IR;
+    int getIRSize();
+
+    void decreaseTempCount(Operand* name);
     SymbolTable* symbolTable;
+
+private:
+    std::vector<vector<Instruction*>> IR;
     unsigned int tempCount;
     unsigned int labelCount;
     unsigned int idCount;
+    unsigned int current;
 };
 
 

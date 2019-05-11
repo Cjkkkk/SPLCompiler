@@ -26,7 +26,7 @@ namespace SPL
 class SPL_Driver
 {
   public:
-    SPL_Driver() : ir(&symtab), ssa_ir(&ir), code_gen(&ir.IR){};
+    SPL_Driver() : ir(&symtab), code_gen(&ir){};
 
     virtual ~SPL_Driver();
 
@@ -50,7 +50,6 @@ class SPL_Driver
   private:
     void parse_helper(std::istream &stream);
     SPL_IR ir;
-    SPL_SSA ssa_ir;
     SPL_CodeGen code_gen;
     SPL::SPL_Parser *parser = nullptr;
     SPL::SPL_Scanner *scanner = nullptr;

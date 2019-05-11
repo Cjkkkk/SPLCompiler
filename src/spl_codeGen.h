@@ -10,10 +10,10 @@
 #include "spl_IR.hpp"
 class SPL_CodeGen {
 public:
-    SPL_CodeGen( std::vector<Instruction*>* ir_): ir(ir_){};
+    explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){};
     void GenerateMachineCode(){};
     std::map<std::string, int> name_to_memory;
-    std::vector<Instruction*>* ir;
+    SPL_IR* ir;
 };
 
 
