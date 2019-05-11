@@ -63,10 +63,9 @@ public:
     std::list<pair<std::string, Instruction*>> nameDefinitionMap;
 
     // 优化IR
-    void OptimizeIR(std::vector<Instruction*>& ins);
+    void OptimizeIR();
 
-    void genCFGNode(std::vector<Instruction*>& ins);
-
+    void genCFGNode();
 
     // 生成CFG
     void generateCFG();

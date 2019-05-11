@@ -5,8 +5,8 @@
 #include <queue>
 #include <stack>
 
-void SPL_SSA::OptimizeIR(std::vector<Instruction*>& ins) {
-    genCFGNode(ins);
+void SPL_SSA::OptimizeIR() {
+    genCFGNode();
 
     // generate CFG
     generateCFG();
@@ -42,12 +42,12 @@ void SPL_SSA::OptimizeIR(std::vector<Instruction*>& ins) {
 
     outputInstruction("byte_code/remove_var.bc");
 
-    backToTAC(ins);
+    backToTAC(ir->IR);
 
 
     std::ofstream outfile;
     outfile.open("byte_code/opt.bc", std::ios::out);
-    for(auto& instr:ins) {
+    for(auto& instr:ir->IR) {
         instr->output(outfile);
     }
     outfile.close();
@@ -130,9 +130,9 @@ void SPL_SSA::generateDF() {
 
 
 
-void SPL_SSA::genCFGNode(std::vector<Instruction*> &insSet) {
+void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
-    for(Instruction* ins : insSet){
+    for(Instruction* ins : ir->IR){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
             auto it = variableListBlock.find(ins->res->name);
 

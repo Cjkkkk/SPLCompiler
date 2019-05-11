@@ -102,5 +102,9 @@ void SPL::SPL_Driver::emitIR() {
 
 
 void SPL::SPL_Driver::optimizeIR() {
-    ssaIr.OptimizeIR(ir.IR);
+    ssa_ir.OptimizeIR();
+}
+
+void SPL::SPL_Driver::codeGen() {
+    code_gen.GenerateMachineCode();
 }
