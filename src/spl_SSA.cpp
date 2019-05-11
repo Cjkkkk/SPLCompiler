@@ -53,7 +53,7 @@ void SPL_SSA::OptimizeIR() {
 //    }
 //    outfile.close();
 
-    // ---------------------------------------------
+// ---------------------------------------------
 //    outputIdom();
 //
 //    outputDUChain();
@@ -69,6 +69,9 @@ void removeSubScript(Operand* var) {
 bool isSameVariable(Operand* a, Operand* b) {
     auto a_pos = a->name.rfind('.');
     auto b_pos = b->name.rfind('.');
+    if(a_pos == std::string::npos || b_pos == std::string::npos) {
+        throw invalid_argument{"debug info > isSameVariable expect var.\n"};
+    }
     return a->name.substr(0, a_pos) == b->name.substr(0, b_pos);
 }
 
@@ -169,8 +172,11 @@ void SPL_SSA::generateCFG() {
     for(auto& node : nodeSet) {
         auto currentNodeOffset = &node - &nodeSet[0];
         for(auto& label : node->LabelSet) {
-            int offset = labelIndexMap.find(*label)->second; // 找到子女的label对应的offset
-//            node->childSet.push_back(offset); // child set
+            auto it = labelIndexMap.find(*label);
+            if(it == labelIndexMap.end()) {
+                throw invalid_argument{"debug info > generateCFG encounter a non exist label."};
+            }
+            int offset = it->second; // 找到子女的label对应的offset
             nodeSet[offset]->parentSet.push_back(static_cast<int>(currentNodeOffset)); // parent set
         }
     }
@@ -237,8 +243,10 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
                           Instruction* ins) {
     if(checkOperandClass(operand, TEMP)) {
         auto it = nameUsageMap.find(operand->name);
-        if(it == nameUsageMap.end())
+        if(it == nameUsageMap.end()){
+            throw invalid_argument{"debug info> can not find a temp variable definition in updateUsage method."};
             return;
+        }
         else {
             it->second.push_back(ins);
         }
@@ -257,6 +265,7 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
                 index = nodeSet[index]->idom;
                 if(pre == index) {
                     //root
+                    throw invalid_argument{"debug info > can not find a real variable definition in updateUsage method."};
                     return;
                 }
             }
@@ -276,7 +285,12 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
         nameDefinitionMap.push_back({operand->name, ins});
 
     } else if(checkOperandClass(operand, VAR)) {
+
         auto it = currentDef.find(operand->name); // 更新定义
+
+        if(it == currentDef.end()) {
+            throw invalid_argument{"debug info > can not find a variable definition in updateDefinition method."};
+        }
         auto it1 = closestDef[nodeIndex].find(operand->name);
 
         if(it1 == closestDef[nodeIndex].end()) {
