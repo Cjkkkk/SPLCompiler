@@ -43,7 +43,7 @@ void SPL_SSA::OptimizeIR() {
 
     outputInstruction(prefix + "remove_var.bc");
 
-    backToTAC(inss);
+    backToTAC(insSet);
 
 
 //    std::ofstream outfile;
@@ -137,7 +137,7 @@ void SPL_SSA::generateDF() {
 
 void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
-    for(Instruction* ins : inss){
+    for(Instruction* ins : insSet){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
             auto it = variableListBlock.find(ins->res->name);
 

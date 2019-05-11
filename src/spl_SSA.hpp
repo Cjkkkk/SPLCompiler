@@ -35,14 +35,14 @@ public:
 };
 class SPL_SSA {
 public:
-    SPL_SSA(vector<Instruction*>& ins_, SPL_IR* ir_): inss(ins_), ir(ir_) {};
+    SPL_SSA(vector<Instruction*>& ins_, SPL_IR* ir_): insSet(ins_), ir(ir_) {};
     ~SPL_SSA() {
         for(auto& node: nodeSet) {
             delete(node);
         }
     }
 
-    vector<Instruction*>& inss;
+    vector<Instruction*>& insSet;
     SPL_IR* ir;
     // CFG中所有的node集合
     std::vector<SSANode*> nodeSet;

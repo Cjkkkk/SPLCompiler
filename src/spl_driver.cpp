@@ -104,7 +104,7 @@ void SPL::SPL_Driver::emitIR() {
 
 
 void SPL::SPL_Driver::optimizeIR() {
-    for(auto index = 0 ; index < ir.getIRSize() ; index ++) {
+    for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
         ir.setCurrent(index);
         SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
         ssa_ir.OptimizeIR();

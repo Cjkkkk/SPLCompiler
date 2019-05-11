@@ -278,10 +278,10 @@ void SPL_IR::backFill(Operand* operand, int index) {
     IR[current][index]->res = operand;
 }
 
-void SPL_IR::setCurrent(int index) {
+void SPL_IR::setCurrent(unsigned int index) {
     current = index;
 }
 
-int SPL_IR::getIRSize() {
+int SPL_IR::getIRSetSize() {
     return IR.size();
 }
