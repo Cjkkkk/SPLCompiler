@@ -110,13 +110,13 @@ git commit -m"ADD new class"
 * control flow graph [done]
 * SSA [done]
 
-* constant propagation
-* copy propagation
-* dead code elimination (copy propagation can help)
+* constant propagation [done]
+* copy propagation [done]
+* dead code elimination (copy propagation can help) [done]
 * common subexpression
 
 ### code generation
-* x86
+* x86 NASM
 
 ## useful link
 ### IR optimization
