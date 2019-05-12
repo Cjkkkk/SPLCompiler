@@ -33,10 +33,7 @@ begin
     z := y;
 
 	while x > 0 do begin
-	    if x < 1 then
-            x := 4
-        else
-            x := 4;
+	    x := 4;
 	end;
     write(x);
 end

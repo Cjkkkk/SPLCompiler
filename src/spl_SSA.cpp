@@ -145,22 +145,22 @@ void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
 
     // 返回当前作用域能访问到的所有变量与常量
-//    auto index = ir->symbolTable->getCurrentScopeIndex();
-//
-//    while(ir->symbolTable->getCurrentScopeIndex() >= 0) {
-//        auto symVec = ir->symbolTable->getVariableByScopeIndex();
-//        for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
-//            if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
-//                variableListBlock.insert(
-//                        {std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first, {}});
-//            }
-//        }
-//        if(ir->symbolTable->getCurrentScopeIndex() == 0) break;
-//        ir->symbolTable->setToPrevScopeIndex();
-//    }
-//    // 重置ScopeIndex为当前index
-//
-//    ir->symbolTable->setCurrentScopeIndex(index);
+    auto index = ir->symbolTable->getCurrentScopeIndex();
+
+    while(ir->symbolTable->getCurrentScopeIndex() >= 0) {
+        auto symVec = ir->symbolTable->getVariableByScopeIndex();
+        for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
+            if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
+                variableListBlock.insert(
+                        {std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first, {}});
+            }
+        }
+        if(ir->symbolTable->getCurrentScopeIndex() == 0) break;
+        ir->symbolTable->setToPrevScopeIndex();
+    }
+    // 重置ScopeIndex为当前index
+
+    ir->symbolTable->setCurrentScopeIndex(index);
 
     for(Instruction* ins : insSet){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
@@ -193,6 +193,19 @@ void SPL_SSA::genCFGNode() {
         } else {current->instruSet.push_back(ins);}
     }
 
+
+
+    // 初始化closestDef
+    for(auto i = 0 ; i < nodeSet.size() ; i ++) {
+        closestDef.push_back({});
+    }
+
+    for( auto& var: variableListBlock ) {
+        closestDef[0].insert({var.first, 0});
+        currentDef.insert({var.first, 1});
+        nameUsageMap.insert({var.first + ".0", {}});
+    }
+
 //    for(auto var: variableListBlock){
 //        std::cout << var.first << "\n";
 //        for(auto pos: var.second) {
@@ -200,7 +213,7 @@ void SPL_SSA::genCFGNode() {
 //        }
 //        std::cout << "\n";
 //    }
-//    std::cout << "--------------";
+//    std::cout << "--------------\n";
 }
 
 
@@ -276,6 +289,7 @@ void addVersionToVariable(std::string& variable, int version) {
 void SPL_SSA::updateUsage(Operand* operand,
                           int& nodeIndex,
                           Instruction* ins) {
+
     if(checkOperandClass(operand, TEMP)) {
         auto it = nameUsageMap.find(operand->name);
         if(it == nameUsageMap.end()){
@@ -292,7 +306,11 @@ void SPL_SSA::updateUsage(Operand* operand,
             if(it != closestDef[index].end()) {
                 addVersionToVariable(operand->name, it->second);
                 // 添加u-d链指针
-                nameUsageMap.find(operand->name)->second.push_back(ins);
+                auto du_it = nameUsageMap.find(operand->name);
+                if(du_it == nameUsageMap.end()) {
+                    throw invalid_argument{"debug info > can not find a real variable definition in usageNameMap method."};
+                }
+                du_it->second.push_back(ins);
                 return;
             } else {
                 // 向上寻找
@@ -346,14 +364,12 @@ void SPL_SSA::renameVariable() {
 
 
     for(auto& pair : variableListBlock) {
+        if(currentDef.find(pair.first) == currentDef.end()) continue;
         currentDef.insert({pair.first, 0});
+        closestDef[0].insert({pair.first, 0});
     }
 
-    // 定义最近的def的位置
-    for(auto i = 0 ; i < nodeSet.size() ; i ++) {
-        closestDef.push_back({});
-    }
-    closestDef[0] = currentDef;
+
     // 遍历D tree
     while(!walkDTree.empty()) {
         int index = walkDTree.front();
@@ -375,6 +391,15 @@ void SPL_SSA::renameVariable() {
         }
     }
 
+
+//    for(auto &node : nodeSet) {
+//        std::cout << *node->label << "\n";
+//        for(auto ins : node->instruSet) {
+//            ins->output(std::cout);
+//            //ins->output(outfile);
+//        }
+//
+//    }
 
     // 重新命名phi变量的参数()
     for(const int& nodeIndex : phiBlock) {
