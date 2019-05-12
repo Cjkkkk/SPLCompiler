@@ -282,6 +282,10 @@ void SPL_IR::setCurrent(unsigned int index) {
     current = index;
 }
 
+void SPL_IR::setToMain(){
+    current= getIRSetSize() - 1;
+}
+
 int SPL_IR::getIRSetSize() {
     return IR.size();
 }
