@@ -208,7 +208,6 @@ void SPL_SSA::removeUnusedVariable() {
         if(it == m.end()) {
             // 不在该作用域的变量没有nameDefinitionMap 所以自然也无法删除了
             continue;
-            throw invalid_argument{"debug info > spl opt error." + current};
         }
         Instruction* def = it->second;
 

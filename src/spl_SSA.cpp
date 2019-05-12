@@ -151,8 +151,12 @@ void SPL_SSA::genCFGNode() {
         auto symVec = ir->symbolTable->getVariableByScopeIndex();
         for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
             if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
+                auto var = std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first;
                 variableListBlock.insert(
-                        {std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first, {}});
+                        {var, {}});
+
+                currentDef.insert({var, 1});
+                nameUsageMap.insert({var + ".0", {}});
             }
         }
         if(ir->symbolTable->getCurrentScopeIndex() == 0) break;
@@ -193,18 +197,6 @@ void SPL_SSA::genCFGNode() {
         } else {current->instruSet.push_back(ins);}
     }
 
-
-
-    // 初始化closestDef
-    for(auto i = 0 ; i < nodeSet.size() ; i ++) {
-        closestDef.push_back({});
-    }
-
-    for( auto& var: variableListBlock ) {
-        closestDef[0].insert({var.first, 0});
-        currentDef.insert({var.first, 1});
-        nameUsageMap.insert({var.first + ".0", {}});
-    }
 
 //    for(auto var: variableListBlock){
 //        std::cout << var.first << "\n";
@@ -363,9 +355,12 @@ void SPL_SSA::renameVariable() {
     walkDTree.push(0);
 
 
+    closestDef.resize(nodeSet.size());
+
     for(auto& pair : variableListBlock) {
-        if(currentDef.find(pair.first) == currentDef.end()) continue;
-        currentDef.insert({pair.first, 0});
+        if(currentDef.find(pair.first) != currentDef.end()) {
+            currentDef.insert({pair.first, 0});
+        }
         closestDef[0].insert({pair.first, 0});
     }
 

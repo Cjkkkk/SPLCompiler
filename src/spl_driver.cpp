@@ -116,7 +116,7 @@ void SPL::SPL_Driver::optimizeIR() {
 
         SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
         ssa_ir.OptimizeIR();
-        //ssa_ir.printIR(outfile);
+        ssa_ir.printIR(outfile);
     }
     outfile.close();
 }
