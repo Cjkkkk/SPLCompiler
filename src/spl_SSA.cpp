@@ -59,6 +59,12 @@ void SPL_SSA::OptimizeIR() {
 //    outputDUChain();
 }
 
+void SPL_SSA::printIR(ostream& s) {
+    for(auto& ins:insSet) {
+        ins->output(s);
+    }
+}
+
 void removeSubScript(Operand* var) {
     if(var && checkOperandClass(var, VAR)) {
         auto pos = var->name.rfind('.');
@@ -237,7 +243,7 @@ void addVersionToVariable(std::string& variable, int version) {
 }
 
 
-void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
+void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& closestDef,
                           Operand* operand,
                           int& nodeIndex,
                           Instruction* ins) {
@@ -253,8 +259,8 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
     } else if(checkOperandClass(operand, VAR)) {
         int index = nodeIndex;
         do {
-            auto it = def[index].find(operand->name);
-            if(it != def[index].end()) {
+            auto it = closestDef[index].find(operand->name);
+            if(it != closestDef[index].end()) {
                 addVersionToVariable(operand->name, it->second);
                 // 添加u-d链指针
                 nameUsageMap.find(operand->name)->second.push_back(ins);
@@ -265,6 +271,11 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
                 index = nodeSet[index]->idom;
                 if(pre == index) {
                     //root
+//                    addVersionToVariable(operand->name, 0);
+//                    auto it = nameUsageMap.find(operand->name);
+//                    if(it == nameUsageMap.end()) {
+//
+//                    }
                     throw invalid_argument{"debug info > can not find a real variable definition in updateUsage method."};
                     return;
                 }

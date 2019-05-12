@@ -105,6 +105,8 @@ public:
     void outputDUChain();
     void outputIdom();
     void backToTAC(std::vector<Instruction*>& ins);
+
+    void printIR(ostream& s);
 };
 
 

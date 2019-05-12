@@ -104,11 +104,15 @@ void SPL::SPL_Driver::emitIR() {
 
 
 void SPL::SPL_Driver::optimizeIR() {
+    std::ofstream outfile;
+    outfile.open("byte_code/opt.bc", std::ios::out);
     for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
         ir.setCurrent(index);
         SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
         ssa_ir.OptimizeIR();
+        ssa_ir.printIR(outfile);
     }
+    outfile.close();
 }
 
 void SPL::SPL_Driver::codeGen() {

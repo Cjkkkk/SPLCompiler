@@ -3,3 +3,7 @@
 //
 
 #include "spl_codeGen.h"
+
+void SPL_CodeGen::GenerateMachineCode() {
+
+}
