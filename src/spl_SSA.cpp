@@ -143,6 +143,25 @@ void SPL_SSA::generateDF() {
 
 void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
+
+    // 返回当前作用域能访问到的所有变量与常量
+//    auto index = ir->symbolTable->getCurrentScopeIndex();
+//
+//    while(ir->symbolTable->getCurrentScopeIndex() >= 0) {
+//        auto symVec = ir->symbolTable->getVariableByScopeIndex();
+//        for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
+//            if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
+//                variableListBlock.insert(
+//                        {std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first, {}});
+//            }
+//        }
+//        if(ir->symbolTable->getCurrentScopeIndex() == 0) break;
+//        ir->symbolTable->setToPrevScopeIndex();
+//    }
+//    // 重置ScopeIndex为当前index
+//
+//    ir->symbolTable->setCurrentScopeIndex(index);
+
     for(Instruction* ins : insSet){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
             auto it = variableListBlock.find(ins->res->name);
@@ -158,11 +177,13 @@ void SPL_SSA::genCFGNode() {
         }
             // 开始新的node
         else if(!ins->label.empty()) {
+
             auto newNode = new SSANode();
             current = newNode;
             nodeSet.push_back(newNode);
             current->label = &ins->label;
             labelIndexMap.insert({*current->label, nodeSet.size() - 1});
+
         } else if (checkInstructionOp(ins, OP_IF)
         || checkInstructionOp(ins, OP_IF_Z) || checkInstructionOp(ins, OP_GOTO)) {
             // 添加子节点
@@ -171,6 +192,15 @@ void SPL_SSA::genCFGNode() {
             current->instruSet.push_back(ins);
         } else {current->instruSet.push_back(ins);}
     }
+
+//    for(auto var: variableListBlock){
+//        std::cout << var.first << "\n";
+//        for(auto pos: var.second) {
+//            std::cout << pos << " ";
+//        }
+//        std::cout << "\n";
+//    }
+//    std::cout << "--------------";
 }
 
 

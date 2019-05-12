@@ -90,6 +90,7 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 
 void SPL::SPL_Driver::emitIR() {
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
+        // 设定当前处理的哪个函数的IR
         ir.setCurrent(index);
         ir.getIRSet().push_back({});
         AST* func = astmng.functions->at(index);
@@ -108,6 +109,10 @@ void SPL::SPL_Driver::optimizeIR() {
     outfile.open("byte_code/opt.bc", std::ios::out);
     for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
         ir.setCurrent(index);
+        unsigned int scopeIndex = astmng.scopes->at(index);
+        // 设置作用域
+        ir.symbolTable->setCurrentScopeIndex(scopeIndex);
+
         SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
         ssa_ir.OptimizeIR();
         ssa_ir.printIR(outfile);

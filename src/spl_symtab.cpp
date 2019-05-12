@@ -34,6 +34,14 @@ SymbolTable::~SymbolTable()
     // popScope();
 }
 
+
+SymbolMapType * SymbolTable::getVariableByScopeIndex() {
+    if ( currentScopeIndex >= variables.size() ) {
+        std::cout << currentScopeIndex << " " << variables.size();
+        throw invalid_argument{"debug info > scopeIndex out of range."};
+    }
+    return variables[currentScopeIndex];
+}
 void SymbolTable::pushScope(const std::string &scopeName)
 {
     unsigned int newScopeIndex = variables.size();
