@@ -7,17 +7,22 @@
 
 void SPL_CodeGen::GenerateMachineCode() {
     ir->setToMain();
-    writeGlobal();
-    writeText();
+    writeDirectives();
+    writeSectionText();
     for(auto index = ir->getIRSetSize() - 1; index >= 0 ; index--) {
         ir->setCurrent(index);
     }
+    writeSectionData();
 }
 
-void SPL_CodeGen::writeGlobal() {
-    outfile << "\t.global " << ir->getCurrentIR()[0]->label << endl;
+void SPL_CodeGen::writeDirectives() {
+    outfile << "\tglobal\t" << ir->getCurrentIR()[0]->label << endl;
 }
 
-void SPL_CodeGen::writeText() {
-    outfile<< "\t.text" << endl;
+void SPL_CodeGen::writeSectionText() {
+    outfile<< "\tsection\t.text" << endl;
+}
+
+void SPL_CodeGen::writeSectionData() {
+    outfile<< "\tsection\t.data" << endl;
 }

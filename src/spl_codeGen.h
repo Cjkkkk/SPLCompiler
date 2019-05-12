@@ -20,8 +20,11 @@ public:
     }
     void GenerateMachineCode();
 
-    void writeGlobal();
-    void writeText();
+    void writeDirectives();
+
+    void writeSectionText();
+
+    void writeSectionData();
 
 
     std::map<std::string, int> name_to_memory;
