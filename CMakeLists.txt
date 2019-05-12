@@ -20,7 +20,7 @@ add_executable(SPLCompiler
         src/spl_driver.cpp
         ${FLEX_lexer_OUTPUTS}
         ${BISON_parser_OUTPUTS}
-        src/spl_ast.cpp src/spl_symtab.cpp src/spl_compiler.cpp src/spl_exception.cpp src/spl_exception.hpp src/consoleColor.hpp src/SPL_IR.cpp src/SPL_IR.hpp src/spl_SSA.cpp src/spl_SSA.hpp src/spl_codeGen.cpp src/spl_codeGen.h src/SPL_OPT.cpp)
+        src/spl_ast.cpp src/spl_symtab.cpp src/spl_compiler.cpp src/spl_exception.cpp src/spl_exception.hpp src/consoleColor.hpp src/SPL_IR.cpp src/SPL_IR.hpp src/spl_SSA.cpp src/spl_SSA.hpp src/spl_codeGen.cpp src/spl_codeGen.h src/spl_opt.cpp)
 
 add_subdirectory(test)
 

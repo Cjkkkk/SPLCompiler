@@ -26,7 +26,12 @@ int main(int argc, char *argv[])
 
             // emit IR
             driver.emitIR();
+
+            // opt IR
             driver.optimizeIR();
+
+            // code Gen
+            driver.codeGen();
         }
         catch (splException &e)
         {

@@ -93,24 +93,47 @@ public:
 
 class SPL_IR {
 public:
-    SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0), idCount(0){}
-    SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0){}
+    explicit SPL_IR(SymbolTable* table):symbolTable(table), tempCount(0), labelCount(0), idCount(0), current(0){}
+    SPL_IR():symbolTable(nullptr), tempCount(0), labelCount(0), idCount(0), current(0){}
 
+    // 设置当前中间代码的存放位置
+    void setCurrent(unsigned int index);
+
+    // 添加一条中间代码
     void addInstruction(Instruction* ins);
 
-    Operand* genTempVariable(SPL_TYPE type) ;
+    // 回填技术
+    void backFill(Operand* operand, int index);
 
-    void decreaseTempCount(Operand* name);
+    // 一些访问私有变量的函数
+    vector<Instruction*>& getCurrentIR();
+
+    vector<vector<Instruction*>>& getIRSet();
 
     Instruction* getLastInstruction() ;
 
+    // 生成临时变量
+    Operand* genTempVariable(SPL_TYPE type);
+
+    // 生成标签
     Operand* genLabel();
 
-    std::vector<Instruction*> IR;
+    //为每一条指令生成唯一id用于指令的对比
+    unsigned int getIdCount();
+
+    // 获取有多少个IRSet的大小
+    int getIRSetSize();
+
+    void decreaseTempCount(Operand* name);
+
     SymbolTable* symbolTable;
+
+private:
+    std::vector<vector<Instruction*>> IR;
     unsigned int tempCount;
     unsigned int labelCount;
     unsigned int idCount;
+    unsigned int current;
 };
 
 

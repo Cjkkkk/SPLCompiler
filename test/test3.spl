@@ -1,9 +1,27 @@
 program test;
 var
-    m : integer;
 	x : integer;
     y : integer;
     z : integer;
+
+procedure findMin(x, y, z: integer; var m: integer);
+begin
+   x := 3;
+   y := 4;
+   z := 5;
+   m := 6;
+
+    x := x * 4;
+   if x < y then
+      m := x
+   else
+      m := y;
+
+   if z < m then
+      m := z;
+end
+;
+
 begin
     x := 4 + 5 * 6;
     y := x;

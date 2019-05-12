@@ -19,12 +19,14 @@
 #include "spl_scanner.hpp"
 #include "spl_IR.hpp"
 #include "spl_SSA.hpp"
+#include "spl_codeGen.h"
+
 namespace SPL
 {
 class SPL_Driver
 {
   public:
-    SPL_Driver() : ir(&symtab), ssaIr(&ir){};
+    SPL_Driver() : ir(&symtab), code_gen(&ir){};
 
     virtual ~SPL_Driver();
 
@@ -42,12 +44,13 @@ class SPL_Driver
     std::ostream &print(std::ostream &stream);
     void emitIR();
     void optimizeIR();
+    void codeGen();
     SymbolTable symtab;
     AST_Manager astmng;
   private:
     void parse_helper(std::istream &stream);
     SPL_IR ir;
-    SPL_SSA ssaIr;
+    SPL_CodeGen code_gen;
     SPL::SPL_Parser *parser = nullptr;
     SPL::SPL_Scanner *scanner = nullptr;
 };

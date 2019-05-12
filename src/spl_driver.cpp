@@ -90,6 +90,8 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 
 void SPL::SPL_Driver::emitIR() {
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
+        ir.setCurrent(index);
+        ir.getIRSet().push_back({});
         AST* func = astmng.functions->at(index);
         unsigned int scopeIndex = astmng.scopes->at(index);
         // 设置作用域
@@ -102,5 +104,13 @@ void SPL::SPL_Driver::emitIR() {
 
 
 void SPL::SPL_Driver::optimizeIR() {
-    ssaIr.OptimizeIR(ir.IR);
+    for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
+        ir.setCurrent(index);
+        SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
+        ssa_ir.OptimizeIR();
+    }
+}
+
+void SPL::SPL_Driver::codeGen() {
+    code_gen.GenerateMachineCode();
 }

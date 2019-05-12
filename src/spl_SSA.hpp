@@ -35,13 +35,14 @@ public:
 };
 class SPL_SSA {
 public:
-    SPL_SSA(SPL_IR* ir_): ir(ir_) {};
+    SPL_SSA(vector<Instruction*>& ins_, SPL_IR* ir_): insSet(ins_), ir(ir_) {};
     ~SPL_SSA() {
         for(auto& node: nodeSet) {
             delete(node);
         }
     }
 
+    vector<Instruction*>& insSet;
     SPL_IR* ir;
     // CFG中所有的node集合
     std::vector<SSANode*> nodeSet;
@@ -63,10 +64,9 @@ public:
     std::list<pair<std::string, Instruction*>> nameDefinitionMap;
 
     // 优化IR
-    void OptimizeIR(std::vector<Instruction*>& ins);
+    void OptimizeIR();
 
-    void genCFGNode(std::vector<Instruction*>& ins);
-
+    void genCFGNode();
 
     // 生成CFG
     void generateCFG();

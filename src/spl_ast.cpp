@@ -305,7 +305,7 @@ void AST_If::emit(SPL_IR* ir){
     auto ifLabel = ir->genLabel();
     auto elseLabel = ir->genLabel();
 
-    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->tempVariable, nullptr, elseLabel});
+    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->getTempVariable(), nullptr, elseLabel});
     // if 开始
     ir->addInstruction(new Instruction{ifLabel->name, OP_NULL, nullptr, nullptr, nullptr});
 
@@ -313,7 +313,7 @@ void AST_If::emit(SPL_IR* ir){
 
     ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr, nullptr}); // if结束跳到exit
 
-    auto indexOfGoto = ir->IR.size() - 1;
+    auto indexOfGoto = ir->getCurrentIR().size() - 1;
 
     ir->addInstruction(new Instruction{elseLabel->name , OP_NULL, nullptr, nullptr, nullptr}); // else标签
 
@@ -323,7 +323,7 @@ void AST_If::emit(SPL_IR* ir){
 
     auto exitLabel = ir->genLabel();
 
-    ir->IR[indexOfGoto]->res = exitLabel;
+    ir->backFill(exitLabel, indexOfGoto);
 
     ir->addInstruction(new Instruction{exitLabel->name, OP_NULL, nullptr, nullptr, nullptr}); // exit标签
 
@@ -355,13 +355,13 @@ void AST_While::emit(SPL_IR* ir){
 
 
     ir->addInstruction(new Instruction{"", OP_IF_Z, cond->tempVariable, nullptr , nullptr});
-    auto indexOfGoto = ir->IR.size() - 1;
+    auto indexOfGoto = ir->getCurrentIR().size() - 1;
     ir->addInstruction(new Instruction{stmtLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // trival label
 
     stmt->emit(ir);
 
     auto exitLabel = ir->genLabel();
-    ir->IR[indexOfGoto]->res = exitLabel;
+    ir->backFill(exitLabel, indexOfGoto);
     ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr,whileLabel}); // if结束跳到exit
 
     ir->addInstruction(new Instruction{exitLabel->name , OP_NULL, nullptr, nullptr , nullptr}); // exit标签
@@ -434,7 +434,7 @@ void AST_For::emit(SPL_IR* ir) {
     ir->addInstruction(new Instruction{"", op, init->tempVariable, fin->tempVariable, temp});
     //判断失败则直接跳到exitLabel
     ir->addInstruction(new Instruction{"", OP_IF_Z, temp, nullptr, nullptr});
-    auto indexOfGoto = ir->IR.size() - 1;
+    auto indexOfGoto = ir->getCurrentIR().size() - 1;
 
     ir->addInstruction(new Instruction{ifLabel->name, OP_NULL,nullptr, nullptr , nullptr});// trival goto
     // 生成判断成功需要执行的代码
@@ -447,7 +447,7 @@ void AST_For::emit(SPL_IR* ir) {
     ir->addInstruction(new Instruction{"", OP_GOTO, nullptr, nullptr , forLabel});
     // 添加exitLabel
     auto exitLabel = ir ->genLabel();
-    ir->IR[indexOfGoto]->res = exitLabel;
+    ir->backFill(exitLabel, indexOfGoto);
     ir->addInstruction(new Instruction{exitLabel->name, OP_NULL, nullptr, nullptr , nullptr});
 
 }
