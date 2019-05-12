@@ -11,6 +11,7 @@ void SPL_CodeGen::GenerateMachineCode() {
     writeSectionText();
     for(auto index = ir->getIRSetSize() - 1; index >= 0 ; index--) {
         ir->setCurrent(index);
+        writeSectionTextSubroutine();
     }
     writeSectionData();
 }
@@ -25,4 +26,8 @@ void SPL_CodeGen::writeSectionText() {
 
 void SPL_CodeGen::writeSectionData() {
     outfile<< "\tsection\t.data" << endl;
+}
+
+void SPL_CodeGen::writeSectionTextSubroutine() {
+
 }

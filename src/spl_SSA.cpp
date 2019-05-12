@@ -243,8 +243,7 @@ void addVersionToVariable(std::string& variable, int version) {
 }
 
 
-void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& closestDef,
-                          Operand* operand,
+void SPL_SSA::updateUsage(Operand* operand,
                           int& nodeIndex,
                           Instruction* ins) {
     if(checkOperandClass(operand, TEMP)) {
@@ -271,11 +270,6 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& closestDef,
                 index = nodeSet[index]->idom;
                 if(pre == index) {
                     //root
-//                    addVersionToVariable(operand->name, 0);
-//                    auto it = nameUsageMap.find(operand->name);
-//                    if(it == nameUsageMap.end()) {
-//
-//                    }
                     throw invalid_argument{"debug info > can not find a real variable definition in updateUsage method."};
                     return;
                 }
@@ -285,9 +279,7 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& closestDef,
 }
 
 
-void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
-                               std::vector<map<std::string, int>>& closestDef,
-                               Operand* operand,
+void SPL_SSA::updateDefinition(Operand* operand,
                                int& nodeIndex,
                                Instruction* ins) {
     if(checkOperandClass(operand, TEMP)) {
@@ -321,7 +313,6 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
 void SPL_SSA::renameVariable() {
     std::queue<int> walkDTree;
     walkDTree.push(0);
-    std::map<std::string, int> currentDef;
 
 
     for(auto& pair : variableListBlock) {
@@ -329,7 +320,9 @@ void SPL_SSA::renameVariable() {
     }
 
     // 定义最近的def的位置
-    std::vector<map<std::string, int>> closestDef(nodeSet.size(), map<std::string, int>{});
+    for(auto i = 0 ; i < nodeSet.size() ; i ++) {
+        closestDef.push_back({});
+    }
     closestDef[0] = currentDef;
     // 遍历D tree
     while(!walkDTree.empty()) {
@@ -344,11 +337,11 @@ void SPL_SSA::renameVariable() {
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
             if(ins->res)
-                updateDefinition(currentDef, closestDef, ins->res, index, ins);
+                updateDefinition(ins->res, index, ins);
             if(ins->arg1)
-                updateUsage(closestDef, ins->arg1, index, ins);
+                updateUsage(ins->arg1, index, ins);
             if(ins->arg2)
-                updateUsage(closestDef, ins->arg2, index, ins);
+                updateUsage(ins->arg2, index, ins);
         }
     }
 
@@ -361,7 +354,7 @@ void SPL_SSA::renameVariable() {
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
                 // 寻找最近的变量定义
                 ins->res->name = ins->res->name.substr(0, ins->res->name.rfind('.'));
-                updateUsage(closestDef, ins->res, parent, ins);
+                updateUsage(ins->res, parent, ins);
                 ins->addVariable(new Operand(*ins->res), parent);
             }
             ins->res->name = temp;

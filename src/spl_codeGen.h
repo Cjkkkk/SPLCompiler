@@ -26,6 +26,7 @@ public:
 
     void writeSectionData();
 
+    void writeSectionTextSubroutine();
 
     std::map<std::string, int> name_to_memory;
     SPL_IR* ir;
