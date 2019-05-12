@@ -501,39 +501,51 @@ AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(a
     case 0:
         isProc = false;
         funcId = "abs";
+            break;
     case 1:
         isProc = false;
         funcId = "chr";
+            break;
     case 2:
         isProc = false;
         funcId = "odd";
+            break;
     case 3:
         isProc = false;
         funcId = "ord";
+            break;
     case 4:
         isProc = false;
         funcId = "pred";
+            break;
     case 5:
         isProc = false;
         funcId = "sqr";
+            break;
     case 6:
         isProc = false;
         funcId = "sqrt";
+            break;
     case 7:
         isProc = false;
         funcId = "succ";
+            break;
     case 8:
         isProc = true;
         funcId = "write";
+            break;
     case 9:
         isProc = true;
         funcId = "writeln";
+            break;
     case 10:
         isProc = true;
         funcId = "read";
+            break;
     default:
         isProc = true;
-        funcId = "";
+        funcId = "error";
+            break;
     }
 }
 
@@ -563,7 +575,7 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     int totalSize = 0;
     for(const auto& arg : *argList) {
-        ir->addInstruction(new Instruction{"", OP_PARAM, arg->tempVariable, nullptr, nullptr});
+        ir->addInstruction(new Instruction{"", OP_PARAM, arg->getTempVariable(), nullptr, nullptr});
         switch(arg->valType){
             case INT:
                 totalSize += 4;

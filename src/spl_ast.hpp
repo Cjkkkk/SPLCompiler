@@ -126,7 +126,6 @@ class AST_Sym : public AST_Exp
     int calculate() override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
-    //void print(void);
     std::string id;
     unsigned int scopeIndex;
 };

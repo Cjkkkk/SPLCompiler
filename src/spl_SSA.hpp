@@ -63,6 +63,9 @@ public:
     // 每一个定义出现的位置ins*
     std::list<pair<std::string, Instruction*>> nameDefinitionMap;
 
+    std::vector<map<std::string, int>> closestDef;
+
+    map<std::string, int> currentDef;
     // 优化IR
     void OptimizeIR();
 
@@ -86,14 +89,11 @@ public:
     void renameVariable();
 
 
-    void updateUsage(std::vector<map<std::string, int>>& def,
-                    Operand* operand,
+    void updateUsage(Operand* operand,
                     int& nodeIndex,
                     Instruction* ins);
 
-    void updateDefinition(map<std::string, int>& currentDef,
-                         std::vector<map<std::string, int>>& def,
-                         Operand* operand,
+    void updateDefinition(Operand* operand,
                          int& nodeIndex,
                          Instruction* ins);
 
@@ -105,6 +105,8 @@ public:
     void outputDUChain();
     void outputIdom();
     void backToTAC(std::vector<Instruction*>& ins);
+
+    void printIR(ostream& s);
 };
 
 

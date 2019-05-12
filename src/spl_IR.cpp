@@ -121,7 +121,7 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
                 s << std::to_string(operand->value.valInt);
                 return;
             case CHAR:
-                s << "'" + std::to_string(operand->value.valChar) + "'";
+                s << "'" <<  operand->value.valChar << "'";
                 return;
             case REAL:
                 s << std::to_string(operand->value.valDouble);
@@ -131,7 +131,7 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
                 else s << "false";
                 return;
             case STRING:
-                s << "\"" + *operand->value.valString + "\"";
+                s << "\"" << *operand->value.valString << "\"";
                 return;
             default:
                 s << "ERROR";
@@ -280,6 +280,10 @@ void SPL_IR::backFill(Operand* operand, int index) {
 
 void SPL_IR::setCurrent(unsigned int index) {
     current = index;
+}
+
+void SPL_IR::setToMain(){
+    current= getIRSetSize() - 1;
 }
 
 int SPL_IR::getIRSetSize() {

@@ -99,6 +99,8 @@ public:
     // 设置当前中间代码的存放位置
     void setCurrent(unsigned int index);
 
+    void setToMain();
+
     // 添加一条中间代码
     void addInstruction(Instruction* ins);
 

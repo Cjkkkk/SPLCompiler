@@ -204,8 +204,12 @@ void SPL_SSA::removeUnusedVariable() {
         string& current = unusable.top();
         unusable.pop();
 
-
-        Instruction* def = m.find(current)->second;
+        auto it = m.find(current);
+        if(it == m.end()) {
+            // 不在该作用域的变量没有nameDefinitionMap 所以自然也无法删除了
+            continue;
+        }
+        Instruction* def = it->second;
 
         collect_id.insert(def->unique_id);
 

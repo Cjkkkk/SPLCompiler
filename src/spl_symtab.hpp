@@ -119,9 +119,11 @@ public:
 
     void print();
     void printType(Symbol *sym);
+
     unsigned int getCurrentScopeIndex() {
         return currentScopeIndex;
     }
+
     void setCurrentScopeIndex(unsigned index) {
         if(index >= variables.size()) {
             throw splException{0,0,"illegal scope index"};
@@ -129,6 +131,11 @@ public:
             currentScopeIndex = index;
         }
     }
+    void setToPrevScopeIndex () {
+        currentScopeIndex = prevScopeMap.find(currentScopeIndex)->second;
+    }
+    SymbolMapType * getVariableByScopeIndex();
+
     std::string getFunctionNameByIndex(unsigned int scopeIndex) {
         return scopeNames[scopeIndex];
     }

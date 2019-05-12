@@ -125,7 +125,11 @@ string      { yylval->build<int>(5); return token::SYS_TYPE; }
 '(\\.|''|[^'\n])'       { yylval->build<char>(yytext[1]); return token::CHAR; }
 
     /* string */
-\"(\\.|\"\"|[^\"\n])*\" { yylval->build<std::string>(yytext); return token::STRING; }
+\"(\\.|\"\"|[^\"\n])*\" {
+    std::string s(yytext);
+    yylval->build<std::string>(s.substr(1, s.size()-2));
+    return token::STRING;
+    }
 
     /* operator */
 "+"     { return token::PLUS; }

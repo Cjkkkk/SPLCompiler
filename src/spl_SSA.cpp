@@ -59,6 +59,12 @@ void SPL_SSA::OptimizeIR() {
 //    outputDUChain();
 }
 
+void SPL_SSA::printIR(ostream& s) {
+    for(auto& ins:insSet) {
+        ins->output(s);
+    }
+}
+
 void removeSubScript(Operand* var) {
     if(var && checkOperandClass(var, VAR)) {
         auto pos = var->name.rfind('.');
@@ -137,6 +143,29 @@ void SPL_SSA::generateDF() {
 
 void SPL_SSA::genCFGNode() {
     SSANode* current = nullptr;
+
+    // 返回当前作用域能访问到的所有变量与常量
+    auto index = ir->symbolTable->getCurrentScopeIndex();
+
+    while(ir->symbolTable->getCurrentScopeIndex() >= 0) {
+        auto symVec = ir->symbolTable->getVariableByScopeIndex();
+        for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
+            if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
+                auto var = std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first;
+                variableListBlock.insert(
+                        {var, {}});
+
+                currentDef.insert({var, 1});
+                nameUsageMap.insert({var + ".0", {}});
+            }
+        }
+        if(ir->symbolTable->getCurrentScopeIndex() == 0) break;
+        ir->symbolTable->setToPrevScopeIndex();
+    }
+    // 重置ScopeIndex为当前index
+
+    ir->symbolTable->setCurrentScopeIndex(index);
+
     for(Instruction* ins : insSet){
         if(checkInstructionOp(ins, OP_ASSIGN) && checkOperandClass(ins->res, VAR)){
             auto it = variableListBlock.find(ins->res->name);
@@ -152,11 +181,13 @@ void SPL_SSA::genCFGNode() {
         }
             // 开始新的node
         else if(!ins->label.empty()) {
+
             auto newNode = new SSANode();
             current = newNode;
             nodeSet.push_back(newNode);
             current->label = &ins->label;
             labelIndexMap.insert({*current->label, nodeSet.size() - 1});
+
         } else if (checkInstructionOp(ins, OP_IF)
         || checkInstructionOp(ins, OP_IF_Z) || checkInstructionOp(ins, OP_GOTO)) {
             // 添加子节点
@@ -165,6 +196,16 @@ void SPL_SSA::genCFGNode() {
             current->instruSet.push_back(ins);
         } else {current->instruSet.push_back(ins);}
     }
+
+
+//    for(auto var: variableListBlock){
+//        std::cout << var.first << "\n";
+//        for(auto pos: var.second) {
+//            std::cout << pos << " ";
+//        }
+//        std::cout << "\n";
+//    }
+//    std::cout << "--------------\n";
 }
 
 
@@ -237,10 +278,10 @@ void addVersionToVariable(std::string& variable, int version) {
 }
 
 
-void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
-                          Operand* operand,
+void SPL_SSA::updateUsage(Operand* operand,
                           int& nodeIndex,
                           Instruction* ins) {
+
     if(checkOperandClass(operand, TEMP)) {
         auto it = nameUsageMap.find(operand->name);
         if(it == nameUsageMap.end()){
@@ -253,11 +294,15 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
     } else if(checkOperandClass(operand, VAR)) {
         int index = nodeIndex;
         do {
-            auto it = def[index].find(operand->name);
-            if(it != def[index].end()) {
+            auto it = closestDef[index].find(operand->name);
+            if(it != closestDef[index].end()) {
                 addVersionToVariable(operand->name, it->second);
                 // 添加u-d链指针
-                nameUsageMap.find(operand->name)->second.push_back(ins);
+                auto du_it = nameUsageMap.find(operand->name);
+                if(du_it == nameUsageMap.end()) {
+                    throw invalid_argument{"debug info > can not find a real variable definition in usageNameMap method."};
+                }
+                du_it->second.push_back(ins);
                 return;
             } else {
                 // 向上寻找
@@ -274,9 +319,7 @@ void SPL_SSA::updateUsage(std::vector<map<std::string, int>>& def,
 }
 
 
-void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
-                               std::vector<map<std::string, int>>& closestDef,
-                               Operand* operand,
+void SPL_SSA::updateDefinition(Operand* operand,
                                int& nodeIndex,
                                Instruction* ins) {
     if(checkOperandClass(operand, TEMP)) {
@@ -310,16 +353,18 @@ void SPL_SSA::updateDefinition(map<std::string, int>& currentDef,
 void SPL_SSA::renameVariable() {
     std::queue<int> walkDTree;
     walkDTree.push(0);
-    std::map<std::string, int> currentDef;
 
+
+    closestDef.resize(nodeSet.size());
 
     for(auto& pair : variableListBlock) {
-        currentDef.insert({pair.first, 0});
+        if(currentDef.find(pair.first) != currentDef.end()) {
+            currentDef.insert({pair.first, 0});
+        }
+        closestDef[0].insert({pair.first, 0});
     }
 
-    // 定义最近的def的位置
-    std::vector<map<std::string, int>> closestDef(nodeSet.size(), map<std::string, int>{});
-    closestDef[0] = currentDef;
+
     // 遍历D tree
     while(!walkDTree.empty()) {
         int index = walkDTree.front();
@@ -333,14 +378,23 @@ void SPL_SSA::renameVariable() {
         // 遍历原有的指令
         for(auto& ins : nodeSet[index]->instruSet) {
             if(ins->res)
-                updateDefinition(currentDef, closestDef, ins->res, index, ins);
+                updateDefinition(ins->res, index, ins);
             if(ins->arg1)
-                updateUsage(closestDef, ins->arg1, index, ins);
+                updateUsage(ins->arg1, index, ins);
             if(ins->arg2)
-                updateUsage(closestDef, ins->arg2, index, ins);
+                updateUsage(ins->arg2, index, ins);
         }
     }
 
+
+//    for(auto &node : nodeSet) {
+//        std::cout << *node->label << "\n";
+//        for(auto ins : node->instruSet) {
+//            ins->output(std::cout);
+//            //ins->output(outfile);
+//        }
+//
+//    }
 
     // 重新命名phi变量的参数()
     for(const int& nodeIndex : phiBlock) {
@@ -350,7 +404,7 @@ void SPL_SSA::renameVariable() {
             for(auto& parent : nodeSet[nodeIndex]->parentSet) {
                 // 寻找最近的变量定义
                 ins->res->name = ins->res->name.substr(0, ins->res->name.rfind('.'));
-                updateUsage(closestDef, ins->res, parent, ins);
+                updateUsage(ins->res, parent, ins);
                 ins->addVariable(new Operand(*ins->res), parent);
             }
             ins->res->name = temp;

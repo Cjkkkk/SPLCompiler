@@ -461,6 +461,8 @@ var_decl:
             {
                 Symbol* symbol = new Symbol(*$3);
                 symbol->name = (*$1)[i];
+                symbol->scopeIndex = driver.symtab.getCurrentScopeIndex();
+                //std::cout << symbol->name << " " << driver.symtab.getCurrentScopeIndex() << "\n";
                 symbol->symbolClass = VAR;
                 driver.symtab.addVariable(symbol);
             }
@@ -556,8 +558,11 @@ procedure_head:
             driver.symtab.addFunction(symbol);
             // new scope
             driver.symtab.pushScope($2);
-            for(size_t i = 0; i < $3->size(); i++)
-                driver.symtab.addVariable((*$3)[i]);
+            for(size_t i = 0; i < $3->size(); i++) {
+            	(*$3)[i]->scopeIndex = driver.symtab.getCurrentScopeIndex();
+            	driver.symtab.addVariable((*$3)[i]);
+            }
+
         }
         ;
 
