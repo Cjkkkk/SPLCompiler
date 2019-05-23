@@ -13,24 +13,24 @@
 class SPL_CodeGen {
 public:
     explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){
-        outfile.open("assem/hello.s",std::ios::out);
+        outfile.open("assem/hello.asm",std::ios::out);
     };
     ~SPL_CodeGen() {
         outfile.close();
     }
     void GenerateMachineCode();
 
-    void writeDirectives();
-
-    void writeSectionText();
-
-    void writeSectionData();
+    void writeDirectives(const std::string& instr, const std::string& op);
 
     void writeSectionTextSubroutine();
+
+    void writeStringLiteral();
+    void writeSectionConstData();
 
     std::map<std::string, int> name_to_memory;
     SPL_IR* ir;
     std::ofstream outfile;
+    std::vector<Instruction*> StringLiteral;
 };
 
 

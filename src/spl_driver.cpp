@@ -94,9 +94,12 @@ void SPL::SPL_Driver::emitIR() {
         ir.setCurrent(index);
         ir.getIRSet().push_back({});
         AST* func = astmng.functions->at(index);
+
+        // 设置当前函数的作用域
         unsigned int scopeIndex = astmng.scopes->at(index);
-        // 设置作用域
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
+
+        // 代码生成
         ir.addInstruction(new Instruction{symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
         ir.addInstruction(new Instruction{"", OP_RET, nullptr, nullptr, nullptr});
@@ -122,5 +125,5 @@ void SPL::SPL_Driver::optimizeIR() {
 }
 
 void SPL::SPL_Driver::codeGen() {
-    //code_gen.GenerateMachineCode();
+    code_gen.GenerateMachineCode();
 }

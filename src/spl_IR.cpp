@@ -25,7 +25,6 @@ bool compareValue(Operand* l, Operand* r) {
 
 
 Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
-//    name.clear();
     auto new_operand = new Operand();
     new_operand->cl = CONST;
     new_operand->name = "";

@@ -46,13 +46,6 @@ void SPL_SSA::OptimizeIR() {
     backToTAC(insSet);
 
 
-//    std::ofstream outfile;
-//    outfile.open("byte_code/opt.bc", std::ios::out);
-//    for(auto& instr:ir->IR) {
-//        instr->output(outfile);
-//    }
-//    outfile.close();
-
 // ---------------------------------------------
 //    outputIdom();
 //
@@ -196,16 +189,6 @@ void SPL_SSA::genCFGNode() {
             current->instruSet.push_back(ins);
         } else {current->instruSet.push_back(ins);}
     }
-
-
-//    for(auto var: variableListBlock){
-//        std::cout << var.first << "\n";
-//        for(auto pos: var.second) {
-//            std::cout << pos << " ";
-//        }
-//        std::cout << "\n";
-//    }
-//    std::cout << "--------------\n";
 }
 
 

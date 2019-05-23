@@ -173,7 +173,7 @@ std::string SPL_OPToString(SPL_OP op){
             return "";
             break;
         case OP_RET:
-            return "return";
+            return "ret";
             break;
         case OP_PHI:
             return "phi";
