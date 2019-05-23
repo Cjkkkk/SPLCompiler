@@ -14,7 +14,6 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-//#include <assert.h>
 
 #define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
 
@@ -109,9 +108,10 @@ enum SPL_PARA : bool
 };
 
 void DoAssert(const char *errorMsg);
-std::string SPL_OPToString(SPL_OP op);
+std::string opToString(SPL_OP op);
 std::string classToString(SPL_CLASS classId);
 std::string typeToString(SPL_TYPE typeId);
+std::string opTox86Ins(SPL_OP op);
 SPL_OP_NUM getOperandNum(SPL_OP op);
 bool isCalculateOp(SPL_OP op);
 #endif //_SPL_COMPILER_H_

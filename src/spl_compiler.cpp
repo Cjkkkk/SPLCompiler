@@ -92,7 +92,7 @@ std::string typeToString(SPL_TYPE typeId)
     }
 }
 
-std::string SPL_OPToString(SPL_OP op){
+std::string opToString(SPL_OP op){
     switch (op)
     {
         case PLUS_:
@@ -273,6 +273,21 @@ SPL_OP_NUM getOperandNum(SPL_OP op) {
         default:
             return ZERO;
             break;
+    }
+}
+
+std::string opTox86Ins(SPL_OP op) {
+    switch(op) {
+        case PLUS_:
+            return "add";
+        case MINUS_:
+            return "sub";
+        case MUL_:
+            return "mul";
+        case DIV_:
+            return "div";
+        default:
+            return "error";
     }
 }
 

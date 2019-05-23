@@ -12,8 +12,6 @@ void SPL_CodeGen::GenerateMachineCode() {
     for(auto index = ir->getIRSetSize() - 1; index >= 0 ; index--) {
         ir->setCurrent(index);
         writeSectionTextSubroutine();
-        outfile << "\n";
-        // collectConstData();
     }
     writeStringLiteral();
     writeDirectives("section", ".data"); // initialized global variable
@@ -22,29 +20,17 @@ void SPL_CodeGen::GenerateMachineCode() {
 }
 
 void SPL_CodeGen::writeStringLiteral(){
-    for(auto& ins : StringLiteral) {
+    for(auto& ins : string_literals) {
         outfile << ins->res->name << ":\n";
         outfile << "\t" << "db" << "\n";
     }
 }
+
+
 void SPL_CodeGen::writeDirectives(const std::string& instr, const std::string& op) {
     outfile << "\t" << instr <<"\t" << op << endl;
 }
 
-std::string opTox86Ins(SPL_OP op) {
-    switch(op) {
-        case PLUS_:
-            return "add";
-        case MINUS_:
-            return "sub";
-        case MUL_:
-            return "mul";
-        case DIV_:
-            return "div";
-        default:
-            return "error";
-    }
-}
 
 void SPL_CodeGen::writeSectionTextSubroutine() {
     vector<Instruction*>& instr = ir->getCurrentIR();
@@ -70,7 +56,7 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
             case OP_ASSIGN:
                 if(checkOperandClass(ins->arg1, CONST) && checkOperandIsLiteral(ins->arg1)
                     && checkOperandType(ins->arg1, STRING)) {
-                    StringLiteral.push_back(ins);
+                    string_literals.push_back(ins);
                 }
                 outfile << ins->label << "\t" << "mov" << "\t" << ins->res->name << "\t"<< ins->arg1->name <<"\n";
                 break;

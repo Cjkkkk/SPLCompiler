@@ -162,7 +162,7 @@ void Instruction::output(ostream& s) {
             outputOperand(res, s);
             s << " = ";
             outputOperand(arg1, s);
-            s << " " << SPL_OPToString(op) << " ";
+            s << " " << opToString(op) << " ";
             outputOperand(arg2, s);
             break;
 
@@ -176,7 +176,7 @@ void Instruction::output(ostream& s) {
         case OP_IF:
         case OP_IF_Z:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(arg1, s);
             s << " goto ";
             outputOperand(res, s);
@@ -185,26 +185,26 @@ void Instruction::output(ostream& s) {
         case MINUS__:
             s << label << "\t";
             outputOperand(res, s);
-            s << " = " << SPL_OPToString(op) << " ";
+            s << " = " << opToString(op) << " ";
             outputOperand(arg1, s);
             break;
             // 1 operand
         case OP_GOTO:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(res, s);
             break;
         case OP_PARAM:
         case OP_POP:
         case OP_CALL:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(arg1, s);
             break;
             // 0 operand
         default:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
     }
     s << "\n";
 }
@@ -218,7 +218,7 @@ void PhiInstruction::output(ostream& s) {
         Instruction::output(s);
         return;
     }
-    s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
+    s << label << "\t" << opToString(op) << "\t" << res->name;
     s << "(";
     for(auto it = variableCluster.begin() ; it != variableCluster.end() ; it++) {
         if(std::distance(variableCluster.begin(), it) > 0) s << ", ";
