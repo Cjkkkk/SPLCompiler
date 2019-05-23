@@ -82,6 +82,7 @@ void SPL::SPL_Driver::parse_helper(std::istream &stream)
     return;
 }
 
+
 std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 {
     return (stream);
@@ -89,10 +90,13 @@ std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
 
 
 void SPL::SPL_Driver::emitIR() {
+    // 为每一个函数留一个位置存放IR
+    ir.getIRSet().resize(astmng.functions->size());
+
+    // 遍历每一个函数的语法树生成IR
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
-        // 设定当前处理的哪个函数的IR
+        // 设定当前处理的哪个函数
         ir.setCurrent(index);
-        ir.getIRSet().push_back({});
         AST* func = astmng.functions->at(index);
 
         // 设置当前函数的作用域
@@ -107,16 +111,20 @@ void SPL::SPL_Driver::emitIR() {
 }
 
 
+// 代码优化
 void SPL::SPL_Driver::optimizeIR() {
     std::ofstream outfile;
     outfile.open("byte_code/opt.bc", std::ios::out);
 
     for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
+        // 设定当前处理的函数的IR的index
         ir.setCurrent(index);
         unsigned int scopeIndex = astmng.scopes->at(index);
+
         // 设置作用域
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
 
+        // 生成IR优化对象
         SPL_SSA ssa_ir(ir.getCurrentIR(), &ir);
         ssa_ir.OptimizeIR();
         ssa_ir.printIR(outfile);
@@ -124,6 +132,8 @@ void SPL::SPL_Driver::optimizeIR() {
     outfile.close();
 }
 
+
+// 目标代码生成
 void SPL::SPL_Driver::codeGen() {
     code_gen.GenerateMachineCode();
 }
