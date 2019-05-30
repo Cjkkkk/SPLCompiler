@@ -5,6 +5,14 @@
 #include <fstream>
 #include "spl_codeGen.h"
 
+void SPL_CodeGen::x86Instruction(const string& label, const string& ins, const string& op1, const string& op2) {
+    outfile << label << "\t" << ins;
+    if(!op2.empty()) {
+        outfile << " " << op1 << ", " << op2 << "\n";
+    } else {
+        outfile << " " << op1 << "\n";
+    }
+}
 void SPL_CodeGen::GenerateMachineCode() {
     ir->setToMain();
     writeDirectives("global", ir->getCurrentIR()[0]->label);
@@ -20,15 +28,15 @@ void SPL_CodeGen::GenerateMachineCode() {
 }
 
 void SPL_CodeGen::writeStringLiteral(){
-    for(auto& ins : string_literals) {
-        outfile << ins->res->name << ":\n";
-        outfile << "\t" << "db" << "\n";
+    for(auto& str : string_literals) {
+        x86Instruction(str.first + ":", "", "", "");
+        x86Instruction("", "db", "\"" + *str.second->value.valString + "\"", "");
     }
 }
 
 
 void SPL_CodeGen::writeDirectives(const std::string& instr, const std::string& op) {
-    outfile << "\t" << instr <<"\t" << op << endl;
+    x86Instruction("", instr, op, "");
 }
 
 
@@ -38,43 +46,80 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
         switch(ins->op) {
             case PLUS_:
             case MINUS_:
-                outfile << "\t" << opTox86Ins(ins->op) << "\t" << ins->arg1->name << "\n";
+                generatePlusAndMinus(ins);
             case MUL_:
             case DIV_:
-                // mul的一个乘数在eax中， 只接受一个参数， 结果放在eax中
-                // div的一个乘数在eax中， 只接受一个参数， 结果放在eax中
-                outfile << "\t" << "mov" << "\t" << "eax" << ins->arg1->name << "\n";
-                outfile << "\t" << "mov" << "\t" << "ebx" << ins->arg2->name << "\n";
-                outfile << "\t" << opTox86Ins(ins->op) << "\t" << "ebx" << "\n";
+                generateMulAndDivide(ins);
                 break;
             case OP_NULL:
-                outfile << ins->label <<"\n";
+                generateNull(ins);
                 break;
             case OP_GOTO:
-                outfile << ins->label << "\t" << "jmp" << "\t" << ins->res->name << "\n";
+                generateGoto(ins);
                 break;
             case OP_ASSIGN:
-                if(checkOperandClass(ins->arg1, CONST) && checkOperandIsLiteral(ins->arg1)
-                    && checkOperandType(ins->arg1, STRING)) {
-                    string_literals.push_back(ins);
-                }
-                outfile << ins->label << "\t" << "mov" << "\t" << ins->res->name << "\t"<< ins->arg1->name <<"\n";
+                generateAssign(ins);
                 break;
             case OP_IF:
-                outfile << ins->label << "\t" << "cmp" << "\t" << ins->arg1->name << "\t"<< "0x0\n";
-                outfile << ins->label << "\t" << "jne" << "\t" << ins->res->name << "\n";
-                break;
             case OP_IF_Z:
-                outfile << ins->label << "\t" << "cmp" << "\t" << ins->arg1->name << "\t"<< "0x0\n";
-                outfile << ins->label << "\t" << "je" << "\t" << ins->res->name << "\n";
+                generateIf(ins);
                 break;
             case OP_RET:
-                outfile << ins->label << "\t" << "ret" << "\n";
+                generateRet(ins);
                 break;
             default:
                 break;
         }
     }
+}
+
+
+void SPL_CodeGen::generateIf(Instruction* ins) {
+    if(checkInstructionOp(ins, OP_IF)) {
+        x86Instruction(ins->label, "cmp", ins->arg1->name, "0x0");
+        x86Instruction(ins->label, "jne", ins->res->name, "");
+    } else {
+        x86Instruction(ins->label, "cmp", ins->arg1->name, "0x0");
+        x86Instruction(ins->label, "je", ins->res->name, "");
+    }
+}
+
+
+void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
+    x86Instruction(ins->label, opTox86Ins(ins->op), ins->arg1->name, "");
+}
+
+
+void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
+    // mul的一个乘数在eax中， 只接受一个参数， 结果放在eax中
+    // div的一个乘数在eax中， 只接受一个参数， 结果放在eax中
+    x86Instruction(ins->label, "mov", "eax", ins->arg1->name);
+    x86Instruction(ins->label, "mov", "ebx", ins->arg2->name);
+    x86Instruction(ins->label, opTox86Ins(ins->op), "ebx", "");
+}
+
+void SPL_CodeGen::generateAssign(Instruction *ins) {
+    if(checkOperandClass(ins->arg1, CONST) && checkOperandIsLiteral(ins->arg1)
+       && checkOperandType(ins->arg1, STRING)) {
+        string_literals.insert({ins->res->name, ins->arg1});
+    }
+    x86Instruction(ins->label, "mov", ins->res->name, ins->arg1->name);
+}
+
+void SPL_CodeGen::generateLogic(Instruction* ins) {
+
+}
+
+void SPL_CodeGen::generateNull(Instruction* ins) {
+    x86Instruction(ins->label, "", "", "");
+}
+
+void SPL_CodeGen::generateRet(Instruction* ins) {
+    x86Instruction(ins->label, "ret", "", "");
+}
+
+void SPL_CodeGen::generateGoto(Instruction* ins) {
+    x86Instruction(ins->label, "jmp", ins->res->name, "");
 }
 
 void SPL_CodeGen::writeSectionConstData() {

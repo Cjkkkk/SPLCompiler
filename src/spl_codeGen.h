@@ -42,7 +42,16 @@ public:
     // we use .bss section
     void writeSectionConstData();
 
+    void generatePlusAndMinus(Instruction* ins);
+    void generateMulAndDivide(Instruction* ins);
+    void generateAssign(Instruction* ins);
+    void generateLogic(Instruction* ins);
+    void generateIf(Instruction* ins);
+    void generateNull(Instruction* ins);
+    void generateRet(Instruction* ins);
+    void generateGoto(Instruction* ins);
 
+    void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // intermediate representations
     SPL_IR* ir;
 
@@ -50,7 +59,7 @@ public:
     std::ofstream outfile;
 
     // string literal
-    std::vector<Instruction*> string_literals;
+    std::map<std::string, Operand*> string_literals;
 
     std::map<std::string, int> name_to_memory;
 
