@@ -6,13 +6,18 @@
 #include "spl_codeGen.h"
 
 void SPL_CodeGen::x86Instruction(const string& label, const string& ins, const string& op1, const string& op2) {
-    outfile << label << "\t" << ins;
+    if(label.empty()) {
+        outfile << "\t" << ins;
+    } else {
+        outfile << label << ":\t" << ins;
+    }
     if(!op2.empty()) {
         outfile << " " << op1 << ", " << op2 << "\n";
     } else {
         outfile << " " << op1 << "\n";
     }
 }
+
 void SPL_CodeGen::GenerateMachineCode() {
     ir->setToMain();
     writeDirectives("global", ir->getCurrentIR()[0]->label);
@@ -29,7 +34,7 @@ void SPL_CodeGen::GenerateMachineCode() {
 
 void SPL_CodeGen::writeStringLiteral(){
     for(auto& str : string_literals) {
-        x86Instruction(str.first + ":", "", "", "");
+        x86Instruction(str.first, "", "", "");
         x86Instruction("", "db", "\"" + *str.second->value.valString + "\"", "");
     }
 }
@@ -66,6 +71,9 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
                 break;
             case OP_RET:
                 generateRet(ins);
+                break;
+            case OP_CALL:
+                generateCall(ins);
                 break;
             default:
                 break;
@@ -120,6 +128,11 @@ void SPL_CodeGen::generateRet(Instruction* ins) {
 
 void SPL_CodeGen::generateGoto(Instruction* ins) {
     x86Instruction(ins->label, "jmp", ins->res->name, "");
+}
+
+
+void SPL_CodeGen::generateCall(Instruction* ins) {
+    x86Instruction(ins->label, "call", ins->arg1->name, "");
 }
 
 void SPL_CodeGen::writeSectionConstData() {

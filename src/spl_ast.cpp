@@ -182,7 +182,7 @@ void AST_Sym::checkSemantic()
 }
 void AST_Sym::emit(SPL_IR* ir){
 
-    tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id, VAR);
+    tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
 
 }
 
@@ -598,7 +598,7 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     auto literal = new Operand(INT, "", CONST);
     literal->value.valInt = totalSize;
-    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr, nullptr});
     ir->addInstruction(new Instruction{"", OP_POP, literal, nullptr, nullptr});
 }
 

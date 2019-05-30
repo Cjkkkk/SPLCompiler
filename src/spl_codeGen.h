@@ -50,6 +50,7 @@ public:
     void generateNull(Instruction* ins);
     void generateRet(Instruction* ins);
     void generateGoto(Instruction* ins);
+    void generateCall(Instruction* ins);
 
     void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // intermediate representations
