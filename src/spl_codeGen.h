@@ -51,7 +51,9 @@ public:
     void generateRet(Instruction* ins);
     void generateGoto(Instruction* ins);
     void generateCall(Instruction* ins);
-
+    void prepare_rbp();
+    void clean_rbp();
+    void allocateStack();
     void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // intermediate representations
     SPL_IR* ir;

@@ -22,10 +22,13 @@ void SPL_CodeGen::GenerateMachineCode() {
     ir->setToMain();
     writeDirectives("global", ir->getCurrentIR()[0]->label);
     writeDirectives("section", ".text");
+
+    // 遍历所有函数
     for(auto index = ir->getIRSetSize() - 1; index >= 0 ; index--) {
         ir->setCurrent(index);
         writeSectionTextSubroutine();
     }
+
     writeStringLiteral();
     writeDirectives("section", ".data"); // initialized global variable
     writeDirectives("section", ".bss"); // uninitialized global variable
@@ -46,6 +49,8 @@ void SPL_CodeGen::writeDirectives(const std::string& instr, const std::string& o
 
 
 void SPL_CodeGen::writeSectionTextSubroutine() {
+    prepare_rbp();
+    allocateStack();
     vector<Instruction*>& instr = ir->getCurrentIR();
     for(auto ins : instr) {
         switch(ins->op) {
@@ -79,6 +84,7 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
                 break;
         }
     }
+    clean_rbp();
 }
 
 
@@ -137,4 +143,25 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
 
 void SPL_CodeGen::writeSectionConstData() {
 
+}
+
+void SPL_CodeGen::prepare_rbp() {
+    x86Instruction("", "push", "rbp", "");
+    x86Instruction("", "mov", "rbp", "rsp");
+}
+
+void SPL_CodeGen::clean_rbp() {
+    x86Instruction("", "pop", "rbp", "");
+}
+void SPL_CodeGen::allocateStack() {
+    vector<Instruction*>& instr = ir->getCurrentIR();
+    // 堆栈上的数据用offset索引
+    uint16_t offset = 0;
+    for(auto ins : instr) {
+        if(ins->op == OP_ASSIGN) {
+            // sizeof();
+        }
+    }
+    // 在堆栈上分配空间
+    x86Instruction("", "sub", "rsp", std::to_string(offset));
 }
