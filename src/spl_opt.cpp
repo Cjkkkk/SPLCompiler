@@ -100,7 +100,7 @@ void SPL_SSA::constantPropagation() {
 
                     auto it = nameUsageMap.find((*ins_it)->res->name);
 
-                    auto o = evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    auto o = evaluate(op,(*ins_it)->arg1, (*ins_it)->arg2);
 
                     delete((*ins_it)->arg1);
                     (*ins_it)->arg1 = nullptr;

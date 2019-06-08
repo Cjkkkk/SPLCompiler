@@ -29,13 +29,14 @@ public:
         this->cl = op.cl;
         this->value = op.value;
     }
+    uint8_t getSize();
     SPL_TYPE type;
     std::string name;
     SPL_CLASS cl;
     Value value;
 };
 
-Operand* evalute(SPL_OP op, Operand* left, Operand* right);
+Operand* evaluate(SPL_OP op, Operand* left, Operand* right);
 bool compareValue(Operand* l, Operand* r);
 
 inline bool checkOperandClass(Operand* operand, SPL_CLASS cl) {

@@ -3,8 +3,8 @@
 //
 
 #include <fstream>
-#include "spl_codeGen.h"
-
+#include "spl_codeGen.hpp"
+#include "spl_compiler.hpp"
 void SPL_CodeGen::x86Instruction(const string& label, const string& ins, const string& op1, const string& op2) {
     if(label.empty()) {
         outfile << "\t" << ins;
@@ -49,10 +49,13 @@ void SPL_CodeGen::writeDirectives(const std::string& instr, const std::string& o
 
 
 void SPL_CodeGen::writeSectionTextSubroutine() {
+    vector<Instruction*>& instr = ir->getCurrentIR();
+    // 打出函数名
+    x86Instruction((*instr.begin())->label, "", "", "");
     prepare_rbp();
     allocateStack();
-    vector<Instruction*>& instr = ir->getCurrentIR();
-    for(auto ins : instr) {
+    for(auto it = instr.begin() + 1; it != instr.end(); it++) {
+        auto ins = *it;
         switch(ins->op) {
             case PLUS_:
             case MINUS_:
@@ -158,8 +161,25 @@ void SPL_CodeGen::allocateStack() {
     // 堆栈上的数据用offset索引
     uint16_t offset = 0;
     for(auto ins : instr) {
-        if(ins->op == OP_ASSIGN) {
-            // sizeof();
+        if(checkInstructionOp(ins, OP_ASSIGN) || isCalculateOp(ins->op)) {
+            std::cout << ins->res->name << " ";
+            auto it = name_to_memory.find(ins->res->name);
+            if(it == name_to_memory.end()) {
+                // 还没有在内存中， 添加到内存
+                if(offset % 4 != 0) {
+                    offset /= 4;
+                    offset = (offset + 1) * 4;
+                }
+                auto size = ins->res->getSize();
+                offset += size;
+                name_to_memory.insert({ins->res->name, -offset});
+                if(!checkOperandClass(ins->res, TEMP)) {
+                    x86Instruction(ins->label,
+                            "mov",
+                            "[rbp - "+ std::to_string(offset) +" ]",
+                            std::to_string(ins->res->value.valInt));
+                }
+            }
         }
     }
     // 在堆栈上分配空间

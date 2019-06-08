@@ -9,6 +9,7 @@
 void SPL_SSA::OptimizeIR() {
     genCFGNode();
 
+    auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
     // generate CFG
     generateCFG();
 
@@ -24,8 +25,7 @@ void SPL_SSA::OptimizeIR() {
     // rename variable
     renameVariable();
 
-    auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
-    outputInstruction(prefix +"origin.bc");
+    outputInstruction(prefix +"phi_var.bc");
 
     // --------------------------------------------
     // output optimized IR
@@ -144,7 +144,7 @@ void SPL_SSA::genCFGNode() {
         auto symVec = ir->symbolTable->getVariableByScopeIndex();
         for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
             if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
-                auto var = std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first;
+                auto var = it->first + "." + std::to_string(ir->symbolTable->getCurrentScopeIndex());
                 variableListBlock.insert(
                         {var, {}});
 

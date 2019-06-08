@@ -2,8 +2,8 @@
 // Created by DELL on 2019/4/30.
 //
 
-#ifndef SPLCOMPILER_SPL_CODEGEN_H
-#define SPLCOMPILER_SPL_CODEGEN_H
+#ifndef SPLCOMPILER_SPL_CODEGEN_HPP
+#define SPLCOMPILER_SPL_CODEGEN_HPP
 
 #include <map>
 #include <list>
@@ -64,6 +64,7 @@ public:
     // string literal
     std::map<std::string, Operand*> string_literals;
 
+    // 变量相对rbp的offset
     std::map<std::string, int> name_to_memory;
 
     // callee saved
@@ -71,4 +72,4 @@ public:
 };
 
 
-#endif //SPLCOMPILER_SPL_CODEGEN_H
+#endif //SPLCOMPILER_SPL_CODEGEN_HPP

@@ -9,17 +9,20 @@ main:
 	.seh_pushreg	%rbp
 	movq	%rsp, %rbp
 	.seh_setframe	%rbp, 0
-	subq	$64, %rsp
-	.seh_stackalloc	64
+	subq	$48, %rsp
+	.seh_stackalloc	48
 	.seh_endprologue
 	call	__main
 	movl	$1, -4(%rbp)
-	movl	$2, -8(%rbp)
-	movl	$3, -12(%rbp)
-	movl	$5, -16(%rbp)
-	movl	$10, -20(%rbp)
+	movl	$5, -8(%rbp)
+	movl	-4(%rbp), %edx
+	movl	-8(%rbp), %eax
+	addl	%edx, %eax
+	addl	$5, %eax
+	movl	%eax, -12(%rbp)
+	movl	$10, -16(%rbp)
 	movl	$0, %eax
-	addq	$64, %rsp
+	addq	$48, %rsp
 	popq	%rbp
 	ret
 	.seh_endproc

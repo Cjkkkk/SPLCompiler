@@ -24,7 +24,7 @@ bool compareValue(Operand* l, Operand* r) {
 }
 
 
-Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
+Operand* evaluate(SPL_OP op, Operand* left, Operand* right) {
     auto new_operand = new Operand();
     new_operand->cl = CONST;
     new_operand->name = "";
@@ -105,6 +105,23 @@ Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
             break;
     }
     return new_operand;
+}
+
+
+uint8_t Operand::getSize() {
+    switch(type) {
+        case BOOL:
+            return 1;
+        case REAL:
+            return 8;
+        case INT:
+            return 4;
+        case CHAR:
+            return 1;
+        case STRING:
+        default:
+            return 100;
+    }
 }
 void Instruction::addVariable(Operand* name, int index) {};
 std::list<pair<Operand*, int>>* Instruction::getVariable() {
