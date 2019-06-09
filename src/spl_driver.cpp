@@ -93,6 +93,9 @@ void SPL::SPL_Driver::emitIR() {
     // 为每一个函数留一个位置存放IR
     ir.getIRSet().resize(astmng.functions->size());
 
+    // 输出没有优化的中间码
+    std::ofstream outfile;
+    outfile.open("byte_code/unopt.bc", std::ios::out);
     // 遍历每一个函数的语法树生成IR
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
         // 设定当前处理的哪个函数
@@ -107,7 +110,10 @@ void SPL::SPL_Driver::emitIR() {
         ir.addInstruction(new Instruction{symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
         func->emit(&ir);
         ir.addInstruction(new Instruction{"", OP_RET, nullptr, nullptr, nullptr});
+
+        ir.outputInstruction(outfile);
     }
+    outfile.close();
 }
 
 
@@ -115,7 +121,6 @@ void SPL::SPL_Driver::emitIR() {
 void SPL::SPL_Driver::optimizeIR() {
     std::ofstream outfile;
     outfile.open("byte_code/opt.bc", std::ios::out);
-
     for(auto index = 0 ; index < ir.getIRSetSize() ; index ++) {
         // 设定当前处理的函数的IR的index
         ir.setCurrent(index);

@@ -159,7 +159,6 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
 }
 
 
-
 void Instruction::output(ostream& s) {
     switch(op) {
         case PLUS_:
@@ -246,6 +245,13 @@ void PhiInstruction::output(ostream& s) {
 
 std::list<pair<Operand*, int>>* PhiInstruction::getVariable() {return &variableCluster;}
 
+
+void SPL_IR::outputInstruction(ostream& f) {
+    auto ins_set = getCurrentIR();
+    for(auto& ins: ins_set) {
+        ins->output(f);
+    }
+}
 
 void SPL_IR::addInstruction(Instruction* ins) {
     if(!ins->label.empty() && !getCurrentIR().empty()

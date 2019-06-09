@@ -119,6 +119,7 @@ public:
 
     Instruction* getLastInstruction() ;
 
+    void outputInstruction(ostream& f);
     // 生成临时变量
     Operand* genTempVariable(SPL_TYPE type);
 
