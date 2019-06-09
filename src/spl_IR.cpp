@@ -26,7 +26,7 @@ bool compareValue(Operand* l, Operand* r) {
 
 Operand* evaluate(SPL_OP op, Operand* left, Operand* right) {
     auto new_operand = new Operand();
-    new_operand->cl = CONST;
+    new_operand->cl = KNOWN;
     new_operand->name = "";
     switch(op) {
         case PLUS_:
@@ -131,7 +131,7 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
     if(operand == nullptr) return;
     else if(operand->cl == LABEL) {
         s << operand->name;
-    } else if(operand->cl == CONST) {
+    } else if(operand->cl == KNOWN) {
         switch (operand->type) {
             case INT:
                 s << std::to_string(operand->value.valInt);

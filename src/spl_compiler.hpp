@@ -64,8 +64,8 @@ enum SPL_CLASS : unsigned char
     TYPE,  // user-defined type
     FUNC,  // function/procedure
     LABEL,  // label
-    TEMP,
-    KNOWN, // Known in compile time
+    TEMP,   // temp variable
+    KNOWN, // Known in compile time / literal
 };
 
 // type of a variable symbol

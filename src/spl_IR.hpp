@@ -44,7 +44,7 @@ inline bool checkOperandClass(Operand* operand, SPL_CLASS cl) {
 }
 
 inline bool checkOperandIsLiteral(Operand* operand) {
-    return operand->name.empty();
+    return operand->cl == KNOWN;
 }
 
 inline bool checkOperandType(Operand* operand, SPL_TYPE type) {

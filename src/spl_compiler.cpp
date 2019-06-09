@@ -189,90 +189,81 @@ SPL_OP_NUM getOperandNum(SPL_OP op) {
     {
         case PLUS_:
             return THREE;
-            break;
 
         case MINUS_:
             return THREE;
-            break;
 
         case MUL_:
             return THREE;
-            break;
 
         case DIV_:
             return THREE;
-            break;
 
         case AND_:
             return THREE;
-            break;
 
         case OR_:
             return THREE;
-            break;
 
         case NOT_:
             return TWO;
-            break;
 
         case MINUS__:
             return TWO;
-            break;
 
         case MOD_:
             return THREE;
-            break;
+
         case EQUAL_:
             return THREE;
-            break;
+
         case UNEQUAL_:
             return THREE;
-            break;
+
         case GE_:
             return THREE;
-            break;
+
         case GT_:
             return THREE;
-            break;
+
         case LE_:
             return THREE;
-            break;
+
         case LT_:
             return THREE;
-            break;
+
         case OP_ASSIGN:
             return TWO;
-            break;
+
         case OP_GOTO:
             return ONE;
-            break;
+
         case OP_IF_Z:
             return TWO;
-            break;
+
         case OP_IF:
             return TWO;
-            break;
+
         case OP_CALL:
             return ONE;
-            break;
+
         case OP_PARAM:
             return ONE;
-            break;
+
         case OP_POP:
             return ONE;
-            break;
+
         case OP_NULL:
             return ZERO;
-            break;
+
         case OP_RET:
             return ZERO;
-            break;
+
         case OP_PHI:
             return ZERO;
-            break;
+
         default:
             return ZERO;
-            break;
     }
 }
 

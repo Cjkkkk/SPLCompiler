@@ -28,13 +28,14 @@ var
 begin
 //    s := "hello";
 //    m := 'c';
-    x := 4 + 5 * 6;
+    x := 40;
+    x := 4 + 20;
     y := x;
     z := y;
-
-	while x > 0 do begin
-	    x := 4;
-	end;
-    write(x);
+    write(z);
+//	while x > 0 do begin
+//	    x := 4;
+//	end;
+//    write(x);
 end
 .

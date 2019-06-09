@@ -1,7 +1,10 @@
 
 int main() {
-    int x = 1;
-    int l = 5;
-    int ss = x + l + 5;
-    int z = 10;
+    int a = 1;
+    int b = 2;
+    int c = 3;
+    int d = c;
+    int e = 5;
+    int f = (a * b) + (c * d) + e * c;
+    int g = 10;
 }

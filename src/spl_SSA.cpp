@@ -79,7 +79,7 @@ void SPL_SSA::backToTAC(std::vector<Instruction*>& ins){
         for(auto ins: nodeSet[index]->instruSet) {
             if( ! checkInstructionOp(ins, OP_PHI) ) break;
             for(auto var: *ins->getVariable()) {
-                if(checkOperandClass(var.first, CONST)
+                if(checkOperandClass(var.first, KNOWN)
                 || checkOperandClass(var.first, TEMP)
                 || (checkOperandClass(var.first, VAR) && !isSameVariable(var.first, ins->res))) {
                     // write definition
@@ -145,8 +145,8 @@ void SPL_SSA::genCFGNode() {
         for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
             if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
                 auto var = it->first + "." + std::to_string(ir->symbolTable->getCurrentScopeIndex());
-                variableListBlock.insert(
-                        {var, {}});
+                // 初始化变量
+                variableListBlock.insert({var, {}});
 
                 currentDef.insert({var, 1});
                 nameUsageMap.insert({var + ".0", {}});
