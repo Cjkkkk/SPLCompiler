@@ -72,6 +72,14 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
             case DIV_:
                 generateMulAndDivide(ins);
                 break;
+            case GT_:
+            case GE_:
+            case LE_:
+            case LT_:
+            case EQUAL_:
+            case UNEQUAL_:
+                generateCompare(ins);
+                break;
             case OP_NULL:
                 generateNull(ins);
                 break;
@@ -101,14 +109,37 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
 }
 
 
-void SPL_CodeGen::generateIf(Instruction* ins) {
-    if(checkInstructionOp(ins, OP_IF)) {
-        x86Instruction(ins->label, "cmp", ins->arg1->name, "0x0");
-        x86Instruction(ins->label, "jne", ins->res->name, "");
-    } else {
-        x86Instruction(ins->label, "cmp", ins->arg1->name, "0x0");
-        x86Instruction(ins->label, "je", ins->res->name, "");
+void SPL_CodeGen::generateCompare(Instruction* ins) {
+    // 加载两个比较的操作数
+    auto reg1 = bringToReg(ins->arg1);
+    auto reg2 = bringToReg(ins->arg2);
+    x86Instruction(ins->label, "cmp", reg_to_string(reg1), reg_to_string(reg2));
+
+    // 释放reg因为不再需要了
+    freeReg(reg1);
+    freeReg(reg2);
+
+    switch(ins->op) {
+        case LE_:
+            x86Instruction("", "setle", "al", "");
+            break;
+        default:
+            break;
     }
+    auto offset = fetchStackVariable(ins->res->name);
+    x86Instruction("", "mov", "[ rbp - " + std::to_string(offset) + " ]", "al");
+}
+
+void SPL_CodeGen::generateIf(Instruction* ins) {
+    auto reg = bringToReg(ins->arg1);
+    if(checkInstructionOp(ins, OP_IF)) {
+        x86Instruction(ins->label, "cmp", reg_to_string(reg), "0x1");
+        x86Instruction("", "je", ins->res->name, "");
+    } else {
+        x86Instruction(ins->label, "cmp", reg_to_string(reg), "0x0");
+        x86Instruction("", "je", ins->res->name, "");
+    }
+    freeReg(reg);
 }
 
 
@@ -116,11 +147,14 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     //检查参数是否在寄存器中了
     x86_reg reg1 = bringToReg(ins->arg1);
     x86_reg reg2 = bringToReg(ins->arg2);
-    x86Instruction(ins->label, "add", reg_to_string(reg1), reg_to_string(reg2));
+    if(ins->op == PLUS_)
+        x86Instruction(ins->label, "add", reg_to_string(reg1), reg_to_string(reg2));
+    if(ins->op == MINUS_)
+        x86Instruction(ins->label, "sub", reg_to_string(reg1), reg_to_string(reg2));
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
-    freeReg(reg1);
+    freeReg(reg1, true);
     freeReg(reg2);
 }
 
@@ -138,7 +172,7 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
-    freeReg(reg1);
+    freeReg(reg1, true);
     freeReg(reg2);
 }
 
@@ -220,7 +254,7 @@ void SPL_CodeGen::allocateStack() {
             auto it = name_to_stack.find(ins->res->name);
             if(it == name_to_stack.end()) {
                 // 还没有在内存中， 添加到内存
-                if(offset % 4 != 0) offset = (offset / 4 + 1) * 4;
+                if(offset % 8 != 0) offset = (offset / 8 + 1) * 8;
                 auto size = ins->res->getSize();
                 offset += size;
                 std::cout << ins->res->name << " " << offset << "\n";
@@ -260,11 +294,13 @@ x86_reg SPL_CodeGen::getNextArgReg() {
     }
     return not_in;
 }
+
+
 x86_reg SPL_CodeGen::loadLiteralToReg(int i, x86_reg reg) {
     if(reg == not_in) {
         reg = get_x86_reg();
     } else {
-        get_x86_reg(reg);
+        freeReg(reg);
     }
     x86Instruction("", "mov", reg_to_string(reg), std::to_string(i));
     return reg;
@@ -274,7 +310,7 @@ x86_reg SPL_CodeGen::loadLiteralToReg(int i, x86_reg reg) {
 x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
     if(reg == not_in) reg = get_x86_reg(); // 需要一个空闲的寄存器
     else {
-        get_x86_reg(reg); // 需要指定的寄存器
+        freeReg(reg); // 需要指定的寄存器
     }
     if(checkOperandClass(operand, KNOWN)) {
         // 是常量
@@ -344,6 +380,7 @@ x86_reg SPL_CodeGen::get_x86_reg() {
             reg.counter = true;
         }
     }
+    return not_in;
 }
 /**
  * 释放寄存器
@@ -351,8 +388,12 @@ x86_reg SPL_CodeGen::get_x86_reg() {
  * @param write_back [bool] 是否写回堆栈或者全局变量
  */
 
-void SPL_CodeGen::freeReg(x86_reg reg) {
+void SPL_CodeGen::freeReg(x86_reg reg, bool write_back) {
     auto& reg_status = reg_memory_mapping.find(reg)->second;
+    if(!write_back) {
+        reg_status.status = FREE;
+        return;
+    }
     if(reg_status.status == STACK) {
         auto offset = reg_status.offset;
         x86Instruction("", "mov", "[ rbp - " + std::to_string(offset) + " ]", reg_to_string(reg));

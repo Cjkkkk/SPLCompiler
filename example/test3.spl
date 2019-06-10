@@ -29,9 +29,13 @@ begin
 //    s := "hello";
 //    m := 'c';
     x := 20 / 5;
-    y := x + 2;
+    y := x - 2;
     z := y + x;
-    write("%d", y);
+    if x <= y then
+        x := 30
+    else
+        x := 20;
+    write("%d %d %d", x, y, z);
 //	while x > 0 do begin
 //	    x := 4;
 //	end;

@@ -88,6 +88,7 @@ public:
     void generateGoto(Instruction* ins);
     void generateCall(Instruction* ins);
     void generateParam(Instruction* ins);
+    void generateCompare(Instruction* ins);
 
 
     int fetchStackVariable(std::string& variable);
@@ -95,7 +96,7 @@ public:
     x86_reg loadLiteralToReg(int, x86_reg=not_in);
     // 把全局变量/堆栈/常量加载到寄存器中
     x86_reg bringToReg(Operand* operand, x86_reg=not_in);
-    void freeReg(x86_reg);
+    void freeReg(x86_reg, bool=false);
     // 获取某一个寄存器的使用权
     x86_reg get_x86_reg();
     void get_x86_reg(x86_reg);
