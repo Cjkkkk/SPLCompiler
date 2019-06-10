@@ -61,6 +61,8 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
     allocateStack();
     for(auto it = instr.begin() + 1; it != instr.end(); it++) {
         auto ins = *it;
+        outfile << ";";
+        ins->output(outfile);
         switch(ins->op) {
             case PLUS_:
             case MINUS_:
@@ -85,6 +87,9 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
                 break;
             case OP_RET:
                 generateRet(ins);
+                break;
+            case OP_PARAM:
+                generateParam(ins);
                 break;
             case OP_CALL:
                 generateCall(ins);
@@ -112,10 +117,11 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     x86_reg reg1 = bringToReg(ins->arg1);
     x86_reg reg2 = bringToReg(ins->arg2);
     x86Instruction("", "add", reg_to_string(reg1), reg_to_string(reg2));
-    reg_available.find(reg1)->second = STACK;
-    reg_to_stack.find(reg1)->second = fetchStackVariable(ins->res->name);
-    freeReg(reg1, true);
-    freeReg(reg2, false);
+    auto& reg_status = reg_memory_mapping.find(reg1)->second;
+    reg_status.status = STACK;
+    reg_status.offset = fetchStackVariable(ins->res->name);
+    freeReg(reg1);
+    freeReg(reg2);
 }
 
 
@@ -142,13 +148,24 @@ void SPL_CodeGen::generateAssign(Instruction *ins) {
                        "mov",
                        "[ " + ins->res->name + " ]",
                        reg_to_string(reg));
-        freeReg(reg, false);
+        freeReg(reg);
     }
 }
 
 void SPL_CodeGen::generateLogic(Instruction* ins) {
 
 }
+
+void SPL_CodeGen::generateParam(Instruction* ins) {
+    auto reg = getNextArgReg();
+    if(reg == not_in) {
+        // 参数寄存器不够用了
+        throw invalid_argument{"reg for argument is not available now..."};
+    }
+    get_x86_reg(reg);
+    bringToReg(ins->arg1, reg);
+}
+
 
 void SPL_CodeGen::generateNull(Instruction* ins) {
     x86Instruction(ins->label, "", "", "");
@@ -166,10 +183,7 @@ void SPL_CodeGen::generateGoto(Instruction* ins) {
 
 
 void SPL_CodeGen::generateCall(Instruction* ins) {
-    x86Instruction("", "mov", "rdi", "format");
-    x86Instruction("", "mov", "rsi", "rdx");
     x86Instruction(ins->label, "call", "printf", "");
-    string_literals.insert({"format", "db  \"%ld\", 10, 0"});
 }
 
 void SPL_CodeGen::writeSectionConstData() {
@@ -218,18 +232,6 @@ void SPL_CodeGen::deallocateStack() {
     stack_size = 0;
 }
 
-x86_reg SPL_CodeGen::get_x86_reg() {
-    for(auto reg: reg_order) {
-        auto reg_it = reg_available.find(reg);
-        if(reg_it->second == FREE) {
-            // 说明是空闲的
-            return reg;
-        }
-    }
-    return r1;
-}
-
-
 int SPL_CodeGen::fetchStackVariable(std::string& variable) {
     auto memory_offset_it = name_to_stack.find(variable);
     if(memory_offset_it == name_to_stack.end()) {
@@ -239,37 +241,51 @@ int SPL_CodeGen::fetchStackVariable(std::string& variable) {
 }
 
 
-x86_reg SPL_CodeGen::loadLiteralToReg(int i) {
-    auto reg = get_x86_reg();
-    // 装载字面量到寄存器中
-    x86Instruction("", "mov", reg_to_string(reg), std::to_string(i));
-
-    // 记录该寄存器中存放的是常数
-    reg_available.find(reg)->second = LITERAL;
-    return reg;
+x86_reg SPL_CodeGen::getNextArgReg() {
+    for(auto& reg: reg_arg) {
+        if(reg.status) {
+            // 可以使用这个寄存器作为参数传递
+            reg.status = false;
+            return reg.name;
+        }
+    }
+    return not_in;
 }
+x86_reg SPL_CodeGen::loadLiteralToReg(int i) {}
 
 
-x86_reg SPL_CodeGen::bringToReg(Operand* operand) {
-    x86_reg reg;
+x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
+    if(reg == not_in) reg = get_x86_reg(); // 需要一个空闲的寄存器
+    else {
+        get_x86_reg(reg); // 需要指定的寄存器
+    }
     if(checkOperandClass(operand, KNOWN)) {
         // 是常量
-        reg = loadLiteralToReg(operand->value.valInt);
+        if(checkOperandType(operand, INT)) {
+            // 装载字面量到寄存器中
+            x86Instruction("", "mov", reg_to_string(reg), std::to_string(operand->value.valInt));
+        }
+        if(checkOperandType(operand, STRING)) {
+            x86Instruction("", "mov", reg_to_string(reg), "format");
+            string_literals.insert({"format", "db  \"%d\", 10, 0"});
+        }
+        // 记录该寄存器中存放的是常数
+        reg_memory_mapping.find(reg)->second.status = LITERAL;
     } else if(checkOperandClass(operand, VAR)) {
         // 加载变量到寄存器中
         // 变量默认是全局的
-        reg = get_x86_reg();
         x86Instruction("", "mov", reg_to_string(reg), "[ " + operand->name + " ]");
         // 添加寄存器到内存的映射
-        reg_available.find(reg)->second = GLOBAL;
-        reg_to_global.find(reg)->second = operand->name;
+        auto& reg_status = reg_memory_mapping.find(reg)->second;
+        reg_status.status = GLOBAL;
+        reg_status.global = operand->name;
     } else {
-        reg = get_x86_reg();
         auto offset = fetchStackVariable(operand->name);
         x86Instruction("", "mov", reg_to_string(reg), "[ rbp - " + std::to_string(offset) + " ]");
         // 添加寄存器到内存的映射
-        reg_available.find(reg)->second = STACK;
-        reg_to_stack.find(reg)->second = offset;
+        auto& reg_status = reg_memory_mapping.find(reg)->second;
+        reg_status.status = STACK;
+        reg_status.offset = offset;
     }
     return reg;
 }
@@ -280,33 +296,57 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand) {
  */
 
 void SPL_CodeGen::get_x86_reg(x86_reg reg) {
-
+    auto& reg_status = reg_memory_mapping.find(reg)->second;
+    if (reg_status.status == GLOBAL || reg_status.status == STACK) {
+        freeReg(reg);
+    }
 }
 
+/**
+ * 获取任意空闲的寄存器
+ * @return reg [x86_reg] 空闲寄存器
+ */
+
+x86_reg SPL_CodeGen::get_x86_reg() {
+    for(const auto& reg: reg_order) {
+        auto& reg_status = reg_memory_mapping.find(reg.name)->second;
+        if(reg_status.status == FREE) {
+            // 说明是空闲的
+            return reg.name;
+        }
+    }
+    // 没有找到空闲的，那么开始轮班
+    for(auto& reg: reg_order) {
+        if(reg.counter) {
+            // counter为true，征用这个寄存器，同时设为false，下次不会重复使用
+            reg.counter = false;
+            freeReg(reg.name);
+            return reg.name;
+        } else {
+            reg.counter = true;
+        }
+    }
+}
 /**
  * 释放寄存器
  * @param reg [x86_reg] 寄存器
  * @param write_back [bool] 是否写回堆栈或者全局变量
  */
 
-void SPL_CodeGen::freeReg(x86_reg reg, bool write_back) {
-    if(!write_back) {
-        reg_available.find(reg)->second = FREE;
-        return;
-    }
-    auto it = reg_available.find(reg);
-    if(it->second == STACK) {
-        auto offset = reg_to_stack.find(reg)->second;
+void SPL_CodeGen::freeReg(x86_reg reg) {
+    auto& reg_status = reg_memory_mapping.find(reg)->second;
+    if(reg_status.status == STACK) {
+        auto offset = reg_status.offset;
         x86Instruction("", "mov", "[ rbp - " + std::to_string(offset) + " ]", reg_to_string(reg));
-    } else if(it->second == GLOBAL) {
-        auto name = reg_to_global.find(reg)->second;
+    } else if(reg_status.status == GLOBAL) {
+        auto name = reg_status.global;
         x86Instruction("", "mov", "[ " + name + " ]", reg_to_string(reg));
-    } else if (it->second == LITERAL) {
+    } else if (reg_status.status == LITERAL) {
 
     } else {
         throw invalid_argument{"debug info> already free" + reg_to_string(reg)};
     }
-    it->second = FREE;
+    reg_status.status = FREE;
 }
 
 

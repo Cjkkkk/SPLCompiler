@@ -29,9 +29,9 @@ begin
 //    s := "hello";
 //    m := 'c';
     x := 4 + 20;
-    y := x;
+    y := x + 2;
     z := y + x;
-    write(z);
+    write("%d", y);
 //	while x > 0 do begin
 //	    x := 4;
 //	end;
