@@ -266,8 +266,9 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
             x86Instruction("", "mov", reg_to_string(reg), std::to_string(operand->value.valInt));
         }
         if(checkOperandType(operand, STRING)) {
-            x86Instruction("", "mov", reg_to_string(reg), "format");
-            string_literals.insert({"format", "db  \"%d\", 10, 0"});
+            auto temp_s = getTempStringLable();
+            x86Instruction("", "mov", reg_to_string(reg), temp_s);
+            string_literals.insert({temp_s, "db \"" +  *operand->value.valString +"\", 10, 0"});
         }
         // 记录该寄存器中存放的是常数
         reg_memory_mapping.find(reg)->second.status = LITERAL;
@@ -363,4 +364,8 @@ void SPL_CodeGen::collect_bss_data(Instruction* ins) {
         auto it = bss_data.find(ins->res->name);
         if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 1}});
     }
+}
+
+std::string SPL_CodeGen::getTempStringLable() {
+    return "string_literal_" + std::to_string(temp_count++);
 }

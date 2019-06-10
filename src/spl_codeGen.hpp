@@ -57,6 +57,8 @@ public:
             reg_memory_mapping.insert({reg.name, {FREE, 0, ""}});
         }
 
+        temp_count = 0;
+
     };
     ~SPL_CodeGen() {
         outfile.close();
@@ -86,6 +88,8 @@ public:
     void generateGoto(Instruction* ins);
     void generateCall(Instruction* ins);
     void generateParam(Instruction* ins);
+
+
     int fetchStackVariable(std::string& variable);
     x86_reg getNextArgReg();
     x86_reg loadLiteralToReg(int);
@@ -105,6 +109,7 @@ public:
     void allocateStack();
     void deallocateStack();
 
+    std::string getTempStringLable();
     // 将ir写入文件
     void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // 必须16字节对齐
@@ -133,6 +138,8 @@ public:
     std::set<x86_reg> callee_saved_registers;
 
     std::map<std::string, pair<x86_size, unsigned int>> bss_data;
+
+    unsigned int temp_count;
 };
 
 

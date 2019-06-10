@@ -22,27 +22,27 @@ std::string classToString(SPL_CLASS classId)
     {
         case VAR:
             return "VAR";
-            break;
+
 
         case CONST:
             return "CONST";
-            break;
+
         
         case TYPE:
             return "TYPE";
-            break;
+
 
         case FUNC:
             return "FUNC";
-            break;
+
 
         case LABEL:
             return "LABEL";
-            break;
+
 
         default:
             return "ERROR";
-            break;
+
     }
 }
 
@@ -52,43 +52,43 @@ std::string typeToString(SPL_TYPE typeId)
     {
         case BOOL:
             return "BOOL";
-            break;
+
 
         case CHAR:
             return "CHAR";
-            break;
+
         
         case INT:
             return "INT";
-            break;
+
 
         case REAL:
             return "REAL";
-            break;
+
 
         case STRING:
             return "STRING";
-            break;
+
         
         case ENUM:
             return "ENUM";
-            break;
+
         
         case SUBRANGE:
             return "SUBRANGE";
-            break;
+
 
         case ARRAY:
             return "ARRAY";
-            break;
+
         
         case RECORD:
             return "RECORD";
-            break;
+
 
         default:
             return "";
-            break;
+
     }
 }
 
@@ -97,90 +97,90 @@ std::string opToString(SPL_OP op){
     {
         case PLUS_:
             return "+";
-            break;
+
 
         case MINUS_:
             return "-";
-            break;
+
 
         case MUL_:
             return "*";
-            break;
+
 
         case DIV_:
             return "/";
-            break;
+
 
         case AND_:
             return "&&";
-            break;
+
 
         case OR_:
             return "||";
-            break;
+
 
         case NOT_:
             return "!";
-            break;
+
 
         case MINUS__:
             return "-";
-            break;
+
 
         case MOD_:
             return "%";
-            break;
+
         case EQUAL_:
             return "==";
-            break;
+
         case UNEQUAL_:
             return "!=";
-            break;
+
         case GE_:
             return ">=";
-            break;
+
         case GT_:
             return ">";
-            break;
+
         case LE_:
             return "<=";
-            break;
+
         case LT_:
             return "<";
-            break;
+
         case OP_ASSIGN:
             return "=";
-            break;
+
         case OP_GOTO:
             return "goto";
-            break;
+
         case OP_IF_Z:
             return "ifFalse";
-            break;
+
         case OP_IF:
             return "if";
-            break;
+
         case OP_CALL:
             return "call";
-            break;
+
         case OP_PARAM:
             return "param";
-            break;
+
         case OP_POP:
             return "pop";
-            break;
+
         case OP_NULL:
             return "";
-            break;
+
         case OP_RET:
             return "ret";
-            break;
+
         case OP_PHI:
             return "phi";
-            break;
+
         default:
             return "error";
-            break;
+
     }
 }
 
