@@ -257,9 +257,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == nullptr){
         lhs->emit(ir);
     }
-//    ir->decreaseTempCount(rhs->tempVariable);
-    tempVariable = lhs->getTempVariable();
-    ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, tempVariable});
+    ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, lhs->getTempVariable()});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)

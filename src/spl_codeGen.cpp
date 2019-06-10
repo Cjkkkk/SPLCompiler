@@ -11,7 +11,7 @@ void SPL_CodeGen::x86Instruction(const string& label, const string& ins, const s
     if(label.empty()) {
         outfile << "    " << ins;
     } else {
-        outfile << label << ":" << ins;
+        outfile << label << ":    " << ins;
     }
     if(!op2.empty()) {
         outfile << "    " << op1 << ", " << op2;
@@ -36,8 +36,8 @@ void SPL_CodeGen::GenerateMachineCode() {
 
     writeStringLiteral();
 //    writeDirectives("section", ".data"); // initialized global variable
-//    writeDirectives("section", ".bss"); // uninitialized global variable
-//    writeSectionConstData();
+    writeDirectives("section", ".bss"); // uninitialized global variable
+    writeSectionConstData();
 }
 
 void SPL_CodeGen::writeStringLiteral(){
@@ -112,9 +112,10 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     x86_reg reg1 = bringToReg(ins->arg1);
     x86_reg reg2 = bringToReg(ins->arg2);
     x86Instruction("", "add", reg_to_string(reg1), reg_to_string(reg2));
-
-    // 将临时变量的值存储位置记录下来
-    name_to_reg.insert({ins->res->name, reg1});
+    reg_available.find(reg1)->second = STACK;
+    reg_to_stack.find(reg1)->second = fetchStackVariable(ins->res->name);
+    freeReg(reg1, true);
+    freeReg(reg2, false);
 }
 
 
@@ -127,24 +128,22 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
 }
 
 void SPL_CodeGen::generateAssign(Instruction *ins) {
+    // x = 3 或者 x = y
     if( checkOperandClass(ins->arg1, KNOWN)) {
+        auto size = ins->arg1->getSize();
         x86Instruction(ins->label,
-                "mov word",
-                "[rbp - " + std::to_string(fetchStackVariable(ins->res->name)) + "]",
-                std::to_string(ins->arg1->value.valInt));
-
-//        if(checkOperandType(ins->arg1, STRING)) {
-//            string_literals.insert({ins->res->name, ins->arg1});
-//        }
+                    "mov " + x86SizeToString(size),
+                    "[ " + ins->res->name + " ]",
+                    std::to_string(ins->arg1->value.valInt));
     } else {
-        // 查看变量是否在内存之间
+        // 把变量移动到寄存器中
         auto reg = bringToReg(ins->arg1);
         x86Instruction(ins->label,
                        "mov",
-                       "[rbp - " + std::to_string(fetchStackVariable(ins->res->name)) + "]",
+                       "[ " + ins->res->name + " ]",
                        reg_to_string(reg));
+        freeReg(reg, false);
     }
-
 }
 
 void SPL_CodeGen::generateLogic(Instruction* ins) {
@@ -170,12 +169,13 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
     x86Instruction("", "mov", "rdi", "format");
     x86Instruction("", "mov", "rsi", "rdx");
     x86Instruction(ins->label, "call", "printf", "");
-    string_literals.insert({"format", "db  \"%20ld\", 10, 0"});
-    // x86Instruction(ins->label, "call", ins->arg1->name, "");
+    string_literals.insert({"format", "db  \"%ld\", 10, 0"});
 }
 
 void SPL_CodeGen::writeSectionConstData() {
-
+    for(auto& data: bss_data) {
+        x86Instruction(data.first, x86SizeToBssInit(data.second.first, data.second.second), "", "");
+    }
 }
 
 void SPL_CodeGen::push_rbp() {
@@ -191,19 +191,18 @@ void SPL_CodeGen::allocateStack() {
     // 堆栈上的数据用offset索引
     uint16_t offset = 0;
     for(auto ins : instr) {
-        if((checkInstructionOp(ins, OP_ASSIGN) || isCalculateOp(ins->op))
-        && checkOperandClass(ins->res, VAR)) {
-            auto it = name_to_memory.find(ins->res->name);
-            if(it == name_to_memory.end()) {
+        collect_bss_data(ins);
+        if(isCalculateOp(ins->op)) {
+            // 现在栈上把临时变量的位置留出来
+            auto it = name_to_stack.find(ins->res->name);
+            if(it == name_to_stack.end()) {
                 // 还没有在内存中， 添加到内存
-                offset = (offset / 4 + 1) * 4;
+                if(offset % 4 != 0) offset = (offset / 4 + 1) * 4;
                 auto size = ins->res->getSize();
                 offset += size;
                 std::cout << ins->res->name << " " << offset << "\n";
                 // 初始化变量在堆栈上的位置
-                name_to_memory.insert({ins->res->name, offset});
-                // 初始化变量是否在寄存器中 not_in是一个特殊的寄存器代表变量不在寄存器中
-                name_to_reg.insert({ins->res->name, not_in});
+                name_to_stack.insert({ins->res->name, offset});
             }
         }
     }
@@ -220,82 +219,20 @@ void SPL_CodeGen::deallocateStack() {
 }
 
 x86_reg SPL_CodeGen::get_x86_reg() {
-    for(auto it = reg_order.begin() ; it != reg_order.end() ; it ++) {
-        auto reg_it = reg_to_memory.find(*it);
-        if(reg_it->second == 0) {
+    for(auto reg: reg_order) {
+        auto reg_it = reg_available.find(reg);
+        if(reg_it->second == FREE) {
             // 说明是空闲的
-            return reg_it->first;
+            return reg;
         }
     }
-    // 将rax中的值存起来
-    auto it = reg_to_memory.find(rax);
-    if(it->second != -1) {
-        //说明存的不是常量
-        x86Instruction("", "mov", "[rbp - " + std::to_string(it->second) + "]", reg_to_string(rax));
-    }
-
-    // 返回rax
-    return rax;
-}
-
-
-std::string SPL_CodeGen::reg_to_string(x86_reg reg) {
-    switch(reg) {
-        case rax:
-            return "rax";
-        case rbx:
-            return "rbx";
-        case rcx:
-            return "rcx";
-        case rdx:
-            return "rdx";
-        case rbp:
-            return "rbp";
-        case rsp:
-            return "rsp";
-        case rsi:
-            return "rsi";
-        case rdi:
-            return "rdi";
-        case r1:
-            return "r1";
-        case r2:
-            return "r2";
-        case r3:
-            return "r3";
-        case r4:
-            return "r4";
-        case r5:
-            return "r5";
-        case r6:
-            return "r6";
-        case r7:
-            return "r7";
-        case r8:
-            return "r8";
-        case r9:
-            return "r9";
-        case r10:
-            return "r10";
-        case r11:
-            return "r11";
-        case r12:
-            return "r12";
-        case r13:
-            return "r13";
-        case r14:
-            return "r14";
-        case r15:
-            return "r15";
-        default:
-            return "not_in";
-    }
+    return r1;
 }
 
 
 int SPL_CodeGen::fetchStackVariable(std::string& variable) {
-    auto memory_offset_it = name_to_memory.find(variable);
-    if(memory_offset_it == name_to_memory.end()) {
+    auto memory_offset_it = name_to_stack.find(variable);
+    if(memory_offset_it == name_to_stack.end()) {
         throw invalid_argument{"debug info > should at load in memory " + variable};
     }
     return memory_offset_it->second;
@@ -306,42 +243,84 @@ x86_reg SPL_CodeGen::loadLiteralToReg(int i) {
     auto reg = get_x86_reg();
     // 装载字面量到寄存器中
     x86Instruction("", "mov", reg_to_string(reg), std::to_string(i));
-    reg_to_memory.find(reg)->second = -1;
+
+    // 记录该寄存器中存放的是常数
+    reg_available.find(reg)->second = LITERAL;
     return reg;
-};
+}
 
 
 x86_reg SPL_CodeGen::bringToReg(Operand* operand) {
-    x86_reg reg = not_in;
+    x86_reg reg;
     if(checkOperandClass(operand, KNOWN)) {
         // 是常量
         reg = loadLiteralToReg(operand->value.valInt);
     } else if(checkOperandClass(operand, VAR)) {
-        auto exist_in_reg = name_to_reg.find(operand->name);
-        if(exist_in_reg == name_to_reg.end()) {
-            throw invalid_argument{"debug info > should at least not_in " + operand->name};
-        }
-        if(exist_in_reg->second == not_in) {
-            // 加载变量到寄存器中
-            reg = get_x86_reg();
-            auto offset = fetchStackVariable(operand->name);
-            string s = "[rbp - " + std::to_string(offset) + "]";
-            x86Instruction("", "mov", reg_to_string(reg), s);
-            // 添加变量保存在寄存器的记录
-            exist_in_reg->second = reg;
-            // 添加寄存器到内存的映射
-            reg_to_memory.find(reg)->second = offset;
-        }
-        else {
-            reg = exist_in_reg->second;
-        }
+        // 加载变量到寄存器中
+        // 变量默认是全局的
+        reg = get_x86_reg();
+        x86Instruction("", "mov", reg_to_string(reg), "[ " + operand->name + " ]");
+        // 添加寄存器到内存的映射
+        reg_available.find(reg)->second = GLOBAL;
+        reg_to_global.find(reg)->second = operand->name;
     } else {
-        auto it = name_to_reg.find(operand->name);
-        if(it == name_to_reg.end()) {
-            throw invalid_argument{"temp variable should be in reg " + operand->name};
-        }
-        return it->second;
+        reg = get_x86_reg();
+        auto offset = fetchStackVariable(operand->name);
+        x86Instruction("", "mov", reg_to_string(reg), "[ rbp - " + std::to_string(offset) + " ]");
+        // 添加寄存器到内存的映射
+        reg_available.find(reg)->second = STACK;
+        reg_to_stack.find(reg)->second = offset;
     }
-
     return reg;
+}
+
+/**
+ * 获取寄存器
+ * @param reg [x86_reg] 寄存器
+ */
+
+void SPL_CodeGen::get_x86_reg(x86_reg reg) {
+
+}
+
+/**
+ * 释放寄存器
+ * @param reg [x86_reg] 寄存器
+ * @param write_back [bool] 是否写回堆栈或者全局变量
+ */
+
+void SPL_CodeGen::freeReg(x86_reg reg, bool write_back) {
+    if(!write_back) {
+        reg_available.find(reg)->second = FREE;
+        return;
+    }
+    auto it = reg_available.find(reg);
+    if(it->second == STACK) {
+        auto offset = reg_to_stack.find(reg)->second;
+        x86Instruction("", "mov", "[ rbp - " + std::to_string(offset) + " ]", reg_to_string(reg));
+    } else if(it->second == GLOBAL) {
+        auto name = reg_to_global.find(reg)->second;
+        x86Instruction("", "mov", "[ " + name + " ]", reg_to_string(reg));
+    } else if (it->second == LITERAL) {
+
+    } else {
+        throw invalid_argument{"debug info> already free" + reg_to_string(reg)};
+    }
+    it->second = FREE;
+}
+
+
+void SPL_CodeGen::collect_bss_data(Instruction* ins) {
+    if(ins->arg1 && checkOperandClass(ins->arg1, VAR)) {
+        auto it = bss_data.find(ins->arg1->name);
+        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 1}});
+    }
+    if(ins->arg2 && checkOperandClass(ins->arg2, VAR)) {
+        auto it = bss_data.find(ins->arg2->name);
+        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),1}});
+    }
+    if(ins->res && checkOperandClass(ins->res, VAR)) {
+        auto it = bss_data.find(ins->res->name);
+        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 1}});
+    }
 }

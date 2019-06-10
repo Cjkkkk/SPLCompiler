@@ -304,3 +304,94 @@ bool isCalculateOp(SPL_OP op) {
             return false;
     }
 }
+
+std::string x86SizeToString(x86_size size) {
+    switch(size) {
+        case byte:
+            return "byte";
+        case word:
+            return "word";
+        case dword:
+            return "dword";
+        case qword:
+            return "qword";
+        default:
+            return "invalid";
+    }
+}
+
+std::string reg_to_string(x86_reg reg) {
+    switch(reg) {
+        case rax:
+            return "rax";
+        case rbx:
+            return "rbx";
+        case rcx:
+            return "rcx";
+        case rdx:
+            return "rdx";
+        case rbp:
+            return "rbp";
+        case rsp:
+            return "rsp";
+        case rsi:
+            return "rsi";
+        case rdi:
+            return "rdi";
+        case r1:
+            return "r1";
+        case r2:
+            return "r2";
+        case r3:
+            return "r3";
+        case r4:
+            return "r4";
+        case r5:
+            return "r5";
+        case r6:
+            return "r6";
+        case r7:
+            return "r7";
+        case r8:
+            return "r8";
+        case r9:
+            return "r9";
+        case r10:
+            return "r10";
+        case r11:
+            return "r11";
+        case r12:
+            return "r12";
+        case r13:
+            return "r13";
+        case r14:
+            return "r14";
+        case r15:
+            return "r15";
+        default:
+            return "not_in";
+    }
+}
+
+std::string x86SizeToBssInit(x86_size size, unsigned int length) {
+    std::string op;
+    switch (size) {
+        case byte:
+            op = "resb";
+            break;
+        case word:
+            op = "resw";
+            break;
+        case dword:
+            op = "resd";
+            break;
+        case qword:
+            op = "resq";
+            break;
+        default:
+            op = "error";
+    }
+    op = op + " " + std::to_string(length);
+    return op;
+}
+

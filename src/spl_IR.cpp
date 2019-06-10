@@ -3,6 +3,7 @@
 //
 
 #include "spl_IR.hpp"
+#include "spl_compiler.hpp"
 
 bool compareValue(Operand* l, Operand* r) {
     if(checkOperandType(l, INT)) {
@@ -108,19 +109,19 @@ Operand* evaluate(SPL_OP op, Operand* left, Operand* right) {
 }
 
 
-uint8_t Operand::getSize() {
+x86_size Operand::getSize() {
     switch(type) {
         case BOOL:
-            return 1;
+            return byte;
         case REAL:
-            return 8;
+            return qword;
         case INT:
-            return 4;
+            return dword;
         case CHAR:
-            return 1;
+            return byte;
         case STRING:
         default:
-            return 100;
+            return invalid;
     }
 }
 void Instruction::addVariable(Operand* name, int index) {};

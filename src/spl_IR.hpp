@@ -29,7 +29,7 @@ public:
         this->cl = op.cl;
         this->value = op.value;
     }
-    uint8_t getSize();
+    x86_size getSize();
     SPL_TYPE type;
     std::string name;
     SPL_CLASS cl;

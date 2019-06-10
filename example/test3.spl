@@ -28,10 +28,9 @@ var
 begin
 //    s := "hello";
 //    m := 'c';
-    x := 40;
     x := 4 + 20;
     y := x;
-    z := y;
+    z := y + x;
     write(z);
 //	while x > 0 do begin
 //	    x := 4;
