@@ -9,6 +9,7 @@
 void SPL_SSA::OptimizeIR() {
     genCFGNode();
 
+    auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
     // generate CFG
     generateCFG();
 
@@ -24,8 +25,7 @@ void SPL_SSA::OptimizeIR() {
     // rename variable
     renameVariable();
 
-    auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
-    outputInstruction(prefix +"origin.bc");
+    outputInstruction(prefix +"phi_var.bc");
 
     // --------------------------------------------
     // output optimized IR
@@ -45,13 +45,6 @@ void SPL_SSA::OptimizeIR() {
 
     backToTAC(insSet);
 
-
-//    std::ofstream outfile;
-//    outfile.open("byte_code/opt.bc", std::ios::out);
-//    for(auto& instr:ir->IR) {
-//        instr->output(outfile);
-//    }
-//    outfile.close();
 
 // ---------------------------------------------
 //    outputIdom();
@@ -86,7 +79,7 @@ void SPL_SSA::backToTAC(std::vector<Instruction*>& ins){
         for(auto ins: nodeSet[index]->instruSet) {
             if( ! checkInstructionOp(ins, OP_PHI) ) break;
             for(auto var: *ins->getVariable()) {
-                if(checkOperandClass(var.first, CONST)
+                if(checkOperandClass(var.first, KNOWN)
                 || checkOperandClass(var.first, TEMP)
                 || (checkOperandClass(var.first, VAR) && !isSameVariable(var.first, ins->res))) {
                     // write definition
@@ -151,9 +144,9 @@ void SPL_SSA::genCFGNode() {
         auto symVec = ir->symbolTable->getVariableByScopeIndex();
         for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
             if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
-                auto var = std::to_string(ir->symbolTable->getCurrentScopeIndex()) +"."+ it->first;
-                variableListBlock.insert(
-                        {var, {}});
+                auto var = it->first + "." + std::to_string(ir->symbolTable->getCurrentScopeIndex());
+                // 初始化变量
+                variableListBlock.insert({var, {}});
 
                 currentDef.insert({var, 1});
                 nameUsageMap.insert({var + ".0", {}});
@@ -196,16 +189,6 @@ void SPL_SSA::genCFGNode() {
             current->instruSet.push_back(ins);
         } else {current->instruSet.push_back(ins);}
     }
-
-
-//    for(auto var: variableListBlock){
-//        std::cout << var.first << "\n";
-//        for(auto pos: var.second) {
-//            std::cout << pos << " ";
-//        }
-//        std::cout << "\n";
-//    }
-//    std::cout << "--------------\n";
 }
 
 

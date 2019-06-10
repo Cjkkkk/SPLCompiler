@@ -19,7 +19,7 @@
 #include "spl_scanner.hpp"
 #include "spl_IR.hpp"
 #include "spl_SSA.hpp"
-#include "spl_codeGen.h"
+#include "spl_codeGen.hpp"
 
 namespace SPL
 {

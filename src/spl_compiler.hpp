@@ -14,7 +14,6 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-//#include <assert.h>
 
 #define Assert(expr, errorMsg) ((void)((expr) ? 0 : ((void)DoAssert(errorMsg), 0)))
 
@@ -65,7 +64,8 @@ enum SPL_CLASS : unsigned char
     TYPE,  // user-defined type
     FUNC,  // function/procedure
     LABEL,  // label
-    TEMP
+    TEMP,   // temp variable
+    KNOWN, // Known in compile time / literal
 };
 
 // type of a variable symbol
@@ -107,10 +107,26 @@ enum SPL_PARA : bool
     REFER = true    // pass by reference
 };
 
+typedef enum x86_reg {
+    rax, rbx, rcx, rdx, rbp, rsp,
+    rsi, rdi,
+    r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15,
+    not_in
+} reg;
+
+
+typedef enum x86_size {
+    byte=1, word=2, dword=4, qword=8, invalid=100
+} x86_size;
+
 void DoAssert(const char *errorMsg);
-std::string SPL_OPToString(SPL_OP op);
+std::string opToString(SPL_OP op);
 std::string classToString(SPL_CLASS classId);
 std::string typeToString(SPL_TYPE typeId);
+std::string opTox86Ins(SPL_OP op);
+std::string x86SizeToString(x86_size size);
+std::string x86SizeToBssInit(x86_size size, unsigned int length);
+std::string reg_to_string(x86_reg reg);
 SPL_OP_NUM getOperandNum(SPL_OP op);
 bool isCalculateOp(SPL_OP op);
 #endif //_SPL_COMPILER_H_

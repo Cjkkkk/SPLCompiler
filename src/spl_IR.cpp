@@ -3,6 +3,7 @@
 //
 
 #include "spl_IR.hpp"
+#include "spl_compiler.hpp"
 
 bool compareValue(Operand* l, Operand* r) {
     if(checkOperandType(l, INT)) {
@@ -24,10 +25,9 @@ bool compareValue(Operand* l, Operand* r) {
 }
 
 
-Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
-//    name.clear();
+Operand* evaluate(SPL_OP op, Operand* left, Operand* right) {
     auto new_operand = new Operand();
-    new_operand->cl = CONST;
+    new_operand->cl = KNOWN;
     new_operand->name = "";
     switch(op) {
         case PLUS_:
@@ -107,6 +107,23 @@ Operand* evalute(SPL_OP op, Operand* left, Operand* right) {
     }
     return new_operand;
 }
+
+
+x86_size Operand::getSize() {
+    switch(type) {
+        case BOOL:
+            return byte;
+        case REAL:
+            return qword;
+        case INT:
+            return dword;
+        case CHAR:
+            return byte;
+        case STRING:
+        default:
+            return invalid;
+    }
+}
 void Instruction::addVariable(Operand* name, int index) {};
 std::list<pair<Operand*, int>>* Instruction::getVariable() {
     return nullptr;
@@ -115,7 +132,7 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
     if(operand == nullptr) return;
     else if(operand->cl == LABEL) {
         s << operand->name;
-    } else if(operand->cl == CONST) {
+    } else if(operand->cl == KNOWN) {
         switch (operand->type) {
             case INT:
                 s << std::to_string(operand->value.valInt);
@@ -143,7 +160,6 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
 }
 
 
-
 void Instruction::output(ostream& s) {
     switch(op) {
         case PLUS_:
@@ -163,7 +179,7 @@ void Instruction::output(ostream& s) {
             outputOperand(res, s);
             s << " = ";
             outputOperand(arg1, s);
-            s << " " << SPL_OPToString(op) << " ";
+            s << " " << opToString(op) << " ";
             outputOperand(arg2, s);
             break;
 
@@ -177,7 +193,7 @@ void Instruction::output(ostream& s) {
         case OP_IF:
         case OP_IF_Z:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(arg1, s);
             s << " goto ";
             outputOperand(res, s);
@@ -186,26 +202,26 @@ void Instruction::output(ostream& s) {
         case MINUS__:
             s << label << "\t";
             outputOperand(res, s);
-            s << " = " << SPL_OPToString(op) << " ";
+            s << " = " << opToString(op) << " ";
             outputOperand(arg1, s);
             break;
             // 1 operand
         case OP_GOTO:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(res, s);
             break;
         case OP_PARAM:
         case OP_POP:
         case OP_CALL:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
             outputOperand(arg1, s);
             break;
             // 0 operand
         default:
             s << label << "\t";
-            s << SPL_OPToString(op) << " ";
+            s << opToString(op) << " ";
     }
     s << "\n";
 }
@@ -219,7 +235,7 @@ void PhiInstruction::output(ostream& s) {
         Instruction::output(s);
         return;
     }
-    s << label << "\t" << SPL_OPToString(op) << "\t" << res->name;
+    s << label << "\t" << opToString(op) << "\t" << res->name;
     s << "(";
     for(auto it = variableCluster.begin() ; it != variableCluster.end() ; it++) {
         if(std::distance(variableCluster.begin(), it) > 0) s << ", ";
@@ -230,6 +246,13 @@ void PhiInstruction::output(ostream& s) {
 
 std::list<pair<Operand*, int>>* PhiInstruction::getVariable() {return &variableCluster;}
 
+
+void SPL_IR::outputInstruction(ostream& f) {
+    auto ins_set = getCurrentIR();
+    for(auto& ins: ins_set) {
+        ins->output(f);
+    }
+}
 
 void SPL_IR::addInstruction(Instruction* ins) {
     if(!ins->label.empty() && !getCurrentIR().empty()

@@ -11,9 +11,9 @@ namespace {
     protected:  // You should make the members protected s.t. they can be
         void SetUp() override {
             ir.addInstruction(new Instruction{"test", OP_NULL, nullptr, nullptr, nullptr});
-            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", CONST), nullptr ,new Operand(INT, "_t0", TEMP)});
-            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", CONST), nullptr ,new Operand(INT, "_t1", TEMP)});
-            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", CONST), nullptr ,new Operand(INT, "_t2", TEMP)});
+            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", KNOWN), nullptr ,new Operand(INT, "_t0", TEMP)});
+            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", KNOWN), nullptr ,new Operand(INT, "_t1", TEMP)});
+            ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"", KNOWN), nullptr ,new Operand(INT, "_t2", TEMP)});
             ir.addInstruction(new Instruction{"", MUL_, new Operand(INT,"_t1", TEMP), new Operand(INT, "_t2", TEMP) ,new Operand(INT, "_t3", TEMP)});
             ir.addInstruction(new Instruction{"", PLUS_, new Operand(INT,"_t0", TEMP), new Operand(INT, "_t3", TEMP) ,new Operand(INT, "_t4", TEMP)});
             ir.addInstruction(new Instruction{"", OP_ASSIGN, new Operand(INT,"_t4", TEMP), nullptr ,new Operand(INT, "0.ans.0", VAR)});

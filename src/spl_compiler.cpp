@@ -92,7 +92,7 @@ std::string typeToString(SPL_TYPE typeId)
     }
 }
 
-std::string SPL_OPToString(SPL_OP op){
+std::string opToString(SPL_OP op){
     switch (op)
     {
         case PLUS_:
@@ -173,7 +173,7 @@ std::string SPL_OPToString(SPL_OP op){
             return "";
             break;
         case OP_RET:
-            return "return";
+            return "ret";
             break;
         case OP_PHI:
             return "phi";
@@ -189,90 +189,96 @@ SPL_OP_NUM getOperandNum(SPL_OP op) {
     {
         case PLUS_:
             return THREE;
-            break;
 
         case MINUS_:
             return THREE;
-            break;
 
         case MUL_:
             return THREE;
-            break;
 
         case DIV_:
             return THREE;
-            break;
 
         case AND_:
             return THREE;
-            break;
 
         case OR_:
             return THREE;
-            break;
 
         case NOT_:
             return TWO;
-            break;
 
         case MINUS__:
             return TWO;
-            break;
 
         case MOD_:
             return THREE;
-            break;
+
         case EQUAL_:
             return THREE;
-            break;
+
         case UNEQUAL_:
             return THREE;
-            break;
+
         case GE_:
             return THREE;
-            break;
+
         case GT_:
             return THREE;
-            break;
+
         case LE_:
             return THREE;
-            break;
+
         case LT_:
             return THREE;
-            break;
+
         case OP_ASSIGN:
             return TWO;
-            break;
+
         case OP_GOTO:
             return ONE;
-            break;
+
         case OP_IF_Z:
             return TWO;
-            break;
+
         case OP_IF:
             return TWO;
-            break;
+
         case OP_CALL:
             return ONE;
-            break;
+
         case OP_PARAM:
             return ONE;
-            break;
+
         case OP_POP:
             return ONE;
-            break;
+
         case OP_NULL:
             return ZERO;
-            break;
+
         case OP_RET:
             return ZERO;
-            break;
+
         case OP_PHI:
             return ZERO;
-            break;
+
         default:
             return ZERO;
-            break;
+    }
+}
+
+std::string opTox86Ins(SPL_OP op) {
+    switch(op) {
+        case PLUS_:
+            return "add";
+        case MINUS_:
+            return "sub";
+        case MUL_:
+            return "mul";
+        case DIV_:
+            return "div";
+        default:
+            return "error";
     }
 }
 
@@ -298,3 +304,94 @@ bool isCalculateOp(SPL_OP op) {
             return false;
     }
 }
+
+std::string x86SizeToString(x86_size size) {
+    switch(size) {
+        case byte:
+            return "byte";
+        case word:
+            return "word";
+        case dword:
+            return "dword";
+        case qword:
+            return "qword";
+        default:
+            return "invalid";
+    }
+}
+
+std::string reg_to_string(x86_reg reg) {
+    switch(reg) {
+        case rax:
+            return "rax";
+        case rbx:
+            return "rbx";
+        case rcx:
+            return "rcx";
+        case rdx:
+            return "rdx";
+        case rbp:
+            return "rbp";
+        case rsp:
+            return "rsp";
+        case rsi:
+            return "rsi";
+        case rdi:
+            return "rdi";
+        case r1:
+            return "r1";
+        case r2:
+            return "r2";
+        case r3:
+            return "r3";
+        case r4:
+            return "r4";
+        case r5:
+            return "r5";
+        case r6:
+            return "r6";
+        case r7:
+            return "r7";
+        case r8:
+            return "r8";
+        case r9:
+            return "r9";
+        case r10:
+            return "r10";
+        case r11:
+            return "r11";
+        case r12:
+            return "r12";
+        case r13:
+            return "r13";
+        case r14:
+            return "r14";
+        case r15:
+            return "r15";
+        default:
+            return "not_in";
+    }
+}
+
+std::string x86SizeToBssInit(x86_size size, unsigned int length) {
+    std::string op;
+    switch (size) {
+        case byte:
+            op = "resb";
+            break;
+        case word:
+            op = "resw";
+            break;
+        case dword:
+            op = "resd";
+            break;
+        case qword:
+            op = "resq";
+            break;
+        default:
+            op = "error";
+    }
+    op = op + " " + std::to_string(length);
+    return op;
+}
+

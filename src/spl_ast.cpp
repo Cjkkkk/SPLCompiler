@@ -144,7 +144,7 @@ AST_Const::~AST_Const()
 void AST_Const::checkSemantic() {}
 void AST_Const::emit(SPL_IR* ir){
     // tempVariable = ir->genTempVariable(valType);
-    auto literal = new Operand(valType, "", CONST);
+    auto literal = new Operand(valType, "", KNOWN);
 
     switch (valType) {
         case INT: literal->value.valInt = getValue().valInt;
@@ -182,7 +182,7 @@ void AST_Sym::checkSemantic()
 }
 void AST_Sym::emit(SPL_IR* ir){
 
-    tempVariable = new Operand(valType, std::to_string(scopeIndex) + "." + id, VAR);
+    tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
 
 }
 
@@ -257,9 +257,7 @@ void AST_Assign::emit(SPL_IR* ir){
     if(lhs->tempVariable == nullptr){
         lhs->emit(ir);
     }
-//    ir->decreaseTempCount(rhs->tempVariable);
-    tempVariable = lhs->getTempVariable();
-    ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, tempVariable});
+    ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, lhs->getTempVariable()});
 }
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
@@ -440,7 +438,7 @@ void AST_For::emit(SPL_IR* ir) {
     // 生成判断成功需要执行的代码
     stmt->emit(ir);
     // 更改初始值
-    auto literal = new Operand(INT, "", CONST);
+    auto literal = new Operand(INT, "", KNOWN);
     literal->value.valInt = 1;
     ir->addInstruction(new Instruction{"", plusOrMinus, init->tempVariable , literal,  init->tempVariable});
     // 回到判断的位置
@@ -596,49 +594,8 @@ void AST_Func::emit(SPL_IR* ir) {
                 totalSize += 100; //
         }
     }
-    auto literal = new Operand(INT, "", CONST);
+    auto literal = new Operand(INT, "", KNOWN);
     literal->value.valInt = totalSize;
-    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, std::to_string(scopeIndex) + "." + funcId, FUNC), nullptr, nullptr});
+    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr, nullptr});
     ir->addInstruction(new Instruction{"", OP_POP, literal, nullptr, nullptr});
 }
-
-// AST_Routine::AST_Routine(vector<SPL::AST_RoutineHead *> *routine_head_, SPL::AST_Compound *routine_body_)
-// {
-//     routine_body = routine_body_;
-//     routine_head = routine_head_;
-// }
-// void AST_Routine::checkSemantic()
-// {
-//     for (auto part : *routine_head)
-//     {
-//         if (part)
-//             part->checkSemantic();
-//     }
-//     routine_body->checkSemantic();
-// }
-
-// int AST_Routine::calculate()
-// {
-//     for (auto part : *routine_head)
-//     {
-//         if (part)
-//             part->calculate();
-//     }
-//     routine_body->calculate();
-//     return -ERROR_VAL;
-// }
-// AST_Program::AST_Program(string &id_, SPL::AST_Routine *routine_)
-// {
-//     id = id_;
-//     routine = routine_;
-// }
-
-// void AST_Program::checkSemantic()
-// {
-//     routine->checkSemantic();
-// }
-
-// int AST_Program::calculate()
-// {
-//     return routine->calculate();
-// }

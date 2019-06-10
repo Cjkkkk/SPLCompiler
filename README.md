@@ -110,13 +110,13 @@ git commit -m"ADD new class"
 * control flow graph [done]
 * SSA [done]
 
-* constant propagation
-* copy propagation
-* dead code elimination (copy propagation can help)
+* constant propagation [done]
+* copy propagation [done]
+* dead code elimination (copy propagation can help) [done]
 * common subexpression
 
 ### code generation
-* x86
+* x86 NASM
 
 ## useful link
 ### IR optimization
@@ -133,3 +133,17 @@ git commit -m"ADD new class"
 * [SSA dead code](http://www.cs.colostate.edu/~mstrout/CS553Fall09/Slides/lecture14-SSA.ppt.pdf)
 ### register allocation
 * [register allocation algorithm](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/17/Slides17.pdf)
+
+## getting started
+* 编译程序
+在与可执行文件同目录下创建assem目录用于存储汇编代码/byte_code目录用于存储中间代码
+
+* 编译test目录下的test3.spl
+* 运行nasm生成可执行代码
+```bash=
+nasm -felf64 hello.asm && gcc hello.o && ./a.out
+```
+* 输出
+```
+24
+```

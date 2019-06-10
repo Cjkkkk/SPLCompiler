@@ -29,17 +29,22 @@ public:
         this->cl = op.cl;
         this->value = op.value;
     }
+    x86_size getSize();
     SPL_TYPE type;
     std::string name;
     SPL_CLASS cl;
     Value value;
 };
 
-Operand* evalute(SPL_OP op, Operand* left, Operand* right);
+Operand* evaluate(SPL_OP op, Operand* left, Operand* right);
 bool compareValue(Operand* l, Operand* r);
 
 inline bool checkOperandClass(Operand* operand, SPL_CLASS cl) {
     return operand->cl == cl;
+}
+
+inline bool checkOperandIsLiteral(Operand* operand) {
+    return operand->cl == KNOWN;
 }
 
 inline bool checkOperandType(Operand* operand, SPL_TYPE type) {
@@ -114,6 +119,7 @@ public:
 
     Instruction* getLastInstruction() ;
 
+    void outputInstruction(ostream& f);
     // 生成临时变量
     Operand* genTempVariable(SPL_TYPE type);
 

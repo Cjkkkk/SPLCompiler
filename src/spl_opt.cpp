@@ -50,7 +50,7 @@ void propagateAlongDuchain(std::list<Instruction*>& usage,
         }
 
         if(use_or_not) {
-            if( ! checkOperandClass(res, CONST) ) {
+            if( ! checkOperandClass(res, KNOWN) ) {
                 copy_usage->push_back(*use);
             }
             // 从DU hain中删除使用记录
@@ -94,13 +94,13 @@ void SPL_SSA::constantPropagation() {
     for(auto& node: nodeSet) {
         for(auto ins_it = node->instruSet.begin() ; ins_it != node->instruSet.end(); ins_it ++) {
             if(isCalculateOp((*ins_it)->op)) {
-                if(checkOperandClass((*ins_it)->arg1,CONST)
-                   && checkOperandClass((*ins_it)->arg2,CONST)) {
+                if(checkOperandClass((*ins_it)->arg1,KNOWN)
+                   && checkOperandClass((*ins_it)->arg2,KNOWN)) {
                     SPL_OP op = (*ins_it)->op;
 
                     auto it = nameUsageMap.find((*ins_it)->res->name);
 
-                    auto o = evalute(op,(*ins_it)->arg1, (*ins_it)->arg2);
+                    auto o = evaluate(op,(*ins_it)->arg1, (*ins_it)->arg2);
 
                     delete((*ins_it)->arg1);
                     (*ins_it)->arg1 = nullptr;
@@ -118,7 +118,7 @@ void SPL_SSA::constantPropagation() {
                 continue;
             }
             if (checkInstructionOp(*ins_it, OP_ASSIGN)) {
-                if(checkOperandClass((*ins_it)->arg1, CONST)
+                if(checkOperandClass((*ins_it)->arg1, KNOWN)
                    && checkOperandType((*ins_it)->arg1, INT)) {
                     auto it = nameUsageMap.find((*ins_it)->res->name);
 
@@ -133,7 +133,7 @@ void SPL_SSA::constantPropagation() {
                 Operand* o = nullptr;
                 bool res = true;
                 for(auto var: *(*ins_it)->getVariable()) {
-                    if (!checkOperandClass(var.first, CONST)) {
+                    if (!checkOperandClass(var.first, KNOWN)) {
                         // 存在不为const的变量
                         res = false;
                         break;
@@ -215,18 +215,18 @@ void SPL_SSA::removeUnusedVariable() {
 
         if(checkInstructionOp(def, OP_PHI)) {
             for(auto& var: *(def->getVariable())) {
-                if(checkOperandClass(var.first, CONST)) continue;
+                if(checkOperandClass(var.first, KNOWN)) continue;
                 eraseAlongDuChain(nameUsageMap, unusable, var.first->name, def->unique_id);
             }
             continue;
         }
 
-        if(def->arg1 && !checkOperandClass(def->arg1, CONST)) {
+        if(def->arg1 && !checkOperandClass(def->arg1, KNOWN)) {
             // 在du chain中删除对应的使用
             eraseAlongDuChain(nameUsageMap, unusable, def->arg1->name, def->unique_id);
         }
 
-        if(def->arg2 && !checkOperandClass(def->arg2, CONST)) {
+        if(def->arg2 && !checkOperandClass(def->arg2, KNOWN)) {
             // 在du chain中删除对应的使用
             eraseAlongDuChain(nameUsageMap, unusable, def->arg2->name, def->unique_id);
         }
