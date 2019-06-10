@@ -92,7 +92,7 @@ public:
 
     int fetchStackVariable(std::string& variable);
     x86_reg getNextArgReg();
-    x86_reg loadLiteralToReg(int);
+    x86_reg loadLiteralToReg(int, x86_reg=not_in);
     // 把全局变量/堆栈/常量加载到寄存器中
     x86_reg bringToReg(Operand* operand, x86_reg=not_in);
     void freeReg(x86_reg);

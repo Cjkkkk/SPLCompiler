@@ -28,7 +28,7 @@ var
 begin
 //    s := "hello";
 //    m := 'c';
-    x := 4 + 20;
+    x := 20 / 5;
     y := x + 2;
     z := y + x;
     write("%d", y);

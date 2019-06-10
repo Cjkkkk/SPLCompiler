@@ -116,7 +116,7 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     //检查参数是否在寄存器中了
     x86_reg reg1 = bringToReg(ins->arg1);
     x86_reg reg2 = bringToReg(ins->arg2);
-    x86Instruction("", "add", reg_to_string(reg1), reg_to_string(reg2));
+    x86Instruction(ins->label, "add", reg_to_string(reg1), reg_to_string(reg2));
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
@@ -128,9 +128,18 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
 void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     // mul的一个乘数在eax中， 只接受一个参数， 结果放在eax中
     // div的一个乘数在eax中， 只接受一个参数， 结果放在eax中
-    x86Instruction(ins->label, "mov", "eax", ins->arg1->name);
-    x86Instruction(ins->label, "mov", "ebx", ins->arg2->name);
-    x86Instruction(ins->label, opTox86Ins(ins->op), "ebx", "");
+    auto reg1 = bringToReg(ins->arg1, rax);
+    auto reg2 = bringToReg(ins->arg2);
+    if(ins->op == DIV_) {
+        // rdx 应该为0
+        loadLiteralToReg(0, rdx);
+    }
+    x86Instruction(ins->label, opTox86Ins(ins->op), reg_to_string(reg2), "");
+    auto& reg_status = reg_memory_mapping.find(reg1)->second;
+    reg_status.status = STACK;
+    reg_status.offset = fetchStackVariable(ins->res->name);
+    freeReg(reg1);
+    freeReg(reg2);
 }
 
 void SPL_CodeGen::generateAssign(Instruction *ins) {
@@ -251,7 +260,15 @@ x86_reg SPL_CodeGen::getNextArgReg() {
     }
     return not_in;
 }
-x86_reg SPL_CodeGen::loadLiteralToReg(int i) {}
+x86_reg SPL_CodeGen::loadLiteralToReg(int i, x86_reg reg) {
+    if(reg == not_in) {
+        reg = get_x86_reg();
+    } else {
+        get_x86_reg(reg);
+    }
+    x86Instruction("", "mov", reg_to_string(reg), std::to_string(i));
+    return reg;
+}
 
 
 x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
