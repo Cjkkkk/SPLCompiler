@@ -194,14 +194,14 @@ program_head:
 routine:
         routine_head  routine_body
         {
-           driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex());
+           driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex(), 0);
         }
         ;
 
 sub_routine:
         routine_head  routine_body
         {
-            driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex());
+            driver.astmng.addFunc($2, driver.symtab.getCurrentScopeIndex(), driver.symtab.getPrevScopeIndex());
         }
         ;
 
@@ -504,6 +504,7 @@ function_head:
         FUNCTION  ID  parameters  COLON  simple_type_decl
         {
             Symbol* symbol = new Symbol($2, FUNC, $5->symbolType, driver.symtab.getCurrentScopeIndex());
+
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
@@ -515,10 +516,10 @@ function_head:
             }
             symbol->subSymbolMap = subSymbolMap;
             symbol->subSymbolList = $3;
-            if ($5->symbolType >= BOOL && $5->symbolType <= STRING)
-                delete $5;
-            else
-                symbol->returnTypePtr = $5;
+//            if ($5->symbolType >= BOOL && $5->symbolType <= STRING)
+//                delete $5;
+//            else
+            symbol->returnTypePtr = $5;
 
             driver.symtab.addFunction(symbol);
             // new scope

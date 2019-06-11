@@ -22,27 +22,27 @@ std::string classToString(SPL_CLASS classId)
     {
         case VAR:
             return "VAR";
-            break;
+
 
         case CONST:
             return "CONST";
-            break;
+
         
         case TYPE:
             return "TYPE";
-            break;
+
 
         case FUNC:
             return "FUNC";
-            break;
+
 
         case LABEL:
             return "LABEL";
-            break;
+
 
         default:
             return "ERROR";
-            break;
+
     }
 }
 
@@ -52,43 +52,43 @@ std::string typeToString(SPL_TYPE typeId)
     {
         case BOOL:
             return "BOOL";
-            break;
+
 
         case CHAR:
             return "CHAR";
-            break;
+
         
         case INT:
             return "INT";
-            break;
+
 
         case REAL:
             return "REAL";
-            break;
+
 
         case STRING:
             return "STRING";
-            break;
+
         
         case ENUM:
             return "ENUM";
-            break;
+
         
         case SUBRANGE:
             return "SUBRANGE";
-            break;
+
 
         case ARRAY:
             return "ARRAY";
-            break;
+
         
         case RECORD:
             return "RECORD";
-            break;
+
 
         default:
-            return "";
-            break;
+            return "error";
+
     }
 }
 
@@ -97,90 +97,92 @@ std::string opToString(SPL_OP op){
     {
         case PLUS_:
             return "+";
-            break;
+
 
         case MINUS_:
             return "-";
-            break;
+
 
         case MUL_:
             return "*";
-            break;
+
 
         case DIV_:
             return "/";
-            break;
+
 
         case AND_:
             return "&&";
-            break;
+
 
         case OR_:
             return "||";
-            break;
+
 
         case NOT_:
             return "!";
-            break;
+
 
         case MINUS__:
             return "-";
-            break;
+
 
         case MOD_:
             return "%";
-            break;
+
         case EQUAL_:
             return "==";
-            break;
+
         case UNEQUAL_:
             return "!=";
-            break;
+
         case GE_:
             return ">=";
-            break;
+
         case GT_:
             return ">";
-            break;
+
         case LE_:
             return "<=";
-            break;
+
         case LT_:
             return "<";
-            break;
+
         case OP_ASSIGN:
             return "=";
-            break;
+
         case OP_GOTO:
             return "goto";
-            break;
+
         case OP_IF_Z:
             return "ifFalse";
-            break;
+
         case OP_IF:
             return "if";
-            break;
+
         case OP_CALL:
             return "call";
-            break;
+
         case OP_PARAM:
             return "param";
-            break;
+
         case OP_POP:
             return "pop";
-            break;
+
         case OP_NULL:
             return "";
-            break;
+
         case OP_RET:
             return "ret";
-            break;
+
         case OP_PHI:
             return "phi";
-            break;
+        case OP_FUNC_PARAM:
+            return "func_param";
+
         default:
             return "error";
-            break;
+
     }
 }
 
@@ -277,6 +279,10 @@ std::string opTox86Ins(SPL_OP op) {
             return "mul";
         case DIV_:
             return "div";
+        case AND_:
+            return "and";
+        case OR_:
+            return "or";
         default:
             return "error";
     }
@@ -322,52 +328,38 @@ std::string x86SizeToString(x86_size size) {
 
 std::string reg_to_string(x86_reg reg) {
     switch(reg) {
-        case rax:
-            return "rax";
-        case rbx:
-            return "rbx";
-        case rcx:
-            return "rcx";
-        case rdx:
-            return "rdx";
+        case eax:
+            return "eax";
+        case ebx:
+            return "ebx";
+        case ecx:
+            return "ecx";
+        case edx:
+            return "edx";
         case rbp:
             return "rbp";
         case rsp:
-            return "rsp";
-        case rsi:
-            return "rsi";
-        case rdi:
-            return "rdi";
-        case r1:
-            return "r1";
-        case r2:
-            return "r2";
-        case r3:
-            return "r3";
-        case r4:
-            return "r4";
-        case r5:
-            return "r5";
-        case r6:
-            return "r6";
-        case r7:
-            return "r7";
-        case r8:
-            return "r8";
-        case r9:
-            return "r9";
-        case r10:
-            return "r10";
-        case r11:
-            return "r11";
-        case r12:
-            return "r12";
-        case r13:
-            return "r13";
-        case r14:
-            return "r14";
-        case r15:
-            return "r15";
+            return "esp";
+        case esi:
+            return "esi";
+        case edi:
+            return "edi";
+        case r8d:
+            return "r8d";
+        case r9d:
+            return "r9d";
+        case r10d:
+            return "r10d";
+        case r11d:
+            return "r11d";
+        case r12d:
+            return "r12d";
+        case r13d:
+            return "r13d";
+        case r14d:
+            return "r14d";
+        case r15d:
+            return "r15d";
         default:
             return "not_in";
     }

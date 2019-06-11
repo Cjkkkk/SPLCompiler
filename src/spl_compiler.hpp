@@ -54,10 +54,12 @@ enum SPL_OP : unsigned int
     OP_GOTO,
     OP_NULL,
     OP_PHI,
+
+    OP_FUNC_PARAM,
 };
 
 // class of a symbol
-enum SPL_CLASS : unsigned char
+enum SPL_CLASS
 {
     VAR,   // variable
     CONST, // constant
@@ -69,7 +71,7 @@ enum SPL_CLASS : unsigned char
 };
 
 // type of a variable symbol
-enum SPL_TYPE : unsigned char
+enum SPL_TYPE
 {
     UNKNOWN,    // unknown
     BOOL,       // boolean
@@ -108,9 +110,9 @@ enum SPL_PARA : bool
 };
 
 typedef enum x86_reg {
-    rax, rbx, rcx, rdx, rbp, rsp,
-    rsi, rdi,
-    r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15,
+    eax, ebx, ecx, edx, rbp, rsp,
+    esi, edi,
+    r8d, r9d, r10d, r11d, r12d, r13d, r14d, r15d,
     not_in
 } reg;
 

@@ -134,6 +134,10 @@ public:
     void setToPrevScopeIndex () {
         currentScopeIndex = prevScopeMap.find(currentScopeIndex)->second;
     }
+
+    unsigned int getPrevScopeIndex () {
+        return prevScopeMap.find(currentScopeIndex)->second;
+    }
     SymbolMapType * getVariableByScopeIndex();
 
     std::string getFunctionNameByIndex(unsigned int scopeIndex) {

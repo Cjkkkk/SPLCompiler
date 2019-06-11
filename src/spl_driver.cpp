@@ -99,18 +99,44 @@ void SPL::SPL_Driver::emitIR() {
     // 遍历每一个函数的语法树生成IR
     for(auto index = 0 ; index < astmng.functions->size() ;index ++) {
         // 设定当前处理的哪个函数
+
         ir.setCurrent(index);
+
         AST* func = astmng.functions->at(index);
 
         // 设置当前函数的作用域
         unsigned int scopeIndex = astmng.scopes->at(index);
+        // 获取该函数定义在那个作用域之中
+        unsigned int PreScopeIndex = astmng.defined_scopes->at(index);
+
         ir.symbolTable->setCurrentScopeIndex(scopeIndex);
 
         // 代码生成
-        ir.addInstruction(new Instruction{symtab.getFunctionNameByIndex(scopeIndex), OP_NULL, nullptr, nullptr, nullptr});
+        auto func_name = symtab.getFunctionNameByIndex(scopeIndex);
+        ir.addInstruction(new Instruction{
+            func_name + "." + std::to_string(PreScopeIndex),
+            OP_NULL,
+            nullptr,
+            nullptr,
+            nullptr});
+
+        // 获取参数列表
+        auto f = symtab.lookupFunction(func_name.c_str());
+
+        if( f ) {
+            auto argument_list = f->subSymbolList;
+            for(auto& argument: *argument_list) {
+                ir.addInstruction(new Instruction{
+                        "",
+                        OP_FUNC_PARAM,
+                        new Operand{argument->elementType, argument->name + "." + std::to_string(argument->scopeIndex), VAR},
+                        nullptr,
+                        nullptr
+                });
+            }
+        }
         func->emit(&ir);
         ir.addInstruction(new Instruction{"", OP_RET, nullptr, nullptr, nullptr});
-
         ir.outputInstruction(outfile);
     }
     outfile.close();

@@ -47,6 +47,7 @@ class AST_Exp : virtual public AST
     SPL_TYPE valType;
     Operand* tempVariable = nullptr;
     Operand* getTempVariable() {
+        if(tempVariable == nullptr) throw invalid_argument{"debug info > tempvariable is null"};
         return new Operand(*tempVariable);
     }
 };
@@ -322,14 +323,19 @@ class AST_Manager
   public:
     std::vector<AST*> *functions = nullptr;
     std::vector<unsigned int> *scopes = nullptr;
+    std::vector<unsigned int> *defined_scopes = nullptr;
+    //std::vector<std::string> *name = nullptr;
     AST_Manager(){
       functions = new std::vector<AST*>();
       scopes = new std::vector<unsigned int>();
+      defined_scopes = new std::vector<unsigned int>();
+      //name = new std::vector<std::string>();
 //      functions->push_back({nullptr, nullptr});  //reserve for main()
     }
-    void addFunc(AST* func, unsigned int scope){
+    void addFunc(AST* func, unsigned int scope, unsigned int preScope){
       functions->emplace_back(func);
       scopes->emplace_back(scope);
+      defined_scopes->emplace_back(preScope);
     }
 //    void addMain(AST* func, string* id, SymbolTable* scope){
 //      functions->at(0) = {func,id};
