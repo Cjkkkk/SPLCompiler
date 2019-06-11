@@ -87,7 +87,7 @@ std::string typeToString(SPL_TYPE typeId)
 
 
         default:
-            return "";
+            return "error";
 
     }
 }
@@ -177,6 +177,8 @@ std::string opToString(SPL_OP op){
 
         case OP_PHI:
             return "phi";
+        case OP_FUNC_PARAM:
+            return "func_param";
 
         default:
             return "error";
@@ -277,6 +279,10 @@ std::string opTox86Ins(SPL_OP op) {
             return "mul";
         case DIV_:
             return "div";
+        case AND_:
+            return "and";
+        case OR_:
+            return "or";
         default:
             return "error";
     }
@@ -330,9 +336,9 @@ std::string reg_to_string(x86_reg reg) {
             return "ecx";
         case edx:
             return "edx";
-        case ebp:
-            return "ebp";
-        case esp:
+        case rbp:
+            return "rbp";
+        case rsp:
             return "esp";
         case esi:
             return "esi";

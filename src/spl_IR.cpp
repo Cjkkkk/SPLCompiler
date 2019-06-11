@@ -212,13 +212,22 @@ void Instruction::output(ostream& s) {
             outputOperand(res, s);
             break;
         case OP_PARAM:
+        case OP_FUNC_PARAM:
         case OP_POP:
-        case OP_CALL:
             s << label << "\t";
             s << opToString(op) << " ";
             outputOperand(arg1, s);
             break;
             // 0 operand
+        case OP_CALL:
+            s << label << "\t";
+            s << opToString(op) << " ";
+            outputOperand(arg1, s);
+            if(res) {
+                s << " -> ";
+                outputOperand(res, s);
+            }
+            break;
         default:
             s << label << "\t";
             s << opToString(op) << " ";

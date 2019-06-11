@@ -40,7 +40,7 @@ public:
     explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){
         outfile.open("assem/hello.asm",std::ios::out);
         callee_saved_registers = {
-                ebp, ebx, r12d, r13d, r14d, r15d
+                rbp, ebx, r12d, r13d, r14d, r15d
         };
 
         reg_order = {
@@ -52,13 +52,17 @@ public:
         reg_arg = {
                 {edi, true}, {esi, true}, {edx, true}, {ecx, true}, {r8d, true}, {r9d, true}
         };
+
+        parm_reg_mapping = {
+                edi, esi, edx, ecx, r8d, r9d
+        };
         // 初始化mapping
         for(const auto& reg : reg_order) {
             reg_memory_mapping.insert({reg.name, {FREE, 0, ""}});
         }
 
         temp_count = 0;
-
+        nth_param = 1;
     };
     ~SPL_CodeGen() {
         outfile.close();
@@ -89,14 +93,15 @@ public:
     void generateCall(Instruction* ins);
     void generateParam(Instruction* ins);
     void generateCompare(Instruction* ins);
-
+    void generateGetParam(Instruction* ins);
 
     int fetchStackVariable(std::string& variable);
     x86_reg getNextArgReg();
     void free_arg();
-    x86_reg loadLiteralToReg(int, x86_reg=not_in);
+    bool isParam(Operand*);
     // 把全局变量/堆栈/常量加载到寄存器中
     x86_reg bringToReg(Operand* operand, x86_reg=not_in);
+    x86_reg loadLiteralToReg(int, x86_reg=not_in);
     void freeReg(x86_reg, bool=false);
     // 获取某一个寄存器的使用权
     x86_reg get_x86_reg();
@@ -141,7 +146,14 @@ public:
 
     std::map<std::string, pair<x86_size, unsigned int>> bss_data;
 
+    std::set<std::string> param;
+
+    std::vector<x86_reg> parm_reg_mapping;
     unsigned int temp_count;
+
+    unsigned int nth_param;
+
+    std::string current_function_name;
 };
 
 

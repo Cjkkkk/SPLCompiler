@@ -181,9 +181,7 @@ void AST_Sym::checkSemantic()
     //scope->lookupVariable(id.c_str());
 }
 void AST_Sym::emit(SPL_IR* ir){
-
     tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
-
 }
 
 // AST_Array
@@ -259,6 +257,8 @@ void AST_Assign::emit(SPL_IR* ir){
     }
     ir->addInstruction(new Instruction{"", OP_ASSIGN, rhs->getTempVariable(), nullptr, lhs->getTempVariable()});
 }
+
+
 AST_If::AST_If(SPL::AST_Exp *cond_, SPL::AST_Stmt *doIf_, SPL::AST_Stmt *doElse_)
     : cond(cond_), doIf(doIf_), doElse(doElse_)
 {
@@ -596,6 +596,11 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     auto literal = new Operand(INT, "", KNOWN);
     literal->value.valInt = totalSize;
-    ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr, nullptr});
+    if(isProc) {
+        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr,nullptr});
+    } else {
+        tempVariable = ir->genTempVariable(valType);
+        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr, tempVariable});
+    }
     ir->addInstruction(new Instruction{"", OP_POP, literal, nullptr, nullptr});
 }

@@ -3,42 +3,31 @@ var
 	x : integer;
     y : integer;
     z : integer;
-    s : string;
-    m : char;
+    b : boolean;
+    c : char;
 
 
-//procedure findMin(x, y, z: integer; var m: integer);
-//begin
-//    x := 3;
-//    y := 4;
-//    z := 5;
-//    m := 6;
-//    s := "233";
-//    x := x * 4;
-//   if x < y then
-//      m := x
-//   else
-//      m := y;
-//
-//   if z < m then
-//      m := z;
-//end
-//;
+function findMin(x, y: integer): integer;
+begin
+    findMin := 3 + 10 + x;
+end
+;
+
 
 begin
-//    s := "hello";
-//    m := 'c';
+    c := 'a';
+    write("%c", c);
     x := 20 / 5;
     y := x - 2;
     z := y + x;
-    write("%d", x);
-    write("%d", y);
+    b := ( x < y ) or ( true );
     if x <= y  then
         x := 10
     else
         x := 15;
+    x := findMin(x, y);
     write("%d %d %d", x, y, z);
-	while x < 20 do begin
+	while x < 30 do begin
 	    x := x + 1;
 	    write("%d", x);
 	end;
