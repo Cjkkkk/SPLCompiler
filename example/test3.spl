@@ -31,14 +31,16 @@ begin
     x := 20 / 5;
     y := x - 2;
     z := y + x;
-    if x <= y then
-        x := 30
+    write("%d", x);
+    write("%d", y);
+    if x <= y  then
+        x := 10
     else
-        x := 20;
+        x := 15;
     write("%d %d %d", x, y, z);
-//	while x > 0 do begin
-//	    x := 4;
-//	end;
-//    write(x);
+	while x < 20 do begin
+	    x := x + 1;
+	    write("%d", x);
+	end;
 end
 .

@@ -40,17 +40,17 @@ public:
     explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){
         outfile.open("assem/hello.asm",std::ios::out);
         callee_saved_registers = {
-                rbp, rbx, r12, r13, r14, r15
+                ebp, ebx, r12d, r13d, r14d, r15d
         };
 
         reg_order = {
-                {r8, true}, {r9, true}, {r10, true} ,{r11, true} ,{r12, true} ,{r13, true}, {r14, true}, {r15, true},
-                {rax, true}, {rbx, true}, {rcx, true}, {rdx, true},
-                {rsi, true}, {rdi, true}
+                {r10d, true} ,{r11d, true} ,{r12d, true} ,{r13d, true}, {r14d, true}, {r15d, true},
+                {eax, true}, {ebx, true}, {ecx, true}, {edx, true},
+                {esi, true}, {edi, true}, {r8d, true}, {r9d, true}
         };
 
         reg_arg = {
-                {rdi, true}, {rsi, true}, {rdx, true}, {rcx, true}, {r8, true}, {r9, true}
+                {edi, true}, {esi, true}, {edx, true}, {ecx, true}, {r8d, true}, {r9d, true}
         };
         // 初始化mapping
         for(const auto& reg : reg_order) {
@@ -93,6 +93,7 @@ public:
 
     int fetchStackVariable(std::string& variable);
     x86_reg getNextArgReg();
+    void free_arg();
     x86_reg loadLiteralToReg(int, x86_reg=not_in);
     // 把全局变量/堆栈/常量加载到寄存器中
     x86_reg bringToReg(Operand* operand, x86_reg=not_in);
