@@ -129,7 +129,18 @@ void SPL::SPL_Driver::emitIR() {
                 ir.addInstruction(new Instruction{
                         "",
                         OP_FUNC_PARAM,
-                        new Operand{argument->elementType, argument->name + "." + std::to_string(argument->scopeIndex), VAR},
+                        new Operand{argument->elementType, argument->name + "." + std::to_string(argument->scopeIndex), PARAM},
+                        nullptr,
+                        nullptr
+                });
+            }
+
+            if(f->symbolType != UNKNOWN) {
+                // 函数有返回值
+                ir.addInstruction(new Instruction{
+                        "",
+                        OP_FUNC_RET,
+                        new Operand{f->elementType, func_name + "." + std::to_string(PreScopeIndex), RET},
                         nullptr,
                         nullptr
                 });

@@ -504,7 +504,6 @@ function_head:
         FUNCTION  ID  parameters  COLON  simple_type_decl
         {
             Symbol* symbol = new Symbol($2, FUNC, $5->symbolType, driver.symtab.getCurrentScopeIndex());
-
             SymbolMapType* subSymbolMap = new SymbolMapType;
             for(size_t i = 0; i < $3->size(); i++)
             {
@@ -526,7 +525,7 @@ function_head:
             driver.symtab.pushScope($2);
 
             // 默认添加function名字到symbo table中作为一个变量
-            driver.symtab.addVariable(new Symbol($2, VAR, $5->symbolType, driver.symtab.getCurrentScopeIndex()));
+            driver.symtab.addVariable(new Symbol($2, VAR, $5->symbolType, driver.symtab.getPrevScopeIndex()));
             for(size_t i = 0; i < $3->size(); i++){
             	(*$3)[i]->scopeIndex = driver.symtab.getCurrentScopeIndex();
                 driver.symtab.addVariable((*$3)[i]);

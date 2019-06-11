@@ -27,6 +27,7 @@ void SPL_CodeGen::GenerateMachineCode() {
     writeDirectives("global", "main");
     writeDirectives("section", ".text");
     writeDirectives("extern", "printf");
+    writeDirectives("extern", "scanf");
     // 遍历所有函数
     for(auto index = ir->getIRSetSize() - 1; index >= 0 ; index--) {
         ir->setCurrent(index);
@@ -217,29 +218,36 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
  */
 void SPL_CodeGen::generateAssign(Instruction *ins) {
     // x = 3 或者 x = y
+    x86_reg reg;
+    if(isReturnVariable(ins->res)) {
+        // 说明是函数返回值
+        reg = eax;
+        bringToReg(ins->arg1, eax);
 
-    auto pos1 = current_function_name.rfind('.');
-    auto pos2 = ins->res->name.rfind('.');
-    if(pos1 != std::string::npos && pos2 != std::string::npos) {
-        if(current_function_name.substr(0, pos1) == ins->res->name.substr(0, pos2)) {
-            // 说明是函数返回值
-            bringToReg(ins->arg1, eax);
-        }
+        auto& reg_status = reg_memory_mapping.find(reg)->second;
+        reg_status.status = STACK;
+        reg_status.offset = fetchStackVariable(ins->res->name);
+
+    } else if(isParam(ins->res)) {
+
+        // 说明是函数的参数
+        reg = bringToReg(ins->arg1);
+
+        auto& reg_status = reg_memory_mapping.find(reg)->second;
+        reg_status.status = STACK;
+        reg_status.offset = fetchStackVariable(ins->res->name);
     } else {
-        // 不是函数返回值
-        auto reg = bringToReg(ins->arg1);
-        if(isParam(ins->res)) {
-            auto& reg_status = reg_memory_mapping.find(reg)->second;
-            reg_status.status = STACK;
-            reg_status.offset = fetchStackVariable(ins->res->name);
-        } else {
-            // 是全局变量
-            auto& reg_status = reg_memory_mapping.find(reg)->second;
-            reg_status.status = GLOBAL;
-            reg_status.global = ins->res->name;
-        }
-        freeReg(reg, true);
+
+        // 说明是全局变量
+        reg = bringToReg(ins->arg1);
+
+        // 是全局变量
+        auto& reg_status = reg_memory_mapping.find(reg)->second;
+        reg_status.status = GLOBAL;
+        reg_status.global = ins->res->name;
+
     }
+    freeReg(reg, true);
 }
 
 void SPL_CodeGen::generateLogic(Instruction* ins) {
@@ -274,6 +282,9 @@ void SPL_CodeGen::generateGoto(Instruction* ins) {
 
 void SPL_CodeGen::generateCall(Instruction* ins) {
     if(ins->arg1->name == "write.0") x86Instruction(ins->label, "call", "printf", "");
+    else if (ins->arg1->name == "read.0") {
+        x86Instruction(ins->label, "call", "scanf", "");
+    }
     else {
         x86Instruction(ins->label, "call", ins->arg1->name, "");
     }
@@ -307,11 +318,6 @@ void SPL_CodeGen::allocateStack() {
     // 堆栈上的数据用offset索引
     uint16_t offset = 0;
     for(auto ins : instr) {
-        if(!checkInstructionOp(ins, OP_FUNC_PARAM)) collect_bss_data(ins);
-        else {
-            std::cout << "collect " << ins->arg1->name << "\n";
-            param.insert(ins->arg1->name);
-        }
         // 临时变量放在栈上
         if(isCalculateOp(ins->op) || (checkInstructionOp(ins, OP_CALL) && ins->res)) {
             // 现在栈上把临时变量的位置留出来
@@ -324,8 +330,12 @@ void SPL_CodeGen::allocateStack() {
             }
         }
 
-        // 函数参数也放在栈上
-        if(checkInstructionOp(ins, OP_FUNC_PARAM)) {
+        // 函数参数/返回值也放在栈上
+        if(checkInstructionOp(ins, OP_FUNC_PARAM) || checkInstructionOp(ins, OP_FUNC_RET)) {
+            if(checkInstructionOp(ins, OP_FUNC_PARAM)) {
+                std::cout << "collect " << ins->arg1->name << "\n";
+                param.insert(ins->arg1->name);
+            }
             // 现在栈上把临时变量的位置留出来
             auto it = name_to_stack.find(ins->arg1->name);
             if(it == name_to_stack.end()) {
@@ -334,6 +344,8 @@ void SPL_CodeGen::allocateStack() {
                 name_to_stack.insert({ins->arg1->name, offset});
             }
         }
+
+        collect_bss_data(ins);
     }
     offset = (offset / 16 + 1) * 16;
     stack_size = offset;
@@ -392,7 +404,7 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
         }
         // 记录该寄存器中存放的是常数
         reg_memory_mapping.find(reg)->second.status = LITERAL;
-    } else if(checkOperandClass(operand, VAR) && !isParam(operand)) {
+    } else if(checkOperandClass(operand, VAR) && !isParam(operand) && !isReturnVariable(operand)) {
         // 加载变量到寄存器中
         // 变量默认是全局的
         auto size = operand->getSize();
@@ -488,19 +500,36 @@ void SPL_CodeGen::freeReg(x86_reg reg, bool write_back) {
 
 
 void SPL_CodeGen::collect_bss_data(Instruction* ins) {
-    if(ins->arg1 && checkOperandClass(ins->arg1, VAR) && !isParam(ins->arg1)) {
+    if(ins->arg1 && checkOperandClass(ins->arg1, VAR) && !isParam(ins->arg1) && !isReturnVariable(ins->arg1)) {
         auto it = bss_data.find(ins->arg1->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 1}});
+        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 4}});
     }
-    if(ins->arg2 && checkOperandClass(ins->arg2, VAR) && !isParam(ins->arg2)) {
+    if(ins->arg2 && checkOperandClass(ins->arg2, VAR) && !isParam(ins->arg2) && !isReturnVariable(ins->arg2)) {
         auto it = bss_data.find(ins->arg2->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),1}});
+        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),4}});
     }
-    if(ins->res && checkOperandClass(ins->res, VAR) && !isParam(ins->res)) {
+    if(ins->res && checkOperandClass(ins->res, VAR) && !isParam(ins->res) && !isReturnVariable(ins->res)) {
         auto it = bss_data.find(ins->res->name);
-        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 1}});
+        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 4}});
     }
 }
+
+
+void SPL_CodeGen::collect_ronly_data(Instruction* ins) {
+    if(ins->arg1 && checkOperandClass(ins->arg1, CONST)) {
+        auto it = ronly_data.find(ins->arg1->name);
+        if(it == ronly_data.end()) ronly_data.insert({ins->arg1->name, {ins->arg1->getSize(), 1}});
+    }
+    if(ins->arg2 && checkOperandClass(ins->arg2, CONST)) {
+        auto it = ronly_data.find(ins->arg2->name);
+        if(it == ronly_data.end()) ronly_data.insert({ins->arg2->name, {ins->arg2->getSize(),1}});
+    }
+    if(ins->res && checkOperandClass(ins->res, CONST)) {
+        auto it = ronly_data.find(ins->res->name);
+        if(it == ronly_data.end()) ronly_data.insert({ins->res->name, {ins->res->getSize(), 1}});
+    }
+}
+
 
 std::string SPL_CodeGen::getTempStringLable() {
     return "string_literal_" + std::to_string(temp_count++);
@@ -529,4 +558,9 @@ void SPL_CodeGen::free_arg() {
 
 bool SPL_CodeGen::isParam(Operand* operand) {
     return param.find(operand->name) != param.end();
+}
+
+
+bool SPL_CodeGen::isReturnVariable(Operand* operand) {
+    return current_function_name == operand->name;
 }

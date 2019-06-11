@@ -112,11 +112,15 @@ public:
     void pop_rbp();
 
     void collect_bss_data(Instruction*);
+    void collect_ronly_data(Instruction*);
+
     // 提前分配好堆栈
     void allocateStack();
     void deallocateStack();
 
     std::string getTempStringLable();
+
+    bool isReturnVariable(Operand*);
     // 将ir写入文件
     void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // 必须16字节对齐
@@ -146,6 +150,7 @@ public:
 
     std::map<std::string, pair<x86_size, unsigned int>> bss_data;
 
+    std::map<std::string, pair<x86_size, unsigned int>> ronly_data;
     std::set<std::string> param;
 
     std::vector<x86_reg> parm_reg_mapping;

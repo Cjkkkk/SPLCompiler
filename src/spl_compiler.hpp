@@ -54,7 +54,7 @@ enum SPL_OP : unsigned int
     OP_GOTO,
     OP_NULL,
     OP_PHI,
-
+    OP_FUNC_RET,
     OP_FUNC_PARAM,
 };
 
@@ -67,6 +67,8 @@ enum SPL_CLASS
     FUNC,  // function/procedure
     LABEL,  // label
     TEMP,   // temp variable
+    PARAM,  // 函数参数
+    RET, // 函数返回值
     KNOWN, // Known in compile time / literal
 };
 

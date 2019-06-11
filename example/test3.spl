@@ -1,4 +1,7 @@
 program test;
+const
+    con = 4;
+
 var
 	x : integer;
     y : integer;
@@ -6,10 +9,10 @@ var
     b : boolean;
     c : char;
 
-
 function findMin(x, y: integer): integer;
 begin
-    findMin := 3 + 10 + x;
+    findMin := 13 + x;
+    findMin := findMin + 10;
 end
 ;
 
@@ -21,13 +24,15 @@ begin
     y := x - 2;
     z := y + x;
     b := ( x < y ) or ( true );
+    write("b: %d x: %d, y: %d", b, x, y);
     if x <= y  then
         x := 10
     else
         x := 15;
+    write("x: %d", x);
     x := findMin(x, y);
     write("%d %d %d", x, y, z);
-	while x < 30 do begin
+	while x < 15 do begin
 	    x := x + 1;
 	    write("%d", x);
 	end;

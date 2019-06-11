@@ -213,6 +213,7 @@ void Instruction::output(ostream& s) {
             break;
         case OP_PARAM:
         case OP_FUNC_PARAM:
+        case OP_FUNC_RET:
         case OP_POP:
             s << label << "\t";
             s << opToString(op) << " ";

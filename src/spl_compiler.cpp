@@ -23,23 +23,21 @@ std::string classToString(SPL_CLASS classId)
         case VAR:
             return "VAR";
 
-
         case CONST:
             return "CONST";
 
-        
         case TYPE:
             return "TYPE";
-
 
         case FUNC:
             return "FUNC";
 
-
         case LABEL:
             return "LABEL";
-
-
+        case PARAM:
+            return "PARAM";
+        case RET:
+            return "RET";
         default:
             return "ERROR";
 
@@ -177,8 +175,12 @@ std::string opToString(SPL_OP op){
 
         case OP_PHI:
             return "phi";
+
         case OP_FUNC_PARAM:
             return "func_param";
+
+        case OP_FUNC_RET:
+            return "func_ret";
 
         default:
             return "error";
