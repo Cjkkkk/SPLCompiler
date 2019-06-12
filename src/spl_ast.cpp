@@ -203,7 +203,10 @@ int AST_Array::calculate()
 }
 void AST_Array::checkSemantic() {}
 void AST_Array::emit(SPL_IR* ir){
-
+    // 先计算offset 存到一个临时变量中
+    // exp->emit(ir);
+    // 如何将offset嵌入这个Operand之中
+    // tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
 }
 // AST_Dot
 

@@ -76,6 +76,7 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
                 break;
             case MUL_:
             case DIV_:
+            case MOD_:
                 generateMulAndDivide(ins);
                 break;
             case GT_:
@@ -196,11 +197,17 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     // div的一个乘数在eax中， 只接受一个参数， 结果放在eax中
     auto reg1 = bringToReg(ins->arg1, eax);
     auto reg2 = bringToReg(ins->arg2);
-    if(ins->op == DIV_) {
-        // rdx 应该为0
+    if(ins->op == DIV_ || ins->op == MOD_) {
+        // edx 应该为0
         loadLiteralToReg(0, edx);
     }
     x86Instruction(ins->label, opTox86Ins(ins->op), reg_to_string(reg2), "");
+
+    if(ins->op == MOD_) {
+        // 余数保存在edx寄存器中
+        freeReg(eax);
+        reg1 = edx;
+    }
 
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
@@ -323,7 +330,7 @@ void SPL_CodeGen::allocateStack() {
             // 现在栈上把临时变量的位置留出来
             auto it = name_to_stack.find(ins->res->name);
             if(it == name_to_stack.end()) {
-                offset += 4;
+                offset += 8;
                 std::cout << ins->res->name << " " << offset << "\n";
                 // 初始化变量在堆栈上的位置
                 name_to_stack.insert({ins->res->name, offset});
@@ -339,7 +346,7 @@ void SPL_CodeGen::allocateStack() {
             // 现在栈上把临时变量的位置留出来
             auto it = name_to_stack.find(ins->arg1->name);
             if(it == name_to_stack.end()) {
-                offset += 4;
+                offset += 8;
                 // 初始化变量在堆栈上的位置
                 name_to_stack.insert({ins->arg1->name, offset});
             }

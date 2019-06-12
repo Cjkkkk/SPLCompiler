@@ -279,6 +279,7 @@ std::string opTox86Ins(SPL_OP op) {
             return "sub";
         case MUL_:
             return "mul";
+        case MOD_:
         case DIV_:
             return "div";
         case AND_:

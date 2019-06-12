@@ -8,6 +8,7 @@ var
     z : integer;
     b : boolean;
     c : char;
+    arr : array [30] of integer;
 
 function findMin(x, y: integer): integer;
 begin
@@ -20,6 +21,7 @@ end
 begin
     c := 'a';
     write("%c", c);
+    arr[3] = 4;
     x := 20 / 5;
     y := x - 2;
     z := y + x;

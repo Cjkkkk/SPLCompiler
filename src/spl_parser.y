@@ -363,9 +363,9 @@ array_type_decl:
             Symbol* symbol = new Symbol("", TYPE, ARRAY, driver.symtab.getCurrentScopeIndex());
             symbol->elementType = elementType;
             symbol->scalarSize = $3;
-            if (elementType >= BOOL && elementType <= STRING)
-                delete $6;
-            else
+//            if (elementType >= BOOL && elementType <= STRING)
+//                delete $6;
+//            else
                 symbol->elementTypePtr = $6;
             $$ = symbol;
         }
@@ -679,6 +679,7 @@ assign_stmt:
 		lhs->valType = $3->valType;
         }
         | ID LB expression RB ASSIGN expression {
+        // 查看类型是否匹配
 //            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
 //            $$ = new AST_Assign(lhs, $6);
         }
