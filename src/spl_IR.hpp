@@ -22,18 +22,20 @@ union Value {
 class Operand {
 public:
     Operand(){};
-    Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_) : type(type_), name(name_), cl(cl_) {}
+    Operand(SPL_TYPE type_, string name_, SPL_CLASS cl_, Symbol* symbol_= nullptr) : type(type_), name(name_), cl(cl_), symbol(symbol_) {}
     Operand(const Operand& op) {
         this->type = op.type;
         this->name = op.name;
         this->cl = op.cl;
         this->value = op.value;
+        this->symbol = op.symbol;
     }
     x86_size getSize();
     SPL_TYPE type;
     std::string name;
     SPL_CLASS cl;
     Value value;
+    Symbol* symbol;
 };
 
 Operand* evaluate(SPL_OP op, Operand* left, Operand* right);

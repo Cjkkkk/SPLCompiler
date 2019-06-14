@@ -262,13 +262,7 @@ void SPL_CodeGen::generateLogic(Instruction* ins) {
 }
 
 void SPL_CodeGen::generateParam(Instruction* ins) {
-    auto reg = getNextArgReg();
-    if(reg == not_in) {
-        // 参数寄存器不够用了
-        throw invalid_argument{"reg for argument is not available now..."};
-    } else {
-        bringToReg(ins->arg1, reg);
-    }
+    param_stack.push_back(ins->arg1);
 }
 
 
@@ -288,6 +282,22 @@ void SPL_CodeGen::generateGoto(Instruction* ins) {
 
 
 void SPL_CodeGen::generateCall(Instruction* ins) {
+    auto arg_list = ins->arg1->symbol == nullptr ? nullptr : ins->arg1->symbol->subSymbolList;
+
+    for(auto index = 0 ; index < param_stack.size() ; index ++ ) {
+        auto reg = getNextArgReg();
+        if(reg == not_in) {
+            // 参数寄存器不够用了
+            throw invalid_argument{"reg for argument is not available now..."};
+        } else {
+            if(arg_list && arg_list->at(index)->paraType == REFER) {
+                //std::cout << "call ref\n";
+                bringToReg(param_stack[index], reg, true);
+            } else {
+                bringToReg(param_stack[index], reg);
+            }
+        }
+    }
     if(ins->arg1->name == "write.0") x86Instruction(ins->label, "call", "printf", "");
     else if (ins->arg1->name == "read.0") {
         x86Instruction(ins->label, "call", "scanf", "");
@@ -304,6 +314,9 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
     }
     // 释放所有参数寄存器的使用权
     free_arg();
+
+    // 清空所有参数
+    param_stack.clear();
 }
 
 void SPL_CodeGen::writeSectionConstData() {
@@ -386,7 +399,7 @@ x86_reg SPL_CodeGen::loadLiteralToReg(int i, x86_reg reg) {
 }
 
 
-x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
+x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool bring_address) {
     if(reg == not_in) reg = get_x86_reg(); // 需要一个空闲的寄存器
     else {
         get_x86_reg(reg); // 需要指定的寄存器
@@ -416,9 +429,18 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
         // 变量默认是全局的
         auto size = operand->getSize();
         if(size == dword)
-            x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) +" [ " + operand->name + " ]");
-        else
-            x86Instruction("", "movzx", reg_to_string(reg), x86SizeToString(size) +" [ " + operand->name + " ]");
+            if(bring_address) {
+                x86Instruction("", "mov", reg_to_string(reg), operand->name);
+            } else {
+                x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) +" [ " + operand->name + " ]");
+            }
+        else {
+            if(bring_address) {
+                x86Instruction("", "mov", reg_to_string(reg), operand->name);
+            } else {
+                x86Instruction("", "movzx", reg_to_string(reg), x86SizeToString(size) + " [ " + operand->name + " ]");
+            }
+        }
         // 添加寄存器到内存的映射
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = GLOBAL;
@@ -427,10 +449,20 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg) {
         // 参数和局部变量都放这里
         auto offset = fetchStackVariable(operand->name);
         x86_size size = operand->getSize();
-        if(size == dword)
-            x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
-        else
-            x86Instruction("", "movzx", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
+        if(size == dword) {
+            if(bring_address) {
+                x86Instruction("", "mov", reg_to_string(reg), "rbp - " + std::to_string(offset));
+            } else {
+                x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
+            }
+        }
+        else {
+            if(bring_address) {
+                x86Instruction("", "mov", reg_to_string(reg), "rbp - " + std::to_string(offset));
+            } else {
+                x86Instruction("", "movzx", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
+            }
+        }
         // 添加寄存器到内存的映射
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
@@ -509,15 +541,15 @@ void SPL_CodeGen::freeReg(x86_reg reg, bool write_back) {
 void SPL_CodeGen::collect_bss_data(Instruction* ins) {
     if(ins->arg1 && checkOperandClass(ins->arg1, VAR) && !isParam(ins->arg1) && !isReturnVariable(ins->arg1)) {
         auto it = bss_data.find(ins->arg1->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 4}});
+        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 8}});
     }
     if(ins->arg2 && checkOperandClass(ins->arg2, VAR) && !isParam(ins->arg2) && !isReturnVariable(ins->arg2)) {
         auto it = bss_data.find(ins->arg2->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),4}});
+        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),8}});
     }
     if(ins->res && checkOperandClass(ins->res, VAR) && !isParam(ins->res) && !isReturnVariable(ins->res)) {
         auto it = bss_data.find(ins->res->name);
-        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 4}});
+        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 8}});
     }
 }
 
@@ -571,3 +603,4 @@ bool SPL_CodeGen::isParam(Operand* operand) {
 bool SPL_CodeGen::isReturnVariable(Operand* operand) {
     return current_function_name == operand->name;
 }
+

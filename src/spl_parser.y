@@ -674,7 +674,7 @@ assign_stmt:
 		if(checkTypeUnequal(sym->symbolType,$3->valType)) {
 			throw splException{@1.begin.line, @1.begin.column, "invaild conversion from '" + typeToString($3->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
 		}
-		AST_Sym* lhs = new AST_Sym($1, sym->scopeIndex);
+		AST_Sym* lhs = new AST_Sym($1, sym->scopeIndex, sym);
 		$$ = new AST_Assign(lhs, $3);
 		lhs->valType = $3->valType;
         }
@@ -692,17 +692,37 @@ assign_stmt:
 
 proc_stmt:
         ID  LP  RP
-                {
-                auto sym = driver.symtab.lookupFunction($1.c_str());
-		if(!sym) {
-			// 函数未定义
-			throw splException{@1.begin.line, @1.begin.column , "procedure '" + $1 + "' is not declared in this scope.\n"};
-		}
-                std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-                $$ = new AST_Func(true, $1, emptyVec, sym->scopeIndex);
-                }
+	{
+	auto sym = driver.symtab.lookupFunction($1.c_str());
+	if(!sym) {
+		// 函数未定义
+		throw splException{@1.begin.line, @1.begin.column , "procedure '" + $1 + "' is not declared in this scope.\n"};
+	}
+	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
+	$$ = new AST_Func(true, $1, emptyVec, sym->scopeIndex, sym);
+	}
         |  ID  LP  args_list  RP {
-        $$ = new AST_Func(true, $1, $3, 0);
+        auto sym = driver.symtab.lookupFunction($1.c_str());
+	if(!sym) {
+		// 函数未定义
+		throw splException{@1.begin.line, @1.begin.column , "procedure '" + $1 + "' is not declared in this scope.\n"};
+	}
+
+	auto args_list = sym->subSymbolList;
+	if(args_list->size()!=$3->size()){
+		// 传入参数数目与定义不一致
+		throw splException{@1.begin.line, @1.begin.column ,
+		"function or procedure '" + $1 + "' expect " + std::to_string(args_list->size()) + " arguments, got " + std::to_string($3->size()) +".\n"};
+	}
+	int size = $3->size();
+	for(auto i = 0 ; i < size ; i ++ ){
+		// 检查数据类型是否一致
+		if(checkTypeUnequal($3->at(i)->valType, args_list->at(i)->symbolType)){
+			throw splException{@3.begin.line, @3.begin.column ,
+			"function or procedure '" + $1 + "' expect type '" + typeToString(args_list->at(i)->symbolType) + "', got type '"+ typeToString($3->at(i)->valType) +"'.\n"};
+		}
+	}
+        $$ = new AST_Func(true, $1, $3, 0, sym);
         }
         |  SYS_PROC  LP  RP
 	{
@@ -742,7 +762,16 @@ while_stmt:
 for_stmt:
         FOR  ID  ASSIGN  expression  direction  expression  DO stmt {
         	// todo 查询变量是否存在
-            AST_Assign* init = new AST_Assign(new AST_Sym($2, 0), $4);
+	    auto sym = driver.symtab.lookupVariable($2.c_str());
+
+	    if(!sym) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $2 + "' is not declared in this scope.\n"};
+	    }
+
+	    if(checkTypeUnequal(sym->symbolType,$4->valType)) {
+            	throw splException{@1.begin.line, @1.begin.column, "invaild conversion from '" + typeToString($4->valType) + "' to '" + typeToString(sym->symbolType) + "'.\n"};
+            }
+            AST_Assign* init = new AST_Assign(new AST_Sym($2, 0, sym), $4);
             $$ = new AST_For(init, $5, $6, $8);
         }
         ;
@@ -778,7 +807,11 @@ case_expr_list:
 case_expr:
         const_value  COLON  stmt  SEMI {$$ = new caseUnit($1, $3);}
         |  ID  COLON  stmt  SEMI {
-        $$ = new caseUnit(new AST_Sym($1, 0),$3);
+        auto sym = driver.symtab.lookupVariable($1.c_str());
+	if(!sym) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+	}
+        $$ = new caseUnit(new AST_Sym($1, 0, sym),$3);
         }
         ;
 
@@ -1017,7 +1050,7 @@ factor:
         if(!sym) {
         	throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
         }
-        $$ = new AST_Sym($1, sym->scopeIndex);
+        $$ = new AST_Sym($1, sym->scopeIndex, sym);
         $$->valType = sym->symbolType;
         }
         |  ID  LP  RP
@@ -1029,7 +1062,7 @@ factor:
 		throw splException{@1.begin.line, @1.begin.column , "function or procedure '" + $1 + "' is not declared in this scope.\n"};
         }
 	std::vector<AST_Exp*>* emptyVec = new std::vector<AST_Exp*>();
-	$$ = new AST_Func(false, $1, emptyVec, sym->scopeIndex);
+	$$ = new AST_Func(false, $1, emptyVec, sym->scopeIndex, sym);
         $$->valType = sym->symbolType;
         }
         |  ID  LP  args_list  RP {
@@ -1058,8 +1091,14 @@ factor:
 			throw splException{@3.begin.line, @3.begin.column ,
                         "function or procedure '" + $1 + "' expect type '" + typeToString(args_list->at(i)->symbolType) + "', got type '"+ typeToString($3->at(i)->valType) +"'.\n"};
 		}
+
+		// 检查是否传递常量或者临时变量给引用类型
+		if(args_list->at(i)->paraType == REFER && $3->at(i)->nodeType != AST_SYM) {
+			throw splException{@3.begin.line, @3.begin.column ,
+                        "can not pass temp result or literal as reference in function or procedure '" + $1 + "'n" };
+		}
 	}
-        $$ = new AST_Func(false, $1, $3, sym->scopeIndex);
+        $$ = new AST_Func(false, $1, $3, sym->scopeIndex, sym);
         // 推导为返回值的数据类型
         $$->valType = sym->symbolType;
         }

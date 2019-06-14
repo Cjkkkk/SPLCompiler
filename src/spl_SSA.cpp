@@ -10,6 +10,7 @@ void SPL_SSA::OptimizeIR() {
     genCFGNode();
 
     auto prefix = "byte_code/" + *nodeSet[0]->label + "/";
+    outputInstruction(prefix + "origin.bc");
     // generate CFG
     generateCFG();
 
@@ -144,7 +145,7 @@ void SPL_SSA::genCFGNode() {
         auto symVec = ir->symbolTable->getVariableByScopeIndex();
         for(auto it = symVec->begin() ; it != symVec->end() ; it ++) {
             if(it->second->symbolClass == VAR || it->second->symbolClass == CONST) {
-                auto var = it->first + "." + std::to_string(ir->symbolTable->getCurrentScopeIndex());
+                auto var = it->first + "." + std::to_string(it->second->scopeIndex);
                 // 初始化变量
                 variableListBlock.insert({var, {}});
 
@@ -315,7 +316,7 @@ void SPL_SSA::updateDefinition(Operand* operand,
         auto it = currentDef.find(operand->name); // 更新定义
 
         if(it == currentDef.end()) {
-            throw invalid_argument{"debug info > can not find a variable definition in updateDefinition method."};
+            throw invalid_argument{"debug info > can not find a variable definition in updateDefinition method " + operand->name};
         }
         auto it1 = closestDef[nodeIndex].find(operand->name);
 

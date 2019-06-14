@@ -390,3 +390,12 @@ std::string x86SizeToBssInit(x86_size size, unsigned int length) {
     return op;
 }
 
+
+std::string spl_para_to_string(SPL_PARA s) {
+    switch (s) {
+        case VALUE:
+            return "value";
+        case REFER:
+            return "reference";
+    }
+}

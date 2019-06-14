@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
             driver.emitIR();
 
             // opt IR
-            //driver.optimizeIR();
+            // driver.optimizeIR();
 
             // code Gen
             driver.codeGen();

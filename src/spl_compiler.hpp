@@ -131,6 +131,7 @@ std::string opTox86Ins(SPL_OP op);
 std::string x86SizeToString(x86_size size);
 std::string x86SizeToBssInit(x86_size size, unsigned int length);
 std::string reg_to_string(x86_reg reg);
+std::string spl_para_to_string(SPL_PARA);
 SPL_OP_NUM getOperandNum(SPL_OP op);
 bool isCalculateOp(SPL_OP op);
 #endif //_SPL_COMPILER_H_

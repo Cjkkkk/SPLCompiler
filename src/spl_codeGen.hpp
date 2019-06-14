@@ -100,7 +100,7 @@ public:
     void free_arg();
     bool isParam(Operand*);
     // 把全局变量/堆栈/常量加载到寄存器中
-    x86_reg bringToReg(Operand* operand, x86_reg=not_in);
+    x86_reg bringToReg(Operand* operand, x86_reg=not_in, bool= false);
     x86_reg loadLiteralToReg(int, x86_reg=not_in);
     void freeReg(x86_reg, bool=false);
     // 获取某一个寄存器的使用权
@@ -113,6 +113,7 @@ public:
 
     void collect_bss_data(Instruction*);
     void collect_ronly_data(Instruction*);
+    void collectParamAndRet();
 
     // 提前分配好堆栈
     void allocateStack();
@@ -151,9 +152,14 @@ public:
     std::map<std::string, pair<x86_size, unsigned int>> bss_data;
 
     std::map<std::string, pair<x86_size, unsigned int>> ronly_data;
-    std::set<std::string> param;
 
     std::vector<x86_reg> parm_reg_mapping;
+    // 用于记录当前正在处理的函数的参数列表名字
+    std::set<std::string> param;
+
+    // 用于即将使用的函数调用存储使用需要用到的参数
+    std::vector<Operand*> param_stack;
+
     unsigned int temp_count;
 
     unsigned int nth_param;
