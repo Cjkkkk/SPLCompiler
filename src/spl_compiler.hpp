@@ -112,9 +112,9 @@ enum SPL_PARA : bool
 };
 
 typedef enum x86_reg {
-    eax, ebx, ecx, edx, rbp, rsp,
-    esi, edi,
-    r8d, r9d, r10d, r11d, r12d, r13d, r14d, r15d,
+    rax, rbx, rcx, rdx, rbp, rsp,
+    rsi, rdi,
+    r8, r9, r10, r11, r12, r13, r14, r15,
     not_in
 } reg;
 

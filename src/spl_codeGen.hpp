@@ -40,21 +40,21 @@ public:
     explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){
         outfile.open("assem/hello.asm",std::ios::out);
         callee_saved_registers = {
-                rbp, ebx, r12d, r13d, r14d, r15d
+                rbp, rbx, r12, r13, r14, r15
         };
 
         reg_order = {
-                {r10d, true} ,{r11d, true} ,{r12d, true} ,{r13d, true}, {r14d, true}, {r15d, true},
-                {eax, true}, {ebx, true}, {ecx, true}, {edx, true},
-                {esi, true}, {edi, true}, {r8d, true}, {r9d, true}
+                {r10, true} ,{r11, true} ,{r12, true} ,{r13, true}, {r14, true}, {r15, true},
+                {rax, true}, {rbx, true}, {rcx, true}, {rdx, true},
+                {rsi, true}, {rdi, true}, {r8, true}, {r9, true}
         };
 
         reg_arg = {
-                {edi, true}, {esi, true}, {edx, true}, {ecx, true}, {r8d, true}, {r9d, true}
+                {rdi, true}, {rsi, true}, {rdx, true}, {rcx, true}, {r8, true}, {r9, true}
         };
 
         parm_reg_mapping = {
-                edi, esi, edx, ecx, r8d, r9d
+                rdi, rsi, rdx, rcx, r8, r9
         };
         // 初始化mapping
         for(const auto& reg : reg_order) {
@@ -102,7 +102,7 @@ public:
     // 把全局变量/堆栈/常量加载到寄存器中
     x86_reg bringToReg(Operand* operand, x86_reg=not_in, bool= false);
     x86_reg loadLiteralToReg(int, x86_reg=not_in);
-    void freeReg(x86_reg, bool=false);
+    void freeReg(x86_reg, bool=false, bool=false);
     // 获取某一个寄存器的使用权
     x86_reg get_x86_reg();
     void get_x86_reg(x86_reg);
@@ -155,10 +155,12 @@ public:
 
     std::vector<x86_reg> parm_reg_mapping;
     // 用于记录当前正在处理的函数的参数列表名字
-    std::set<std::string> param;
+    std::map<std::string, Operand*> param;
 
     // 用于即将使用的函数调用存储使用需要用到的参数
     std::vector<Operand*> param_stack;
+
+    bool is_param_ref(string&);
 
     unsigned int temp_count;
 
