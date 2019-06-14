@@ -107,6 +107,7 @@ void SPL_CodeGen::writeSectionTextSubroutine() {
                 generateParam(ins);
                 break;
             case OP_CALL:
+                std::cout << "count 1\n";
                 generateCall(ins);
                 break;
             case OP_FUNC_PARAM:
@@ -130,13 +131,14 @@ void SPL_CodeGen::generateGetParam(Instruction* ins) {
 
 void SPL_CodeGen::generateCompare(Instruction* ins) {
     // 加载两个比较的操作数
-    auto reg1 = bringToReg(ins->arg1);
-    auto reg2 = bringToReg(ins->arg2);
+    x86_reg reg1, reg2;
+    is_param_ref(ins->arg1->name) ? reg1 = bringToReg(ins->arg1, not_in, true, false) : reg1 = bringToReg(ins->arg1, not_in, false, false);
+    is_param_ref(ins->arg2->name) ? reg2 = bringToReg(ins->arg2, not_in, true, false) : reg2 = bringToReg(ins->arg2, not_in, false, false);
     x86Instruction(ins->label, "cmp", reg_to_string(reg1), reg_to_string(reg2));
 
     // 释放reg因为不再需要了
-    freeReg(reg1);
-    freeReg(reg2);
+    freeReg(reg1, false, false);
+    freeReg(reg2, false, false);
 
     auto offset = fetchStackVariable(ins->res->name);
     switch(ins->op) {
@@ -164,7 +166,9 @@ void SPL_CodeGen::generateCompare(Instruction* ins) {
 }
 
 void SPL_CodeGen::generateIf(Instruction* ins) {
-    auto reg = bringToReg(ins->arg1);
+    x86_reg reg;
+    is_param_ref(ins->arg1->name) ? reg = bringToReg(ins->arg1, not_in, true, false) : reg = bringToReg(ins->arg1, not_in, false, false);
+
     if(checkInstructionOp(ins, OP_IF)) {
         x86Instruction(ins->label, "cmp", reg_to_string(reg), "0x1");
         x86Instruction("", "je", ins->res->name, "");
@@ -172,14 +176,15 @@ void SPL_CodeGen::generateIf(Instruction* ins) {
         x86Instruction(ins->label, "cmp", reg_to_string(reg), "0x0");
         x86Instruction("", "je", ins->res->name, "");
     }
-    freeReg(reg);
+    freeReg(reg, false, false);
 }
 
 
 void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     //检查参数是否在寄存器中了
-    x86_reg reg1 = bringToReg(ins->arg1);
-    x86_reg reg2 = bringToReg(ins->arg2);
+    x86_reg reg1, reg2;
+    is_param_ref(ins->arg1->name) ? reg1 = bringToReg(ins->arg1, not_in, true, false) : reg1 = bringToReg(ins->arg1, not_in, false, false);
+    is_param_ref(ins->arg2->name) ? reg2 = bringToReg(ins->arg2, not_in, true, false) : reg2 = bringToReg(ins->arg2, not_in, false, false);
 
     x86Instruction(ins->label, opTox86Ins(ins->op), reg_to_string(reg1), reg_to_string(reg2));
 
@@ -187,20 +192,19 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
 
-    if(is_param_ref(ins->res->name)) {
-        freeReg(reg1, true, true);
-    } else {
-        freeReg(reg1, true); // load back to memory
-    }
-    freeReg(reg2);
+
+    freeReg(reg1, true, false); // load back to memory
+    freeReg(reg2, false, false);
 }
 
 
 void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     // mul的一个乘数在eax中， 只接受一个参数， 结果放在eax中
     // div的一个乘数在eax中， 只接受一个参数， 结果放在eax中
-    auto reg1 = bringToReg(ins->arg1, rax);
-    auto reg2 = bringToReg(ins->arg2);
+    x86_reg reg1, reg2;
+    is_param_ref(ins->arg1->name) ? reg1 = bringToReg(ins->arg1, rax, true, false) : reg1 = bringToReg(ins->arg1, rax, false, false);
+    is_param_ref(ins->arg2->name) ? reg2 = bringToReg(ins->arg2, not_in, true, false) : reg2 = bringToReg(ins->arg2, not_in, false, false);
+
     if(ins->op == DIV_ || ins->op == MOD_) {
         // edx 应该为0
         loadLiteralToReg(0, rdx);
@@ -209,7 +213,7 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
 
     if(ins->op == MOD_) {
         // 余数保存在edx寄存器中
-        freeReg(rax);
+        freeReg(rax, false, false);
         reg1 = rdx;
     }
 
@@ -217,12 +221,10 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
 
-    if(is_param_ref(ins->res->name)) {
-        freeReg(reg1, true, true);
-    } else {
-        freeReg(reg1, true);
-    }
-    freeReg(reg2);
+
+    freeReg(reg1, true, false);
+
+    freeReg(reg2, false, false);
 }
 
 /**
@@ -236,37 +238,36 @@ void SPL_CodeGen::generateAssign(Instruction *ins) {
     x86_reg reg;
     if(isReturnVariable(ins->res)) {
         // 说明是函数返回值
-        reg = rax;
-        bringToReg(ins->arg1, rax);
+        is_param_ref(ins->arg1->name) ? reg = bringToReg(ins->arg1, rax, true, false) : reg = bringToReg(ins->arg1, rax, false, false);
 
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
-
+        freeReg(reg, true, false);
     } else if(isParam(ins->res)) {
 
         // 说明是函数的参数
-        reg = bringToReg(ins->arg1);
+        is_param_ref(ins->arg1->name) ? reg = bringToReg(ins->arg1, not_in, true, false) : reg = bringToReg(ins->arg1, not_in, false, false);
 
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
-    } else {
 
+        if(is_param_ref(ins->res->name)) {
+            freeReg(reg, true, true);
+        } else {
+            freeReg(reg, false, false);
+        }
+
+    } else {
         // 说明是全局变量
         reg = bringToReg(ins->arg1);
-
         // 是全局变量
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = GLOBAL;
         reg_status.global = ins->res->name;
 
-    }
-
-    if( is_param_ref(ins->res->name) ) {
-        freeReg(reg, true, true);
-    } else {
-        freeReg(reg, true);
+        freeReg(reg, true, false);
     }
 }
 
@@ -303,11 +304,15 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
             // 参数寄存器不够用了
             throw invalid_argument{"reg for argument is not available now..."};
         } else {
+            // 参数是引用
             if(arg_list && arg_list->at(index)->paraType == REFER) {
-                //std::cout << "call ref\n";
-                bringToReg(param_stack[index], reg, true);
+                // 需要引用类型
+                reg = is_param_ref(param_stack[index]->name) ? bringToReg(param_stack[index], reg, true, true) : bringToReg(param_stack[index], reg,
+                                                                                                                            false,true);
             } else {
-                bringToReg(param_stack[index], reg);
+                // 不需要引用类型
+                reg = is_param_ref(param_stack[index]->name) ? bringToReg(param_stack[index], reg, true, false) : bringToReg(param_stack[index], reg,
+                                                                                                                             false, false);
             }
         }
     }
@@ -323,11 +328,7 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
         auto& reg_status = reg_memory_mapping.find(rax)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
-        if( is_param_ref(ins->res->name)) {
-            freeReg(rax, true, true);
-        } else {
-            freeReg(rax, true);
-        }
+        is_param_ref(ins->res->name) ? freeReg(rax, true, true) :  freeReg(rax, true, false);
     }
     // 释放所有参数寄存器的使用权
     free_arg();
@@ -416,7 +417,7 @@ x86_reg SPL_CodeGen::loadLiteralToReg(int i, x86_reg reg) {
 }
 
 
-x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool bring_address) {
+x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool is_ref, bool want_ref) {
     if(reg == not_in) reg = get_x86_reg(); // 需要一个空闲的寄存器
     else {
         get_x86_reg(reg); // 需要指定的寄存器
@@ -444,40 +445,64 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool bring_addres
     } else if(checkOperandClass(operand, VAR) && !isParam(operand) && !isReturnVariable(operand)) {
         // 加载变量到寄存器中
         // 变量默认是全局的
-        auto size = operand->getSize();
-        if(size == qword)
-            if(bring_address) {
-                x86Instruction("", "lea", reg_to_string(reg), " [ " + operand->name + " ]");
-            } else {
-                x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) +" [ " + operand->name + " ]");
-            }
-        else {
-            if(bring_address) {
-                x86Instruction("", "lea", reg_to_string(reg), " [ " + operand->name + " ]");
-            } else {
-                x86Instruction("", "movsx", reg_to_string(reg), x86SizeToString(size) + " [ " + operand->name + " ]");
-            }
+        // 提供的变量是引用， 加载这个引用的地址
+        if (!is_ref && want_ref)  {
+            // 提供的变量是值， 加载引用
+            x86Instruction("", "lea", reg_to_string(reg), " [ " + operand->name + " ]");
+        } else if (is_ref && ! want_ref)  {
+            // 提供的是引用， 加载值
+            // 暂时锁住之前用的寄存器
+            auto& reg_status = reg_memory_mapping.find(reg)->second;
+            reg_status.status = STACK;
+            auto r = get_x86_reg();
+            x86Instruction("", "mov", reg_to_string(r), " [ " + operand->name + " ]");
+            x86Instruction("", "mov", reg_to_string(reg), " [ " + reg_to_string(r) + " ]");
+        } else{
+            // 提供的是值， 加载值
+            x86Instruction("", "mov", reg_to_string(reg), " [ " + operand->name + " ]");
         }
+
         // 添加寄存器到内存的映射
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = GLOBAL;
         reg_status.global = operand->name;
+
     } else {
         // 参数和局部变量都放这里
         auto offset = fetchStackVariable(operand->name);
-        x86_size size = operand->getSize();
-        if(size == qword) {
-            if(bring_address) {
-                x86Instruction("", "lea", reg_to_string(reg), " [ rbp - " + std::to_string(offset) + " ]");
+
+        if( !is_ref && want_ref){
+            // 不是引用，加载引用
+            x86Instruction("", "lea", reg_to_string(reg), " [ rbp - " + std::to_string(offset) + " ]");
+        } else if( is_ref && ! want_ref){
+            // 是引用， 但是加载值
+            // 暂时锁住之前用的寄存器
+            auto& reg_status = reg_memory_mapping.find(reg)->second;
+            reg_status.status = STACK;
+
+            auto r = get_x86_reg();
+            x86Instruction("", "mov", reg_to_string(r), " [ rbp - " + std::to_string(offset) + " ]");
+
+            x86Instruction("", "mov", reg_to_string(reg), "[ " + reg_to_string(r) + " ]");
+        } else {
+            // 两者相同
+            x86_size size;
+            string mov;
+            if (!is_ref && ! want_ref) {
+                size = operand->getSize();
+                switch(size) {
+                    case qword:
+                        mov = "mov";
+                        break;
+                    case dword:
+                        mov = "movsx";
+                        break;
+                    default:
+                        mov = "movzx";
+                }
+                x86Instruction("", mov, reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
             } else {
-                x86Instruction("", "mov", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
-            }
-        }
-        else {
-            if(bring_address) {
-                x86Instruction("", "lea", reg_to_string(reg), " [ rbp - " + std::to_string(offset) + " ]");
-            } else {
-                x86Instruction("", "movsx", reg_to_string(reg), x86SizeToString(size) + " [ rbp - " + std::to_string(offset) + " ]");
+                x86Instruction("", "mov", reg_to_string(reg), " [ rbp - " + std::to_string(offset) + " ]");
             }
         }
         // 添加寄存器到内存的映射
@@ -536,15 +561,20 @@ x86_reg SPL_CodeGen::get_x86_reg() {
 
 void SPL_CodeGen::freeReg(x86_reg reg, bool write_back, bool write_reference) {
     auto& reg_status = reg_memory_mapping.find(reg)->second;
+    // 单纯释放
     if(!write_back) {
         reg_status.status = FREE;
         return;
     }
+
+    // 需要写回内存
     if(reg_status.status == STACK) {
         auto offset = reg_status.offset;
         if( write_reference ) {
             auto r = get_x86_reg();
+            // 加载地址到寄存器
             x86Instruction("", "mov", reg_to_string(r), "[ rbp - " + std::to_string(offset) + " ]");
+            // 按照地址写回
             x86Instruction("", "mov", "[ " + reg_to_string(r) + " ]", reg_to_string(reg));
             freeReg(r);
         } else {
@@ -638,4 +668,12 @@ bool SPL_CodeGen::isReturnVariable(Operand* operand) {
 bool SPL_CodeGen::is_param_ref(string& name) {
     auto it = param.find(name);
     return it != param.end() && it->second->symbol->paraType == REFER;
+}
+
+/*
+ * 在寄存器之间移动
+ */
+
+void SPL_CodeGen::moveBetweenReg(x86_reg reg1, x86_reg reg2) {
+    x86Instruction("", "mov", reg_to_string(reg1), reg_to_string(reg2));
 }

@@ -4,11 +4,17 @@ var
 
 function go(var a : integer): integer;
 begin
-	a := 11001;
+    if a < 15 then
+    begin
+	write("%d", a);
+	a := a + 1;
+	go(a);
+	end;
 end
 ;
 
 begin
+    i := 10;
 	go(i);
 	write("%d", i);
 end
