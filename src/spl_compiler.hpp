@@ -54,7 +54,7 @@ enum SPL_OP : unsigned int
     OP_GOTO,
     OP_NULL,
     OP_PHI,
-
+    OP_FUNC_RET,
     OP_FUNC_PARAM,
 };
 
@@ -67,6 +67,8 @@ enum SPL_CLASS
     FUNC,  // function/procedure
     LABEL,  // label
     TEMP,   // temp variable
+    PARAM,  // 函数参数
+    RET, // 函数返回值
     KNOWN, // Known in compile time / literal
 };
 
@@ -110,15 +112,15 @@ enum SPL_PARA : bool
 };
 
 typedef enum x86_reg {
-    eax, ebx, ecx, edx, rbp, rsp,
-    esi, edi,
-    r8d, r9d, r10d, r11d, r12d, r13d, r14d, r15d,
+    rax, rbx, rcx, rdx, rbp, rsp,
+    rsi, rdi,
+    r8, r9, r10, r11, r12, r13, r14, r15,
     not_in
 } reg;
 
 
 typedef enum x86_size {
-    byte=1, word=2, dword=4, qword=8, invalid=100
+    byte=1, word=2, dword=4, qword=8, var=100
 } x86_size;
 
 void DoAssert(const char *errorMsg);
@@ -129,6 +131,7 @@ std::string opTox86Ins(SPL_OP op);
 std::string x86SizeToString(x86_size size);
 std::string x86SizeToBssInit(x86_size size, unsigned int length);
 std::string reg_to_string(x86_reg reg);
+std::string spl_para_to_string(SPL_PARA);
 SPL_OP_NUM getOperandNum(SPL_OP op);
 bool isCalculateOp(SPL_OP op);
 #endif //_SPL_COMPILER_H_

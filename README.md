@@ -152,5 +152,5 @@ nasm -felf64 hello.asm && gcc hello.o && ./a.out
 加减乘除[check]
 比较[check]
 分支[check]
-函数调用[partial]
-逻辑运算[]
+函数调用[check]
+逻辑运算[check]

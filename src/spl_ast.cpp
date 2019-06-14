@@ -158,7 +158,7 @@ void AST_Const::emit(SPL_IR* ir){
     tempVariable = literal;
     // ir->addInstruction(new Instruction{"", OP_ASSIGN, literal, nullptr, tempVariable});
 }
-AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_) : id(id_), scopeIndex(scopeIndex_)
+AST_Sym::AST_Sym(std::string &id_, unsigned int scopeIndex_, Symbol* symbol_) : id(id_), scopeIndex(scopeIndex_), symbol(symbol_)
 {
     this->nodeType = AST_SYM;
 }
@@ -181,12 +181,13 @@ void AST_Sym::checkSemantic()
     //scope->lookupVariable(id.c_str());
 }
 void AST_Sym::emit(SPL_IR* ir){
-    tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
+    tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR, get_symbol());
 }
 
 // AST_Array
 AST_Array::AST_Array(AST_Sym *sym_, AST_Exp *exp_) : sym(sym_), exp(exp_)
 {
+    symbol = sym->symbol;
     this->nodeType = AST_ARRAY;
 }
 
@@ -203,7 +204,19 @@ int AST_Array::calculate()
 }
 void AST_Array::checkSemantic() {}
 void AST_Array::emit(SPL_IR* ir){
-
+    // 先计算offset 存到一个临时变量中
+    exp->emit(ir);
+    // 如何将offset嵌入这个Operand之中
+    tempVariable = new Operand(ARRAY, sym->id + "." + std::to_string(sym->scopeIndex), VAR, get_symbol());
+    if(exp->nodeType == AST_CONST) {
+        tempVariable->offset = new Operand(INT, "", KNOWN);
+        tempVariable->offset->value.valInt = exp->getTempVariable()->value.valInt;
+    }
+    else if (exp->nodeType == AST_MATH || exp->nodeType == AST_SYM) {
+        tempVariable->offset = exp->getTempVariable();
+    } else {
+        throw invalid_argument {"debug info > exp nodeType is " + std::to_string(exp->nodeType)};
+    }
 }
 // AST_Dot
 
@@ -352,7 +365,7 @@ void AST_While::emit(SPL_IR* ir){
     cond->emit(ir);
 
 
-    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->tempVariable, nullptr , nullptr});
+    ir->addInstruction(new Instruction{"", OP_IF_Z, cond->getTempVariable(), nullptr , nullptr});
     auto indexOfGoto = ir->getCurrentIR().size() - 1;
     ir->addInstruction(new Instruction{stmtLabel->name, OP_NULL, nullptr, nullptr , nullptr}); // trival label
 
@@ -485,15 +498,18 @@ void AST_Compound::emit(SPL_IR* ir) {
         stmt->emit(ir);
     }
 }
-AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex_) :
-    isProc(isProc_), funcId(funcId_), argList(argList_), scopeIndex(scopeIndex_)
+
+AST_Func::AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex_, Symbol* symbol_) :
+    isProc(isProc_), funcId(funcId_), argList(argList_), scopeIndex(scopeIndex_), symbol(symbol_)
 {
+    isSys = false;
     this->nodeType = AST_FUNC;
 }
 
 
 AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(argList_), scopeIndex(0)
 {
+    isSys = true;
     switch (sysFuncId_)
     {
     case 0:
@@ -596,11 +612,12 @@ void AST_Func::emit(SPL_IR* ir) {
     }
     auto literal = new Operand(INT, "", KNOWN);
     literal->value.valInt = totalSize;
+    Symbol* sym = isSys ? nullptr : get_symbol();
     if(isProc) {
-        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr,nullptr});
+        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC, sym), nullptr,nullptr});
     } else {
         tempVariable = ir->genTempVariable(valType);
-        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC), nullptr, tempVariable});
+        ir->addInstruction(new Instruction{"", OP_CALL, new Operand(valType, funcId + "." +std::to_string(scopeIndex), FUNC, sym), nullptr, tempVariable});
     }
     ir->addInstruction(new Instruction{"", OP_POP, literal, nullptr, nullptr});
 }

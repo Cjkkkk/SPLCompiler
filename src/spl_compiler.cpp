@@ -23,23 +23,21 @@ std::string classToString(SPL_CLASS classId)
         case VAR:
             return "VAR";
 
-
         case CONST:
             return "CONST";
 
-        
         case TYPE:
             return "TYPE";
-
 
         case FUNC:
             return "FUNC";
 
-
         case LABEL:
             return "LABEL";
-
-
+        case PARAM:
+            return "PARAM";
+        case RET:
+            return "RET";
         default:
             return "ERROR";
 
@@ -177,8 +175,12 @@ std::string opToString(SPL_OP op){
 
         case OP_PHI:
             return "phi";
+
         case OP_FUNC_PARAM:
             return "func_param";
+
+        case OP_FUNC_RET:
+            return "func_ret";
 
         default:
             return "error";
@@ -277,6 +279,7 @@ std::string opTox86Ins(SPL_OP op) {
             return "sub";
         case MUL_:
             return "mul";
+        case MOD_:
         case DIV_:
             return "div";
         case AND_:
@@ -322,68 +325,77 @@ std::string x86SizeToString(x86_size size) {
         case qword:
             return "qword";
         default:
-            return "invalid";
+            return "var";
     }
 }
 
 std::string reg_to_string(x86_reg reg) {
     switch(reg) {
-        case eax:
-            return "eax";
-        case ebx:
-            return "ebx";
-        case ecx:
-            return "ecx";
-        case edx:
-            return "edx";
+        case rax:
+            return "rax";
+        case rbx:
+            return "rbx";
+        case rcx:
+            return "rcx";
+        case rdx:
+            return "rdx";
         case rbp:
             return "rbp";
         case rsp:
-            return "esp";
-        case esi:
-            return "esi";
-        case edi:
-            return "edi";
-        case r8d:
-            return "r8d";
-        case r9d:
-            return "r9d";
-        case r10d:
-            return "r10d";
-        case r11d:
-            return "r11d";
-        case r12d:
-            return "r12d";
-        case r13d:
-            return "r13d";
-        case r14d:
-            return "r14d";
-        case r15d:
-            return "r15d";
+            return "rsp";
+        case rsi:
+            return "rsi";
+        case rdi:
+            return "rdi";
+        case r8:
+            return "r8";
+        case r9:
+            return "r9";
+        case r10:
+            return "r10";
+        case r11:
+            return "r11";
+        case r12:
+            return "r12";
+        case r13:
+            return "r13";
+        case r14:
+            return "r14";
+        case r15:
+            return "r15";
         default:
             return "not_in";
     }
 }
 
 std::string x86SizeToBssInit(x86_size size, unsigned int length) {
-    std::string op;
-    switch (size) {
-        case byte:
-            op = "resb";
-            break;
-        case word:
-            op = "resw";
-            break;
-        case dword:
-            op = "resd";
-            break;
-        case qword:
-            op = "resq";
-            break;
-        default:
-            op = "error";
-    }
+    std::string op = "resq";
+//    switch (size) {
+//        case byte:
+//            op = "resb";
+//            break;
+//        case word:
+//            op = "resw";
+//            break;
+//        case dword:
+//            op = "resd";
+//            break;
+//        case qword:
+//            op = "resq";
+//            break;
+//        default:
+//            op = "error";
+//    }
     op = op + " " + std::to_string(length);
     return op;
 }
 
+
+std::string spl_para_to_string(SPL_PARA s) {
+    switch (s) {
+        case VALUE:
+            return "value";
+        case REFER:
+            return "reference";
+    }
+}

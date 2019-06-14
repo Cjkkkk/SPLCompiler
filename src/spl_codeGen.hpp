@@ -23,6 +23,7 @@ struct reg_memory {
     reg_status status;
     int offset;
     string global;
+    Operand* operand;
 };
 
 struct reg_order {
@@ -40,25 +41,25 @@ public:
     explicit SPL_CodeGen( SPL_IR* ir_): ir(ir_){
         outfile.open("assem/hello.asm",std::ios::out);
         callee_saved_registers = {
-                rbp, ebx, r12d, r13d, r14d, r15d
+                rbp, rbx, r12, r13, r14, r15
         };
 
         reg_order = {
-                {r10d, true} ,{r11d, true} ,{r12d, true} ,{r13d, true}, {r14d, true}, {r15d, true},
-                {eax, true}, {ebx, true}, {ecx, true}, {edx, true},
-                {esi, true}, {edi, true}, {r8d, true}, {r9d, true}
+                {r10, true} ,{r11, true} ,{r12, true} ,{r13, true}, {r14, true}, {r15, true},
+                {rax, true}, {rbx, true}, {rcx, true}, {rdx, true},
+                {rsi, true}, {rdi, true}, {r8, true}, {r9, true}
         };
 
         reg_arg = {
-                {edi, true}, {esi, true}, {edx, true}, {ecx, true}, {r8d, true}, {r9d, true}
+                {rdi, true}, {rsi, true}, {rdx, true}, {rcx, true}, {r8, true}, {r9, true}
         };
 
         parm_reg_mapping = {
-                edi, esi, edx, ecx, r8d, r9d
+                rdi, rsi, rdx, rcx, r8, r9
         };
         // 初始化mapping
         for(const auto& reg : reg_order) {
-            reg_memory_mapping.insert({reg.name, {FREE, 0, ""}});
+            reg_memory_mapping.insert({reg.name, {FREE, 0, "", nullptr}});
         }
 
         temp_count = 0;
@@ -100,9 +101,10 @@ public:
     void free_arg();
     bool isParam(Operand*);
     // 把全局变量/堆栈/常量加载到寄存器中
-    x86_reg bringToReg(Operand* operand, x86_reg=not_in);
+    x86_reg bringToReg(Operand* operand, x86_reg=not_in, bool= false, bool=false);
     x86_reg loadLiteralToReg(int, x86_reg=not_in);
-    void freeReg(x86_reg, bool=false);
+    void freeReg(x86_reg, bool=false, bool=false);
+    void moveBetweenReg(x86_reg, x86_reg);
     // 获取某一个寄存器的使用权
     x86_reg get_x86_reg();
     void get_x86_reg(x86_reg);
@@ -111,12 +113,17 @@ public:
     void push_rbp();
     void pop_rbp();
 
-    void collect_bss_data(Instruction*);
+    void collect_bss_data(Operand*);
+    void collect_ronly_data(Instruction*);
+    void collectParamAndRet();
+
     // 提前分配好堆栈
     void allocateStack();
     void deallocateStack();
 
     std::string getTempStringLable();
+
+    bool isReturnVariable(Operand*);
     // 将ir写入文件
     void x86Instruction(const string& label, const string& ins, const string& op1, const string& op2);
     // 必须16字节对齐
@@ -137,8 +144,6 @@ public:
     std::vector<reg_order> reg_order;
 
     std::vector<reg_arg> reg_arg;
-    // 变量是否在寄存器当中
-    std::map<std::string, x86_reg> name_to_reg;
     // 变量相对rbp的offset
     std::map<std::string, int> name_to_stack;
     // callee saved
@@ -146,9 +151,17 @@ public:
 
     std::map<std::string, pair<x86_size, unsigned int>> bss_data;
 
-    std::set<std::string> param;
+    std::map<std::string, pair<x86_size, unsigned int>> ronly_data;
 
     std::vector<x86_reg> parm_reg_mapping;
+    // 用于记录当前正在处理的函数的参数列表名字
+    std::map<std::string, Operand*> param;
+
+    // 用于即将使用的函数调用存储使用需要用到的参数
+    std::vector<Operand*> param_stack;
+
+    bool is_param_ref(string&);
+
     unsigned int temp_count;
 
     unsigned int nth_param;

@@ -110,7 +110,8 @@ Operand* evaluate(SPL_OP op, Operand* left, Operand* right) {
 
 
 x86_size Operand::getSize() {
-    switch(type) {
+    auto type_ = type == ARRAY ? symbol->elementType : type;
+    switch(type_) {
         case BOOL:
             return byte;
         case REAL:
@@ -121,7 +122,7 @@ x86_size Operand::getSize() {
             return byte;
         case STRING:
         default:
-            return invalid;
+            return var;
     }
 }
 void Instruction::addVariable(Operand* name, int index) {};
@@ -155,7 +156,15 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
         }
     }else {
 //            s << operand->name << "[" << typeToString(operand->type) << "]";
-        s << operand->name;
+        if(operand->type == ARRAY) {
+            if(operand->offset->cl == KNOWN) s << operand->name + "[ " + std::to_string(operand->offset->value.valInt) + " ]";
+            else {
+                s << operand->name + "[ " + operand->offset->name + " ]";
+            }
+        }
+        else{
+            s << operand->name;
+        }
     }
 }
 
@@ -213,6 +222,7 @@ void Instruction::output(ostream& s) {
             break;
         case OP_PARAM:
         case OP_FUNC_PARAM:
+        case OP_FUNC_RET:
         case OP_POP:
             s << label << "\t";
             s << opToString(op) << " ";

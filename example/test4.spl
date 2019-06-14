@@ -1,19 +1,31 @@
-program test;
-var
-	x : integer;
-    y : integer;
-    z : integer;
-begin
-    z := 3;
-    x := 1;
-    while x > 0 do
-    begin
-        if x = 1 then
-            y := 7
-        else
-            y := z + 4;
-        x := 3;
-    end;
-end
+program hello;
+var	
+	f : integer;
+	k : integer;
+function go(var b : integer; a : integer): integer;
+var 
+	fk : integer;
+	t : real;
 
+begin
+	if a > 0 then 
+	begin
+		go := a * go(b , a - 1);
+	end
+	else
+	begin
+		go := 1;
+	end
+	;
+	b := b + go;
+	k := k + go;
+end
+;
+
+begin
+	k := 0;
+	f := go(k , 5);
+	write("%d", f);
+	write("%d", k);
+end
 .

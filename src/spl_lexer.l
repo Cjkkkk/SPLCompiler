@@ -161,7 +161,7 @@ string      { yylval->build<int>(5); return token::SYS_TYPE; }
 [A-Za-z][A-Za-z0-9_]*   { yylval->build<std::string>(yytext); return token::ID; }
 
     /* comments (C-like) */
-"//".*\n
+"//".*\n                { loc->lines(); }
 "/*"                    { BEGIN COMMENT; }
 <COMMENT>"*/"           { BEGIN INITIAL; }
 <COMMENT>([^*]|\n)+|.   { }

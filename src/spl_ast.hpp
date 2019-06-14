@@ -32,7 +32,7 @@ class AST
     virtual void emit(SPL_IR* ir) = 0; //pure virtual function
     virtual ~AST() = 0;          //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
-  protected:
+
     int nodeType;
 };
 
@@ -122,13 +122,19 @@ class AST_Const : public AST_Exp
 class AST_Sym : public AST_Exp
 {
   public:
-    AST_Sym(std::string &id_, unsigned int scopeIndex_);
+    AST_Sym(std::string &id_, unsigned int scopeIndex_, Symbol*);
     ~AST_Sym() override;
     int calculate() override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
+    Symbol* get_symbol() {
+        if(!symbol) throw invalid_argument{"access void pointer in symbol: " + id};
+        return symbol;
+    }
+
     std::string id;
     unsigned int scopeIndex;
+    Symbol* symbol;
 };
 
 // ast node for arrray element, such as a[1], a[exp1+exp2] and so on
@@ -140,8 +146,12 @@ class AST_Array : public AST_Exp
     int calculate(void) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
+    Symbol* get_symbol() {
+        if(!symbol) throw invalid_argument{"access void pointer in symbol: " + sym->id};
+        return symbol;
+    }
     //void print(void);
-  protected:
+    Symbol* symbol;
     AST_Sym *sym;
     AST_Exp *exp;
 };
@@ -280,18 +290,22 @@ class AST_Compound : public AST_Stmt
 class AST_Func : public AST_Exp, public AST_Stmt
 {
   public:
-    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex);
+    AST_Func(bool isProc_, std::string &funcId_, std::vector<AST_Exp *> *argList_, unsigned int scopeIndex, Symbol*);
     AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_);
     ~AST_Func() override;
     int calculate() override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
-
-  protected:
+    Symbol* get_symbol() {
+        if(!symbol) throw invalid_argument{"access void pointer in function: " + funcId};
+        return symbol;
+    }
     bool isProc;
+    bool isSys;
     std::string funcId;
     std::vector<AST_Exp *> *argList;
     unsigned int scopeIndex;
+    Symbol* symbol;
 };
 
 

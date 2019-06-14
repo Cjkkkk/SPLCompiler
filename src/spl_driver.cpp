@@ -129,7 +129,19 @@ void SPL::SPL_Driver::emitIR() {
                 ir.addInstruction(new Instruction{
                         "",
                         OP_FUNC_PARAM,
-                        new Operand{argument->elementType, argument->name + "." + std::to_string(argument->scopeIndex), VAR},
+                        new Operand{argument->elementType, argument->name + "." + std::to_string(argument->scopeIndex), PARAM, argument},
+                        nullptr,
+                        nullptr
+                });
+            }
+
+            if(f->symbolType != UNKNOWN) {
+                // 函数有返回值
+                auto ret = symtab.lookupVariable(func_name.c_str());
+                ir.addInstruction(new Instruction{
+                        "",
+                        OP_FUNC_RET,
+                        new Operand{f->elementType, func_name + "." + std::to_string(PreScopeIndex), RET, ret},
                         nullptr,
                         nullptr
                 });
