@@ -325,7 +325,7 @@ std::string x86SizeToString(x86_size size) {
         case qword:
             return "qword";
         default:
-            return "invalid";
+            return "var";
     }
 }
 
@@ -369,23 +369,23 @@ std::string reg_to_string(x86_reg reg) {
 }
 
 std::string x86SizeToBssInit(x86_size size, unsigned int length) {
-    std::string op;
-    switch (size) {
-        case byte:
-            op = "resb";
-            break;
-        case word:
-            op = "resw";
-            break;
-        case dword:
-            op = "resd";
-            break;
-        case qword:
-            op = "resq";
-            break;
-        default:
-            op = "error";
-    }
+    std::string op = "resq";
+//    switch (size) {
+//        case byte:
+//            op = "resb";
+//            break;
+//        case word:
+//            op = "resw";
+//            break;
+//        case dword:
+//            op = "resd";
+//            break;
+//        case qword:
+//            op = "resq";
+//            break;
+//        default:
+//            op = "error";
+//    }
     op = op + " " + std::to_string(length);
     return op;
 }

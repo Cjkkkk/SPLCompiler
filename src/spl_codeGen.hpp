@@ -23,6 +23,7 @@ struct reg_memory {
     reg_status status;
     int offset;
     string global;
+    Operand* operand;
 };
 
 struct reg_order {
@@ -58,7 +59,7 @@ public:
         };
         // 初始化mapping
         for(const auto& reg : reg_order) {
-            reg_memory_mapping.insert({reg.name, {FREE, 0, ""}});
+            reg_memory_mapping.insert({reg.name, {FREE, 0, "", nullptr}});
         }
 
         temp_count = 0;
@@ -112,7 +113,7 @@ public:
     void push_rbp();
     void pop_rbp();
 
-    void collect_bss_data(Instruction*);
+    void collect_bss_data(Operand*);
     void collect_ronly_data(Instruction*);
     void collectParamAndRet();
 
@@ -143,8 +144,6 @@ public:
     std::vector<reg_order> reg_order;
 
     std::vector<reg_arg> reg_arg;
-    // 变量是否在寄存器当中
-    std::map<std::string, x86_reg> name_to_reg;
     // 变量相对rbp的offset
     std::map<std::string, int> name_to_stack;
     // callee saved

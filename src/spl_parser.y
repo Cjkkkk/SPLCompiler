@@ -653,7 +653,7 @@ stmt:
         ;
 
 non_label_stmt:
-        assign_stmt {$$ = $1; $$->checkSemantic();}
+        assign_stmt {$$ = $1;}
         | proc_stmt {$$ = $1;}
         | compound_stmt {$$ = $1;}
         | if_stmt {$$ = $1;}
@@ -680,8 +680,17 @@ assign_stmt:
         }
         | ID LB expression RB ASSIGN expression {
         // 查看类型是否匹配
-//            AST_Array* lhs = new AST_Array(new AST_Sym($1, nullptr), $3);
-//            $$ = new AST_Assign(lhs, $6);
+	    auto sym = driver.symtab.lookupVariable($1.c_str());
+	    if(!sym) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+	    }
+
+	    if($3->valType != INT) {
+		throw splException{@1.begin.line, @1.begin.column , "index of array '" + $1 + "' must be type INT, get " + typeToString($3->valType) +".\n"};
+             }
+
+            AST_Array* lhs = new AST_Array(new AST_Sym($1, sym->scopeIndex, sym), $3);
+            $$ = new AST_Assign(lhs, $6);
         }
         | ID  DOT  ID  ASSIGN  expression {
 //            AST_Dot* lhs = new AST_Dot(new AST_Sym($1, nullptr),
@@ -1123,7 +1132,16 @@ factor:
         $$->valType = $2->valType;
         }
         |  ID  LB  expression  RB {
-        //$$ = new AST_Array(new AST_Sym($1, nullptr),$3);
+        auto sym = driver.symtab.lookupVariable($1.c_str());
+	if(!sym) {
+		// 函数未定义
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+	}
+	if($3->valType != INT) {
+		throw splException{@1.begin.line, @1.begin.column , "index of array '" + $1 + "' must be type INT, get " + typeToString($3->valType) +".\n"};
+	}
+        $$ = new AST_Array(new AST_Sym($1, sym->scopeIndex, sym),$3);
+        $$->valType = INT;
         }
         |  ID  DOT  ID {
 //        $$ = new AST_Dot(

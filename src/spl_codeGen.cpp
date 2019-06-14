@@ -191,7 +191,7 @@ void SPL_CodeGen::generatePlusAndMinus(Instruction *ins) {
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
-
+    reg_status.operand = ins->res;
 
     freeReg(reg1, true, false); // load back to memory
     freeReg(reg2, false, false);
@@ -220,7 +220,7 @@ void SPL_CodeGen::generateMulAndDivide(Instruction *ins) {
     auto& reg_status = reg_memory_mapping.find(reg1)->second;
     reg_status.status = STACK;
     reg_status.offset = fetchStackVariable(ins->res->name);
-
+    reg_status.operand = ins->res;
 
     freeReg(reg1, true, false);
 
@@ -243,6 +243,7 @@ void SPL_CodeGen::generateAssign(Instruction *ins) {
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
+        reg_status.operand = ins->res;
         freeReg(reg, true, false);
     } else if(isParam(ins->res)) {
 
@@ -252,7 +253,7 @@ void SPL_CodeGen::generateAssign(Instruction *ins) {
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
-
+        reg_status.operand = ins->res;
         if(is_param_ref(ins->res->name)) {
             freeReg(reg, true, true);
         } else {
@@ -266,7 +267,7 @@ void SPL_CodeGen::generateAssign(Instruction *ins) {
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = GLOBAL;
         reg_status.global = ins->res->name;
-
+        reg_status.operand = ins->res;
         freeReg(reg, true, false);
     }
 }
@@ -328,6 +329,7 @@ void SPL_CodeGen::generateCall(Instruction* ins) {
         auto& reg_status = reg_memory_mapping.find(rax)->second;
         reg_status.status = STACK;
         reg_status.offset = fetchStackVariable(ins->res->name);
+        reg_status.operand = ins->res;
         is_param_ref(ins->res->name) ? freeReg(rax, true, true) :  freeReg(rax, true, false);
     }
     // 释放所有参数寄存器的使用权
@@ -383,7 +385,9 @@ void SPL_CodeGen::allocateStack() {
             }
         }
 
-        collect_bss_data(ins);
+        collect_bss_data(ins->arg1);
+        collect_bss_data(ins->arg2);
+        collect_bss_data(ins->res);
     }
     offset = (offset / 16 + 1) * 16;
     stack_size = offset;
@@ -455,18 +459,46 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool is_ref, bool
             auto& reg_status = reg_memory_mapping.find(reg)->second;
             reg_status.status = STACK;
             auto r = get_x86_reg();
+
             x86Instruction("", "mov", reg_to_string(r), " [ " + operand->name + " ]");
+
             x86Instruction("", "mov", reg_to_string(reg), " [ " + reg_to_string(r) + " ]");
         } else{
             // 提供的是值， 加载值
-            x86Instruction("", "mov", reg_to_string(reg), " [ " + operand->name + " ]");
+
+            if(operand->type == ARRAY) {
+                if(operand->offset->cl == KNOWN) {
+                    x86Instruction(
+                            "",
+                            "mov",
+                            reg_to_string(reg),
+                            " [ " + operand->name + " + 8 * " + std::to_string(operand->offset->value.valInt) + " ]");
+                } else {
+                    // 先锁住当前持有的寄存器
+                    auto& reg_status = reg_memory_mapping.find(reg)->second;
+                    reg_status.status = STACK;
+
+
+                    auto r = get_x86_reg();
+                    bringToReg(operand->offset, r);
+                    x86Instruction(
+                            "",
+                            "mov",
+                            reg_to_string(reg),
+                            " [ " + operand->name + " + 8 * " + reg_to_string(r) + " ]"
+                            );
+                    freeReg(r, false, false);
+                }
+            } else {
+                x86Instruction("", "mov", reg_to_string(reg), " [ " + operand->name + " ]");
+            }
         }
 
         // 添加寄存器到内存的映射
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = GLOBAL;
         reg_status.global = operand->name;
-
+        reg_status.operand = operand;
     } else {
         // 参数和局部变量都放这里
         auto offset = fetchStackVariable(operand->name);
@@ -509,6 +541,7 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool is_ref, bool
         auto& reg_status = reg_memory_mapping.find(reg)->second;
         reg_status.status = STACK;
         reg_status.offset = offset;
+        reg_status.operand = operand;
     }
     return reg;
 }
@@ -588,7 +621,26 @@ void SPL_CodeGen::freeReg(x86_reg reg, bool write_back, bool write_reference) {
             x86Instruction("", "mov", "[ " + reg_to_string(r) + " ]", reg_to_string(reg));
             freeReg(r);
         } else {
-            x86Instruction("", "mov", "[ " + name + " ]", reg_to_string(reg));
+            if(reg_status.operand->type == ARRAY) {
+                if(reg_status.operand->offset->cl == KNOWN) {
+                    x86Instruction(
+                            "",
+                            "mov",
+                            " [ " + reg_status.operand->name + " + 8 * " + std::to_string(reg_status.operand->offset->value.valInt) + " ]",
+                            reg_to_string(reg));
+                } else {
+                    auto r = get_x86_reg();
+                    bringToReg(reg_status.operand->offset, r);
+                    x86Instruction(
+                            "",
+                            "mov",
+                            " [ " + reg_status.operand->name + " + 8 * " + reg_to_string(r) + " ]",
+                            reg_to_string(reg));
+                    freeReg(r, false, false);
+                }
+            } else {
+                x86Instruction("", "mov", "[ " + name + " ]", reg_to_string(reg));
+            }
         }
     } else if (reg_status.status == LITERAL) {
 
@@ -599,18 +651,16 @@ void SPL_CodeGen::freeReg(x86_reg reg, bool write_back, bool write_reference) {
 }
 
 
-void SPL_CodeGen::collect_bss_data(Instruction* ins) {
-    if(ins->arg1 && checkOperandClass(ins->arg1, VAR) && !isParam(ins->arg1) && !isReturnVariable(ins->arg1)) {
-        auto it = bss_data.find(ins->arg1->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg1->name, {ins->arg1->getSize(), 8}});
-    }
-    if(ins->arg2 && checkOperandClass(ins->arg2, VAR) && !isParam(ins->arg2) && !isReturnVariable(ins->arg2)) {
-        auto it = bss_data.find(ins->arg2->name);
-        if(it == bss_data.end()) bss_data.insert({ins->arg2->name, {ins->arg2->getSize(),8}});
-    }
-    if(ins->res && checkOperandClass(ins->res, VAR) && !isParam(ins->res) && !isReturnVariable(ins->res)) {
-        auto it = bss_data.find(ins->res->name);
-        if(it == bss_data.end()) bss_data.insert({ins->res->name, {ins->res->getSize(), 8}});
+void SPL_CodeGen::collect_bss_data(Operand* op) {
+    if(op && checkOperandClass(op, VAR) && !isParam(op) && !isReturnVariable(op)) {
+        auto it = bss_data.find(op->name);
+        if(it == bss_data.end()) {
+            if(op->type == ARRAY) {
+                bss_data.insert({op->name, {op->getSize(), op->symbol->scalarSize}});
+            } else {
+                bss_data.insert({op->name, {op->getSize(), 1}});
+            }
+        }
     }
 }
 

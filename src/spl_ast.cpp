@@ -205,9 +205,18 @@ int AST_Array::calculate()
 void AST_Array::checkSemantic() {}
 void AST_Array::emit(SPL_IR* ir){
     // 先计算offset 存到一个临时变量中
-    // exp->emit(ir);
+    exp->emit(ir);
     // 如何将offset嵌入这个Operand之中
-    // tempVariable = new Operand(valType, id + "." + std::to_string(scopeIndex), VAR);
+    tempVariable = new Operand(ARRAY, sym->id + "." + std::to_string(sym->scopeIndex), VAR, get_symbol());
+    if(exp->nodeType == AST_CONST) {
+        tempVariable->offset = new Operand(INT, "", KNOWN);
+        tempVariable->offset->value.valInt = exp->getTempVariable()->value.valInt;
+    }
+    else if (exp->nodeType == AST_MATH || exp->nodeType == AST_SYM) {
+        tempVariable->offset = exp->getTempVariable();
+    } else {
+        throw invalid_argument {"debug info > exp nodeType is " + std::to_string(exp->nodeType)};
+    }
 }
 // AST_Dot
 

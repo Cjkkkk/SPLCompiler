@@ -29,6 +29,7 @@ public:
         this->cl = op.cl;
         this->value = op.value;
         this->symbol = op.symbol;
+        this->offset = op.offset;
     }
     x86_size getSize();
     SPL_TYPE type;
@@ -36,6 +37,7 @@ public:
     SPL_CLASS cl;
     Value value;
     Symbol* symbol;
+    Operand* offset;
 };
 
 Operand* evaluate(SPL_OP op, Operand* left, Operand* right);

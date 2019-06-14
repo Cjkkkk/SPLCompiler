@@ -120,7 +120,7 @@ typedef enum x86_reg {
 
 
 typedef enum x86_size {
-    byte=1, word=2, dword=4, qword=8, invalid=100
+    byte=1, word=2, dword=4, qword=8, var=100
 } x86_size;
 
 void DoAssert(const char *errorMsg);

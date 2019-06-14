@@ -1,6 +1,15 @@
 program hello;
 var
 	i : integer;
+	b : string;
+	arr : array [10] of integer;
+
+//function bo(a : integer): integer;
+//begin
+//    write("bo: %d", a);
+//end
+//;
+
 
 function go(var a : integer): integer;
 begin
@@ -14,7 +23,10 @@ end
 ;
 
 begin
-    i := 10;
+    i := 2;
+    arr[i + 1] := 3;
+    write("%d", arr[i + 1]);
+    i := 10 + arr[3];
 	go(i);
 	write("%d", i);
 end
