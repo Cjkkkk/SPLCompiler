@@ -1,36 +1,33 @@
 program hello;
-
 var
 	i : integer;
-	b : string;
-	arr : array [10] of integer;
-    m : record
-        age : integer;
-        height : integer;
-        end;
-//function bo(a : integer): integer;
-//begin
-//    write("bo: %d", a);
-//end
-//;
 
-
-function go(var a : integer): integer;
-begin
-    if a < 15 then
-    begin
-	write("%d", a);
-	a := a + 1;
-	go(a);
-	end;
-end
+function go(a : integer): integer;
+{
+	if a = 1
+	{
+		go := 1;
+	}
+	else
+	{
+		if a = 2
+		{
+			go := 1;
+		}
+		else
+		{
+			go := go(a - 1) + go(a - 2);
+		}
+		;
+	}
+	;
+}
 ;
 
-begin
-    m.age := 10;
-    i := m.age + 3;
+{
+	i := 6 % 4;
 	write("%d", i);
-end
+}
 .
 
 

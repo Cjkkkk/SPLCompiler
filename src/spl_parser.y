@@ -102,7 +102,7 @@
 %token  RECORD
 %token  REPEAT
 %token  SET
-%token  THEN
+//%token  THEN
 %token  TYPE
 %token  UNTIL
 %token  VAR
@@ -773,7 +773,7 @@ proc_stmt:
         ;
 
 if_stmt:
-        IF  expression  THEN  stmt  else_clause {$$ = new AST_If($2, $4, $5);}
+        IF  expression  stmt  else_clause {$$ = new AST_If($2, $3, $4);}
         ;
 
 else_clause:

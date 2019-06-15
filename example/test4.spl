@@ -24,7 +24,7 @@ end
 
 begin
 	k := 0;
-	f := go(k , 5);
+	f := go(k , 4);
 	write("%d", f);
 	write("%d", k);
 end

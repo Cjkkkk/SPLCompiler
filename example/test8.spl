@@ -10,7 +10,8 @@ var
 
 begin
     m.age := 10;
-    i := m.age + 3;
+    m.height := 20;
+    i := m.age + m.height;
 	write("%d", i);
 end
 .

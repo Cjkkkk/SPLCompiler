@@ -54,20 +54,19 @@ using token = SPL::SPL_Parser::token;
     /* keyword */
 and         { return token::AND; }
 array       { return token::ARRAY; }
-begin       { return token::_BEGIN; }
+"{"       { return token::_BEGIN; }
 case        { return token::CASE; }
 const       { return token::CONST; }
 div         { return token::DIV; }
 do          { return token::DO; }
 downto      { return token::DOWNTO; }
 else        { return token::ELSE; }
-end         { return token::_END; }
+"}"        { return token::_END; }
 for         { return token::FOR; }
 function    { return token::FUNCTION; }
 goto        { return token::GOTO; }
 if          { return token::IF; }
 in          { return token::IN; }
-mod         { return token::MOD; }
 not         { return token::NOT; }
 of          { return token::OF; }
 or          { return token::OR; }
@@ -77,7 +76,6 @@ program     { return token::PROGRAM; }
 record      { return token::RECORD; }
 repeat      { return token::REPEAT; }
 set         { return token::SET; }
-then        { return token::THEN; }
 to          { return token::TO; }
 type        { return token::TYPE; }
 until       { return token::UNTIL; }
@@ -142,7 +140,7 @@ string      { yylval->build<int>(5); return token::SYS_TYPE; }
 "<"     { return token::LT; }
 "="     { return token::EQUAL; }
 "<>"    { return token::UNEQUAL; }
-"MOD"   { return token::MOD; }
+"%"   { return token::MOD; }
 "NOT"   { return token::NOT; }
 ":="    { return token::ASSIGN; }
 

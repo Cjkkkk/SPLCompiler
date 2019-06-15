@@ -1,0 +1,27 @@
+program hello;
+
+// support for record
+var
+	i : integer;
+	j : integer;
+	k : integer;
+	m : integer;
+
+begin
+    // 测试常量折叠
+    i := 4 + 5;
+    write("%d", i);
+    // 常量传播
+    j := i;
+    k := j;
+    write("%d", k);
+
+    // 代码消除
+    m := 20;
+
+
+end
+.
+
+
+
