@@ -236,7 +236,12 @@ int AST_Dot::calculate()
     return ERROR_VAL;
 }
 void AST_Dot::checkSemantic() {}
-void AST_Dot::emit(SPL_IR* ir){}
+void AST_Dot::emit(SPL_IR* ir){
+    std::cout << "record : " << record->id << "\n";
+    std::cout << "field : " << field->id << "\n";
+    tempVariable = new Operand(RECORD, record->id + "." + std::to_string(record->scopeIndex), VAR, record->get_symbol());
+    tempVariable->offset = new Operand(field->symbol->symbolType, field->id, KNOWN, field->get_symbol());
+}
 // AST_Assign
 AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(rhs_)
 {

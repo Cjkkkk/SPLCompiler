@@ -1,0 +1,19 @@
+program hello;
+
+// support for record
+var
+	i : integer;
+    m : record
+        age : integer;
+        height : integer;
+        end;
+
+begin
+    m.age := 10;
+    i := m.age + 3;
+	write("%d", i);
+end
+.
+
+
+

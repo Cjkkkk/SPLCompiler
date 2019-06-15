@@ -693,9 +693,32 @@ assign_stmt:
             $$ = new AST_Assign(lhs, $6);
         }
         | ID  DOT  ID  ASSIGN  expression {
-//            AST_Dot* lhs = new AST_Dot(new AST_Sym($1, nullptr),
-//                                       new AST_Sym($3, nullptr));
-//            $$ = new AST_Assign(lhs, $5);
+        auto sym = driver.symtab.lookupVariable($1.c_str());
+	if(!sym) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+	}
+	if(sym->symbolType != RECORD) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not record type.\n"};
+	}
+	auto members = sym->subSymbolMap;
+	if(members == nullptr) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' has not members.\n"};
+	}
+	auto member = members->find($3);
+	if(member == members->end()) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' has not member " + $3 +"\n"};
+	}
+
+	if(member->second->symbolType != $5->valType) {
+		throw splException{@1.begin.line, @1.begin.column , "invaild conversion from '" + typeToString($5->valType) + "' to '" + typeToString(member->second->symbolType) + "'.\n"};
+	}
+
+
+        AST_Dot* lhs = new AST_Dot(
+                       	new AST_Sym($1, sym->scopeIndex, sym),
+                       	new AST_Sym($3, member->second->scopeIndex, member->second));
+        $$ = new AST_Assign(lhs, $5);
+        $$->valType = member->second->symbolType;
         }
         ;
 
@@ -1144,9 +1167,26 @@ factor:
         $$->valType = INT;
         }
         |  ID  DOT  ID {
-//        $$ = new AST_Dot(
-//	new AST_Sym($1, nullptr),
-//	new AST_Sym($3, nullptr));
+        auto sym = driver.symtab.lookupVariable($1.c_str());
+	if(!sym) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not declared in this scope.\n"};
+	}
+	$$ = new AST_Sym($1, sym->scopeIndex, sym);
+	if(sym->symbolType != RECORD) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' is not record type.\n"};
+	}
+	auto members = sym->subSymbolMap;
+	if(members == nullptr) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' has not members.\n"};
+	}
+	auto member = members->find($3);
+	if(member == members->end()) {
+		throw splException{@1.begin.line, @1.begin.column , "variable '" + $1 + "' has not member " + $3 +"\n"};
+	}
+        $$ = new AST_Dot(
+	new AST_Sym($1, sym->scopeIndex, sym),
+	new AST_Sym($3, member->second->scopeIndex, member->second));
+	$$->valType = member->second->symbolType;
 	}
         ;
 

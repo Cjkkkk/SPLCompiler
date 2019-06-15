@@ -121,6 +121,7 @@ x86_size Operand::getSize() {
         case CHAR:
             return byte;
         case STRING:
+        case RECORD:
         default:
             return var;
     }
@@ -161,6 +162,9 @@ void Instruction::outputOperand(Operand* operand, ostream& s) {
             else {
                 s << operand->name + "[ " + operand->offset->name + " ]";
             }
+        }
+        else if(operand->type == RECORD) {
+            s << operand->name + "." + operand->offset->name;
         }
         else{
             s << operand->name;
