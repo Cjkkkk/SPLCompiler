@@ -489,7 +489,21 @@ x86_reg SPL_CodeGen::bringToReg(Operand* operand, x86_reg reg, bool is_ref, bool
                             );
                     freeReg(r, false, false);
                 }
-            } else {
+            } else if(operand->type == RECORD) {
+                // 先锁住当前持有的寄存器
+                auto members = operand->symbol->subSymbolList;
+                int offset = 0;
+                for(auto i = 0 ; i < members->size() ; i ++ ) {
+                    if(members->at(i)->name == operand->offset->name) offset = i;
+                }
+                x86Instruction(
+                        "",
+                        "mov",
+                        reg_to_string(reg),
+                        " [ " + operand->name + " + 8 * " + std::to_string(offset) + " ]"
+                );
+            }
+            else {
                 x86Instruction("", "mov", reg_to_string(reg), " [ " + operand->name + " ]");
             }
         }
@@ -638,7 +652,19 @@ void SPL_CodeGen::freeReg(x86_reg reg, bool write_back, bool write_reference) {
                             reg_to_string(reg));
                     freeReg(r, false, false);
                 }
-            } else {
+            } else if(reg_status.operand->type == RECORD) {
+                auto members = reg_status.operand->symbol->subSymbolList;
+                int offset = 0;
+                for(auto i = 0 ; i < members->size() ; i ++ ) {
+                    if(members->at(i)->name == reg_status.operand->offset->name) offset = i;
+                }
+                x86Instruction(
+                        "",
+                        "mov",
+                        " [ " + reg_status.operand->name + " + 8 * " +std::to_string(offset) + " ]",
+                        reg_to_string(reg));
+            }
+            else {
                 x86Instruction("", "mov", "[ " + name + " ]", reg_to_string(reg));
             }
         }
@@ -656,9 +682,11 @@ void SPL_CodeGen::collect_bss_data(Operand* op) {
         auto it = bss_data.find(op->name);
         if(it == bss_data.end()) {
             if(op->type == ARRAY) {
-                bss_data.insert({op->name, {op->getSize(), op->symbol->scalarSize}});
+                bss_data.insert({op->name, {qword, op->symbol->scalarSize}});
+            } else if(op->type == RECORD) {
+                bss_data.insert({op->name, {qword, op->symbol->subSymbolList->size()}});
             } else {
-                bss_data.insert({op->name, {op->getSize(), 1}});
+                bss_data.insert({op->name, {qword, 1}});
             }
         }
     }

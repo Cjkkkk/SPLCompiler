@@ -4,12 +4,6 @@ var
 	b : string;
 	arr : array [10] of integer;
 
-//function bo(a : integer): integer;
-//begin
-//    write("bo: %d", a);
-//end
-//;
-
 
 function go(var a : integer): integer;
 begin
