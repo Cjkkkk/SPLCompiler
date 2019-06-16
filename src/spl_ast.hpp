@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include "spl_symtab.hpp"
 #include "spl_compiler.hpp"
@@ -30,8 +31,8 @@ class AST
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
     virtual void emit(SPL_IR* ir) = 0; //pure virtual function
+    virtual void print(std::fstream& fout) = 0;   //pure virtual function
     virtual ~AST() = 0;          //pure virtual function
-                                 //virtual void print(void) = 0;       //pure virtual function
 
     int nodeType;
 };
@@ -42,6 +43,7 @@ class AST_Exp : virtual public AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
+    virtual void print(std::fstream& fout) = 0; //pure virtual function
     virtual ~AST_Exp() = 0;      //pure virtual function
     virtual void emit(SPL_IR* ir) = 0;
     SPL_TYPE valType;
@@ -58,6 +60,7 @@ class AST_Stmt : virtual public AST
   public:
     virtual void checkSemantic() = 0;
     virtual int calculate() = 0; //pure virtual function
+    virtual void print(std::fstream& fout) = 0; //pure virtual function
     virtual void emit(SPL_IR* ir) = 0;
     virtual ~AST_Stmt() = 0;     //pure virtual function
                                  //virtual void print(void) = 0;       //pure virtual function
@@ -72,7 +75,7 @@ class AST_Math : public AST_Exp
     int calculate() override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
-    void print();
+    void print(std::fstream& fout) override;
   protected:
     /* op: operator, including:
      * + - * / % & | -(neg) !(not) 
@@ -104,9 +107,9 @@ class AST_Const : public AST_Exp
     explicit AST_Const(std::string &val);
     ~AST_Const() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
-    void print();
     valueUnion getValue() {
         return value;
     }
@@ -125,6 +128,7 @@ class AST_Sym : public AST_Exp
     AST_Sym(std::string &id_, unsigned int scopeIndex_, Symbol*);
     ~AST_Sym() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     Symbol* get_symbol() {
@@ -144,6 +148,7 @@ class AST_Array : public AST_Exp
     AST_Array(AST_Sym *sym_, AST_Exp *exp_);
     ~AST_Array() override;
     int calculate(void) override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     Symbol* get_symbol() {
@@ -163,6 +168,7 @@ class AST_Dot : public AST_Exp
     AST_Dot(AST_Sym *record_, AST_Sym *field_);
     ~AST_Dot() override;
     int calculate(void) override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     //void print(void);
@@ -179,6 +185,7 @@ class AST_Assign : public AST_Exp, public AST_Stmt
     AST_Assign(AST_Exp *lhs_, AST_Exp *rhs_);
     ~AST_Assign() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     void print();
@@ -196,6 +203,7 @@ class AST_If : public AST_Stmt
     AST_If(AST_Exp *cond_, AST_Stmt *doIf_, AST_Stmt *doElse_);
     ~AST_If() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void addRight(AST_Stmt *doElse_);
     AST_Stmt *getDoElse(void);
     void checkSemantic() override;
@@ -223,6 +231,7 @@ class AST_While : public AST_Stmt
     AST_While(AST_Exp *cond_, AST_Stmt *stmt_);
     ~AST_While() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
 
@@ -237,6 +246,7 @@ class AST_Repeat : public AST_Stmt
     AST_Repeat(std::vector<AST_Stmt *> *stmtList_, AST_Exp *exp_);
     ~AST_Repeat() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
 
@@ -251,6 +261,7 @@ class AST_For : public AST_Stmt
     AST_For(AST_Assign *init_, bool dir_, AST_Exp *fin_, AST_Stmt *stmt_);
     ~AST_For() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
 
@@ -267,6 +278,7 @@ class AST_Goto : public AST_Stmt
     AST_Goto(int label_);
     ~AST_Goto() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
 
@@ -280,6 +292,7 @@ class AST_Compound : public AST_Stmt
     AST_Compound(std::vector<AST_Stmt *> *stmtList_);
     ~AST_Compound() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
 
@@ -294,6 +307,7 @@ class AST_Func : public AST_Exp, public AST_Stmt
     AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_);
     ~AST_Func() override;
     int calculate() override;
+    void print(std::fstream& fout) override;
     void checkSemantic() override;
     void emit(SPL_IR* ir) override;
     Symbol* get_symbol() {
@@ -307,28 +321,6 @@ class AST_Func : public AST_Exp, public AST_Stmt
     unsigned int scopeIndex;
     Symbol* symbol;
 };
-
-
-// class AST_Routine : virtual public AST
-// {
-//   public:
-//     AST_Routine(std::vector<AST_RoutineHead *> *routine_head, AST_Compound *routine_body);
-//     void checkSemantic() override;
-//     int calculate() override; //pure virtual function
-
-//     std::vector<AST_RoutineHead *> *routine_head;
-//     AST_Compound *routine_body;
-// };
-
-// class AST_Program : virtual public AST
-// {
-//   public:
-//     AST_Program(string &id, AST_Routine *routine);
-//     void checkSemantic() override;
-//     int calculate() override; //pure virtual function
-//     string id;
-//     AST_Routine *routine;
-// };
 
 class AST_Manager
 {
@@ -350,6 +342,13 @@ class AST_Manager
       functions->emplace_back(func);
       scopes->emplace_back(scope);
       defined_scopes->emplace_back(preScope);
+    }
+    void printAST(std::fstream& fout){
+      for(std::vector<AST*>::iterator it = functions->begin(); it != functions->end(); ++it){
+        AST* ast = *it;
+        ast->print(fout);
+        fout << std::endl;
+      }
     }
 //    void addMain(AST* func, string* id, SymbolTable* scope){
 //      functions->at(0) = {func,id};

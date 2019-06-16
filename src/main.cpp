@@ -9,6 +9,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include "spl_driver.hpp"
 #include "spl_exception.hpp"
@@ -21,8 +22,11 @@ int main(int argc, char *argv[])
     {
         try
         {
+            fstream fout;
+            fout.open("./astvisio/ast1.txt", ios::out);
             driver.parse(argv[1]);
-            //driver.symtab.print();
+            driver.printAST(fout);
+            fout.close();
 
             // emit IR
             driver.emitIR();

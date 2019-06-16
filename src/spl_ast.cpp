@@ -70,6 +70,31 @@ int AST_Math::calculate()
         return -ERROR_VAL;
     }
 }
+void AST_Math::print(std::fstream& fout)
+{
+    fout << "( ";
+    switch(this->opType){
+        case PLUS_: fout << "+ "; break;
+        case MINUS_: fout << "- "; break;
+        case MUL_: fout << "* "; break;
+        case DIV_: fout << "/ "; break;
+        case MOD_: fout << "% "; break;
+        case OR_: fout << "| "; break;
+        case AND_: fout << "& "; break;
+        case EQUAL_: fout << "== "; break;
+        case UNEQUAL_: fout << "!= "; break;
+        case GE_: fout << ">= "; break;
+        case GT_: fout << "> "; break;
+        case LE_: fout << "<= "; break;
+        case LT_: fout << "< "; break;
+        case NOT_: fout << "! "; break;
+        case MINUS__: fout << "neg "; break;
+        default: fout << "ukn "; break;
+    }
+    this->left->print(fout);
+    this->right->print(fout);
+    fout << ") ";
+}
 
 void AST_Math::emit(SPL_IR* ir) {
     if(left->tempVariable == nullptr) {
@@ -133,6 +158,18 @@ int AST_Const::calculate()
     return 0;
 }
 
+void AST_Const::print(std::fstream& fout)
+{
+    switch(this->valType){
+        case BOOL: fout << (this->value.valBool ? "true " : "false "); break;
+        case CHAR: fout << this->value.valChar << " "; break;
+        case INT: fout << this->value.valInt << " "; break;
+        case REAL: fout << this->value.valDouble << " "; break;
+        case STRING: fout << *(this->value.valString) << " "; break;
+        default: fout << "ukn "; break;
+    }
+}
+
 AST_Const::~AST_Const()
 {
     if(this->valType == STRING){
@@ -169,6 +206,11 @@ int AST_Sym::calculate()
     // add search symbol table
 }
 
+void AST_Sym::print(std::fstream& fout)
+{
+    fout << this->id << " ";
+}
+
 // todo add symbol table destruction
 AST_Sym::~AST_Sym()
 {
@@ -202,6 +244,16 @@ int AST_Array::calculate()
 {
     return ERROR_VAL;
 }
+
+void AST_Array::print(std::fstream& fout)
+{
+    fout << "( ";
+    this->sym->print(fout);
+    fout << "[ ";
+    this->exp->print(fout);
+    fout << "] ) ";
+}
+
 void AST_Array::checkSemantic() {}
 void AST_Array::emit(SPL_IR* ir){
     // 先计算offset 存到一个临时变量中
@@ -235,6 +287,15 @@ int AST_Dot::calculate()
 {
     return ERROR_VAL;
 }
+
+void AST_Dot::print(std::fstream& fout)
+{
+    fout << "( ";
+    this->record->print(fout);
+    fout << ". ";
+    this->field->print(fout);
+    fout << ") ";
+}
 void AST_Dot::checkSemantic() {}
 void AST_Dot::emit(SPL_IR* ir){
     std::cout << "record : " << record->id << "\n";
@@ -248,6 +309,13 @@ AST_Assign::AST_Assign(SPL::AST_Exp *lhs_, SPL::AST_Exp *rhs_) : lhs(lhs_), rhs(
     this->nodeType = AST_ASSIGN;
 }
 
+void AST_Assign::print(std::fstream& fout)
+{
+    fout << "( := ";
+    this->lhs->print(fout);
+    this->rhs->print(fout);
+    fout << ") ";
+}
 
 int AST_Assign::calculate()
 {
@@ -288,6 +356,19 @@ AST_If::~AST_If()
     delete (cond);
     delete (doElse);
     delete (doIf);
+}
+
+void AST_If::print(std::fstream& fout)
+{
+    fout << "( if ";
+    this->cond->print(fout);
+    fout << "then ";
+    this->doIf->print(fout);
+    if(this->doElse){
+        fout << "else ";
+        this->doElse->print(fout);
+    }
+    fout << ") ";
 }
 
 int AST_If::calculate()
@@ -355,6 +436,15 @@ AST_While::~AST_While()
     delete (stmt);
 }
 
+void AST_While::print(std::fstream& fout)
+{
+    fout << "( while ";
+    this->cond->print(fout);
+    fout << "do ";
+    this->stmt->print(fout);
+    fout << ") ";
+}
+
 int AST_While::calculate()
 {
     return ERROR_VAL;
@@ -394,6 +484,18 @@ AST_Repeat::~AST_Repeat()
     delete[] stmtList;
 }
 
+void AST_Repeat::print(std::fstream& fout)
+{
+    fout << "( repeat ";
+    for(std::vector<AST_Stmt*>::iterator it = stmtList->begin(); it != stmtList->end(); ++it){
+        AST_Stmt* ast = *it;
+        ast->print(fout);
+    }
+    fout << "until ";
+    this->exp->print(fout);
+    fout << ") ";
+}
+
 int AST_Repeat::calculate()
 {
     return ERROR_VAL;
@@ -428,6 +530,17 @@ AST_For::~AST_For()
     delete (init);
     delete (fin);
     delete (stmt);
+}
+
+void AST_For::print(std::fstream& fout)
+{
+    fout << "( for ";
+    this->init->print(fout);
+    fout << (dir ? "downto " : "to ");
+    this->fin->print(fout);
+    fout << "do ";
+    this->stmt->print(fout);
+    fout << ") ";
 }
 
 int AST_For::calculate()
@@ -474,6 +587,11 @@ AST_Goto::AST_Goto(int label_) : label(label_)
 
 AST_Goto::~AST_Goto() {}
 
+void AST_Goto::print(std::fstream& fout)
+{
+    fout << "( goto " << this->label << " ) ";
+}
+
 int AST_Goto::calculate()
 {
     return ERROR_VAL;
@@ -491,6 +609,16 @@ AST_Compound::AST_Compound(std::vector<AST_Stmt *> *stmtList_) : stmtList(stmtLi
 AST_Compound::~AST_Compound()
 {
     delete[] stmtList;
+}
+
+void AST_Compound::print(std::fstream& fout)
+{
+    fout << "( compound ";
+    for(std::vector<AST_Stmt*>::iterator it = stmtList->begin(); it != stmtList->end(); ++it){
+        AST_Stmt* ast = *it;
+        ast->print(fout);
+    }
+    fout << ") ";
 }
 
 int AST_Compound::calculate()
@@ -571,6 +699,16 @@ AST_Func::AST_Func(int sysFuncId_, std::vector<AST_Exp *> *argList_) : argList(a
 AST_Func::~AST_Func()
 {
     delete[] argList;
+}
+
+void AST_Func::print(std::fstream& fout)
+{
+    fout << "( call " << this->funcId << " args ";
+    for(std::vector<AST_Exp*>::iterator it = argList->begin(); it != argList->end(); ++it){
+        AST_Exp* ast = *it;
+        ast->print(fout);
+    }
+    fout << ") ";
 }
 
 int AST_Func::calculate()

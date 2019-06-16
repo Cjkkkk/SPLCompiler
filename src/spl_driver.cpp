@@ -83,9 +83,8 @@ void SPL::SPL_Driver::parse_helper(std::istream &stream)
 }
 
 
-std::ostream &SPL::SPL_Driver::print(std::ostream &stream)
-{
-    return (stream);
+void SPL::SPL_Driver::printAST(std::fstream &fout){
+    astmnt.printAST(fout);
 }
 
 

@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <istream>
+#include <fstream>
 #include <string>
 
 #include "spl_parser.tab.hh"
@@ -41,7 +42,7 @@ class SPL_Driver
    */
     void parse(std::istream &stream);
 
-    std::ostream &print(std::ostream &stream);
+    void printAST(std::fstream &fout);
     void emitIR();
     void optimizeIR();
     void codeGen();
