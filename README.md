@@ -11,14 +11,14 @@
 * 编译程序
 在与可执行文件同目录下创建assem目录用于存储汇编代码/byte_code目录用于存储中间代码
 
-* 编译test目录下的test3.spl
+* 编译test目录下的test6.spl
 * 运行nasm生成可执行代码
 ```bash=
 nasm -felf64 hello.asm && gcc hello.o && ./a.out
 ```
 * 输出
 ```
-24
+27
 ```
 
 ## 3 useful link
