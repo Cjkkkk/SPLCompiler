@@ -1,5 +1,5 @@
 # SPL
-## environment
+## 1 environment
 - Windows 10
 - [GCC](https://sourceforge.net/projects/mingw-w64/)
 - [Flex & Bison](https://sourceforge.net/projects/winflexbison/files/winflexbison3-latest.zip/download)
@@ -7,62 +7,21 @@
 	- 下载解压后将win_flex和win_bison更名为flex和bison，并添加到系统变量中
 - [NASM]()
 
-## git convention
+## 2 getting started
+* 编译程序
+在与可执行文件同目录下创建assem目录用于存储汇编代码/byte_code目录用于存储中间代码
+
+* 编译test目录下的test3.spl
+* 运行nasm生成可执行代码
+```bash=
+nasm -felf64 hello.asm && gcc hello.o && ./a.out
 ```
-<path_to_file>: [ADD/CHANGE/UPDATE/REMOVE] <message>
+* 输出
+```
+24
 ```
 
-```shell
-git commit -m"ADD new class"
-```
-
-## TAC format
-
-`label` : `string`
-
-`op` : `SPL_OP`
-
-`arg1`: `string`
-
-`arg2` : `string`
-
-`result` : `string`
-
-### Label
-
-`return "L" + to_string(labelCount ++)`
-
-### temp variable
-
-`"_t" + to_string(tempCount ++)`
-
-### output file
-
-`out.bc`
-
-## todo
-
-### AST
-* record / array translation
-* 检查函数定义是否有返回值，以及返回值类型是否正确
-
-### IR generation
-* 短路翻译
-
-### IR optimization
-* reuse temp variable [done]
-* control flow graph [done]
-* SSA [done]
-
-* constant propagation [done]
-* copy propagation [done]
-* dead code elimination (copy propagation can help) [done]
-* common subexpression
-
-### code generation
-* x86 NASM
-
-## useful link
+## 3 useful link
 ### IR optimization
 * [TAC](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/13/Slides13.pdf)
 * [determine if a temp can be reused](https://en.wikipedia.org/wiki/Sethi%E2%80%93Ullman_algorithm)
@@ -77,26 +36,3 @@ git commit -m"ADD new class"
 * [SSA dead code](http://www.cs.colostate.edu/~mstrout/CS553Fall09/Slides/lecture14-SSA.ppt.pdf)
 ### register allocation
 * [register allocation algorithm](https://web.stanford.edu/class/archive/cs/cs143/cs143.1128/lectures/17/Slides17.pdf)
-
-## getting started
-* 编译程序
-在与可执行文件同目录下创建assem目录用于存储汇编代码/byte_code目录用于存储中间代码
-
-* 编译test目录下的test3.spl
-* 运行nasm生成可执行代码
-```bash=
-nasm -felf64 hello.asm && gcc hello.o && ./a.out
-```
-* 输出
-```
-24
-```
-
-## todo
-加减乘除[check]
-比较[check]
-分支[check]
-函数调用[check]
-逻辑运算[check]
-引用[check]
-数组[check]
